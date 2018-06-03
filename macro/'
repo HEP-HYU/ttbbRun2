@@ -1,0 +1,610 @@
+//=============================================================================================//
+// last upate : 2017-08-04                                                                     //
+// Read Gen.level additional two jets and bjets.                                               //
+// - add matrix.C                                                                              //
+// use example : root -l -b -q TreeReader.C'("~/work/ttbb/../hist.root","~/work/ttbb/170804/")'//
+// ============================================================================================//
+#include <iostream>
+#include <map>
+#include <vector>
+#include <string>
+
+#include <TH1.h>
+#include <TH2.h>
+#include <TLorentzVector.h>
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
+#include <TTreeReaderArray.h>
+
+//#include "../include/TreeReader.h"
+
+using namespace std;
+const double DELTAR_BINWIDTH = 0.2;
+const double INVMASS_BINWIDTH = 10;
+
+
+//void TreeReader(string inputFile, string outputLocation){
+void TreeReader(){
+  cout << "PROCESS START" << endl;
+  //TFile *inFile = TFile::Open(inputFile.c_str());
+  TFile *inFile = TFile::Open("/xrootd/store/user/san/ntuples/hep2017/unfold2/TT_powheg_ttbb2.root");
+  //TFile *outFile = TFile::Open(Form("%s/hist_resp_ttbb.root",outputLocation.c_str()),"recreate");
+  TFile *outFile = TFile::Open("../output/hist_eff_puri_ttbb.root","recreate");
+  //TDirectory *tDir = inFile->GetDirectory("ttbbLepJets");
+  //TreeReader *treeReader = new TreeReader("../test/TT_powheg_ttbb.root");
+  //GenTreeReader *gentreeReader = new GenTreeReader("../test/TT_powheg_ttbb.root");
+
+  vector<int> v_event;
+  vector<int> v_channel;
+  //vector<float> v_genWeight;
+  //vector<float> v_puWeight;
+  //vector<double> v_eventWeight;
+  //vector<double> v_relIso;
+  vector<int> v_njets;
+  vector<int> v_nbjets_t;
+  vector<double> v_reco_AddJets_DeltaR;
+  vector<double> v_reco_AddJets_InvMass;
+  vector<double> v_reco_AddBjets_DeltaR;
+  vector<double> v_reco_AddBjets_InvMass;
+  
+  //Book of histograms
+  TH1D *h_reco_AddJets_DeltaR[2][4];
+  TH1D *h_reco_AddJets_InvMass[2][4];
+  TH1D *h_reco_AddBjets_DeltaR[2][4];
+  TH1D *h_reco_AddBjets_InvMass[2][4]; 
+  TH1D *h_gen_AddBjets_DeltaR[2][4];
+  TH1D *h_gen_AddBjets_InvMass[2][4];
+  TH2D *h_respMatrix_deltaR[2][4];
+  TH2D *h_respMatrix_InvMass[2][4];
+
+  TH1D *h_purity_DeltaR[2][4];
+  TH1D *h_purity_InvMass[2][4];
+  TH1D *h_efficiency_DeltaR[2][4];
+  TH1D *h_efficiency_InvMass[2][4];
+  //TH1D *h_reco_gen_sub_DeltaR[2][4];
+  //TH1D *h_reco_gen_sub_InvMass[2][4];
+
+  vector<string> chName = {"#mu", "#it{e}"};
+  for(int iChannel=0; iChannel<2; ++iChannel){
+    for(int iStep=0; iStep<4; ++iStep){
+      h_reco_AddJets_DeltaR[iChannel][iStep] = new TH1D(Form("h_RecoJetDeltaR_Ch%iS%i",iChannel,iStep),Form("Reco.AddJets Delta R for Ch.%s Step%i",chName[iChannel].c_str(),iStep),50,0,5);
+      h_reco_AddJets_DeltaR[iChannel][iStep]->SetXTitle(Form("DeltaR"));
+      h_reco_AddJets_DeltaR[iChannel][iStep]->Sumw2();
+
+      h_reco_AddJets_InvMass[iChannel][iStep] = new TH1D(Form("h_RecoJetInvMass_Ch%iS%i",iChannel, iStep),Form("Reco. Invariant Mass for Ch.%s Step%i", chName[iChannel].c_str(),iStep),200,0,300);
+      h_reco_AddJets_InvMass[iChannel][iStep]->SetXTitle("InvMass (GeV)");
+      h_reco_AddJets_InvMass[iChannel][iStep]->Sumw2();
+
+      h_reco_AddBjets_DeltaR[iChannel][iStep] = new TH1D(Form("h_RecoBjetDeltaR_Ch%iS%i",iChannel,iStep),Form("Reco.AddBjets Delta R for Ch.%s Step%i",chName[iChannel].c_str(),iStep),50,0,5);
+      h_reco_AddBjets_DeltaR[iChannel][iStep]->SetXTitle(Form("DeltaR"));
+      h_reco_AddBjets_DeltaR[iChannel][iStep]->Sumw2();
+
+      h_reco_AddBjets_InvMass[iChannel][iStep] = new TH1D(Form("h_RecoBjetInvMass_Ch%iS%i",iChannel, iStep),Form("Reco. Invariant Mass for Ch.%s Step%i", chName[iChannel].c_str(),iStep),200,0,300);
+      h_reco_AddBjets_InvMass[iChannel][iStep]->SetXTitle("InvMass (GeV)");
+      h_reco_AddBjets_InvMass[iChannel][iStep]->Sumw2();
+      
+      h_gen_AddBjets_DeltaR[iChannel][iStep] = new TH1D(Form("h_GenBjetDeltaR_Ch%iS%i",iChannel,iStep),Form("Gen. Delta R for Ch.%s Step%i",chName[iChannel].c_str(),iStep),50,0,5);
+      h_gen_AddBjets_DeltaR[iChannel][iStep]->SetXTitle(Form("DeltaR"));
+      h_gen_AddBjets_DeltaR[iChannel][iStep]->Sumw2();
+
+      h_gen_AddBjets_InvMass[iChannel][iStep] = new TH1D(Form("h_GenBjetInvMass_Ch%iS%i",iChannel, iStep),Form("Gen. Invariant Mass for Ch.%s Step%i", chName[iChannel].c_str(),iStep),200,0,300);
+      h_gen_AddBjets_InvMass[iChannel][iStep]->SetXTitle("InvMass (GeV)");
+      h_gen_AddBjets_InvMass[iChannel][iStep]->Sumw2();
+
+      h_respMatrix_deltaR[iChannel][iStep] = new TH2D(Form("h_respMatrix_deltaR_Ch%iS%i", iChannel,iStep),Form("DeltaR Response Matrix for Ch.%s Step%i",chName[iChannel].c_str(),iStep), 25,0,5,25,0,5);
+      h_respMatrix_deltaR[iChannel][iStep]->SetXTitle("Reco. dR");
+      h_respMatrix_deltaR[iChannel][iStep]->SetYTitle("Gen. dR");
+      h_respMatrix_deltaR[iChannel][iStep]->Sumw2();
+
+      h_respMatrix_InvMass[iChannel][iStep] = new TH2D(Form("h_respMatrix_InvMass_Ch%iS%i", iChannel,iStep),Form("Jet InvMass Response Matrix for Ch.%s Step%i",chName[iChannel].c_str(),iStep), 20,0,200,20,0,200);
+      h_respMatrix_InvMass[iChannel][iStep]->SetXTitle("Reco. InvMass(Gev)");
+      h_respMatrix_InvMass[iChannel][iStep]->SetYTitle("Gen. InvMass(Gev)");
+      h_respMatrix_InvMass[iChannel][iStep]->Sumw2();
+
+      h_purity_DeltaR[iChannel][iStep] = new TH1D(Form("h_purity_DeltaR_Ch%iS%i", iChannel, iStep), Form("DeltaR Purity for Ch.%s Step %i", chName[iChannel].c_str(), iStep), 50, 0, 5);
+      h_purity_DeltaR[iChannel][iStep]->SetXTitle("DeltaR");
+      h_purity_DeltaR[iChannel][iStep]->SetYTitle("Purity");
+      h_purity_DeltaR[iChannel][iStep]->Sumw2();
+
+      h_purity_InvMass[iChannel][iStep] = new TH1D(Form("h_purity_InvMass_Ch%iS%i", iChannel, iStep), Form("InvMass Purity for Ch.%s Step %i", chName[iChannel].c_str(), iStep), 30, 0, 300);
+      h_purity_InvMass[iChannel][iStep]->SetXTitle("InvMass (GeV)");
+      h_purity_InvMass[iChannel][iStep]->SetYTitle("Purity");
+      h_purity_InvMass[iChannel][iStep]->Sumw2();
+
+      h_efficiency_DeltaR[iChannel][iStep] = new TH1D(Form("h_efficiency_DeltaR_Ch%iS%i", iChannel, iStep), Form("DeltaR Efficiency for Ch.%s Step %i", chName[iChannel].c_str(), iStep), 50, 0, 5);
+      h_efficiency_DeltaR[iChannel][iStep]->SetXTitle("DeltaR");
+      h_efficiency_DeltaR[iChannel][iStep]->SetYTitle("Efficiency");
+      h_efficiency_DeltaR[iChannel][iStep]->Sumw2();
+
+      h_efficiency_InvMass[iChannel][iStep] = new TH1D(Form("h_efficiency_InvMass_Ch%iS%i", iChannel, iStep), Form("InvMass Efficiency for Ch.%s Step %i", chName[iChannel].c_str(), iStep), 30, 0, 300);
+      h_efficiency_InvMass[iChannel][iStep]->SetXTitle("InvMass (GeV)");
+      h_efficiency_InvMass[iChannel][iStep]->SetXTitle("Efficiency");
+      h_efficiency_InvMass[iChannel][iStep]->Sumw2();
+
+      //h_reco_gen_sub_DeltaR[iChannel][iStep] = new TH1D(Form("h_reco_gen_sub_DeltaR_Ch%i_S%i", iChannel, iStep), Form("Reco-Gen for Ch.%s Step%i",chName[iChannel].c_str(), iStep),1000, -5, 5);
+      //h_reco_gen_sub_DeltaR[iChannel][iStep]->SetXTitle("Delta R");
+      //h_reco_gen_sub_DeltaR[iChannel][iStep]->Sumw2();
+
+      //h_reco_gen_sub_InvMass[iChannel][iStep] = new TH1D(Form("h_reco_gen_sub_DeltaR_Ch%i_S%i", iChannel, iStep), Form("Reco-Gen for Ch.%s Step%i",chName[iChannel].c_str(), iStep),1000, -250, 250);
+      //h_reco_gen_sub_InvMass[iChannel][iStep]->SetXTitle("InvMass (Gev)");
+      //h_reco_gen_sub_InvMass[iChannel][iStep]->Sumw2();
+   }
+  }
+
+  TTreeReader treeReader("ttbbLepJets/tree",inFile);
+  TTreeReaderValue<Int_t> event = {treeReader, "event"};
+  TTreeReaderValue<Int_t> channel = {treeReader, "channel"};
+  TTreeReaderValue<Float_t> lepton_pT = {treeReader, "lepton_pT"};
+  TTreeReaderValue<Float_t> lepton_eta = {treeReader, "lepton_eta"};
+  TTreeReaderValue<Float_t> lepton_phi = {treeReader, "lepton_phi"};
+  TTreeReaderValue<Float_t> lepton_E = {treeReader, "lepton_E"};
+  TTreeReaderArray<float> jet_pT = {treeReader, "jet_pT"};
+  TTreeReaderArray<float> jet_eta = {treeReader, "jet_eta"};
+  TTreeReaderArray<float> jet_phi = {treeReader, "jet_phi"};
+  TTreeReaderArray<float> jet_E = {treeReader, "jet_E"};
+  TTreeReaderArray<int> jet_index = {treeReader, "jet_index"};
+  TTreeReaderArray<float> jet_CSV = {treeReader, "jet_CSV"};
+  TTreeReaderArray<int> kinjet_index = {treeReader, "kinjet_index"};
+  TTreeReaderArray<float> jet_JER_Nom = {treeReader, "jet_JER_Nom"};
+
+  TTreeReader gentreeReader("ttbbLepJets/gentree", inFile);
+  TTreeReaderValue<Int_t> gen_event = {gentreeReader, "event"};
+  TTreeReaderValue<float> addbjet1_pt = {gentreeReader, "addbjet1_pt"};
+  TTreeReaderValue<float> addbjet1_eta = {gentreeReader, "addbjet1_eta"};
+  TTreeReaderValue<float> addbjet1_phi = {gentreeReader, "addbjet1_phi"};
+  TTreeReaderValue<float> addbjet1_e = {gentreeReader, "addbjet1_e"};
+  TTreeReaderValue<float> addbjet2_pt = {gentreeReader, "addbjet2_pt"};
+  TTreeReaderValue<float> addbjet2_eta = {gentreeReader, "addbjet2_eta"};
+  TTreeReaderValue<float> addbjet2_phi = {gentreeReader, "addbjet2_phi"};
+  TTreeReaderValue<float> addbjet2_e = {gentreeReader, "addbjet2_e"};
+  
+  cout << "FIJ" << endl;
+
+  cout << "LOOP1 START" << endl;
+  int x = 0;
+  while(treeReader.Next()){
+
+    const int mode = *channel;
+    TLorentzVector lepton;
+    lepton.SetPtEtaPhiE(*lepton_pT, *lepton_eta, *lepton_phi, *lepton_E);
+    //event selection
+    const bool passmuon = (mode == 0) && (lepton.Pt()>30) && abs(lepton.Eta())<2.1;
+    const bool passelectron = (mode == 1) && (lepton.Pt()>35) && abs(lepton.Eta())<2.1;
+    if( !passmuon and !passelectron ) continue;
+
+    int njets = 0; int nbjets_t = 0;
+    multimap<float /*jet_CSV*/, TLorentzVector /*jet 4-momentum*/, std::greater<float>> m_reco_addJets;
+    multimap<float /*jet_CSV*/, TLorentzVector /*jet 4-momentum*/, std::greater<float>> m_reco_addBjets;
+    for( unsigned int iJet=0;iJet < jet_pT.GetSize(); ++iJet ){
+      TLorentzVector jet;
+      jet.SetPtEtaPhiE(jet_pT[iJet],jet_eta[iJet],jet_phi[iJet],jet_E[iJet]);
+      jet *= jet_JER_Nom[iJet];
+
+      bool isDupl = false;
+      for( unsigned int i : kinjet_index ){
+        if( i == iJet ) {isDupl = true; break;}
+      }
+
+      if( jet.Pt() <= 30 || abs(jet.Eta()) >= 2.4 ) continue;
+      ++njets;
+      if( !isDupl ) m_reco_addJets.insert(pair<float, TLorentzVector>(jet_CSV[iJet],jet));
+      if( jet_CSV[iJet] > 0.9535 ){
+	m_reco_addBjets.insert(pair<float, TLorentzVector>(jet_CSV[iJet],jet));
+	++nbjets_t;
+      }
+    }//for(...iJet<jet_pT.GetSize();...)
+    
+    TLorentzVector reco_addJet1, reco_addJet2;
+    double reco_Jets_DeltaR = 999;
+    double reco_Jets_InvMass = 999;
+    if( m_reco_addJets.size() >= 2) {
+      auto reco_addJet1 = m_reco_addJets.begin()->second;
+      auto reco_addJet2 = std::next(m_reco_addJets.begin())->second;
+
+      reco_Jets_DeltaR = reco_addJet1.DeltaR(reco_addJet2);
+      reco_Jets_InvMass = (reco_addJet1+reco_addJet2).M();
+    
+      v_reco_AddJets_DeltaR.push_back(reco_Jets_DeltaR);
+      v_reco_AddJets_InvMass.push_back(reco_Jets_DeltaR);
+    }
+    
+    if( passmuon ){
+      h_reco_AddJets_DeltaR[0][0]->Fill(reco_Jets_DeltaR);
+      h_reco_AddJets_InvMass[0][0]->Fill(reco_Jets_InvMass);
+      if(njets >= 6){
+	h_reco_AddJets_DeltaR[0][1]->Fill(reco_Jets_DeltaR);
+        h_reco_AddJets_InvMass[0][1]->Fill(reco_Jets_InvMass);
+	if(nbjets_t>=2){
+	  h_reco_AddJets_DeltaR[0][2]->Fill(reco_Jets_DeltaR);
+	  h_reco_AddJets_InvMass[0][2]->Fill(reco_Jets_InvMass);
+	}
+	if(nbjets_t>=3){
+	  h_reco_AddJets_DeltaR[0][3]->Fill(reco_Jets_DeltaR);
+          h_reco_AddJets_InvMass[0][3]->Fill(reco_Jets_InvMass);
+	}
+      }
+    }   
+    if( passelectron ){
+      h_reco_AddJets_DeltaR[1][0]->Fill(reco_Jets_DeltaR);
+      h_reco_AddJets_InvMass[1][0]->Fill(reco_Jets_InvMass);
+      if(njets >= 6){
+	h_reco_AddJets_DeltaR[1][1]->Fill(reco_Jets_DeltaR);
+        h_reco_AddJets_InvMass[1][1]->Fill(reco_Jets_InvMass);
+	if(nbjets_t>=2){
+	  h_reco_AddJets_DeltaR[1][2]->Fill(reco_Jets_DeltaR);
+	  h_reco_AddJets_InvMass[1][2]->Fill(reco_Jets_InvMass);
+	}
+	if(nbjets_t>=3){
+	  h_reco_AddJets_DeltaR[1][3]->Fill(reco_Jets_DeltaR);
+          h_reco_AddJets_InvMass[1][3]->Fill(reco_Jets_InvMass);
+	}
+      }
+    }
+    double reco_Bjets_DeltaR = 999;
+    double reco_Bjets_InvMass = 999;
+    if( m_reco_addBjets.size() >= 2){
+      auto reco_addBjet1 = m_reco_addBjets.begin()->second;
+      auto reco_addBjet2 = std::next(m_reco_addBjets.begin())->second;
+
+      reco_Bjets_DeltaR = reco_addBjet1.DeltaR(reco_addBjet2);
+      reco_Bjets_InvMass = (reco_addBjet1+reco_addBjet2).M();
+    }
+    
+    v_event.push_back(*event);
+    v_channel.push_back(mode);
+    v_njets.push_back(njets);
+    v_nbjets_t.push_back(nbjets_t);
+    v_reco_AddBjets_DeltaR.push_back(reco_Bjets_DeltaR);
+    v_reco_AddBjets_InvMass.push_back(reco_Bjets_InvMass);
+    
+    if( x % 1000 == 0 ) cout << "event : " << x << endl; ++x;
+  }//while((treeReader->fTreeReader).Next())
+  cout << "LOOP1 END" << endl;
+
+  cout << "LOOP2 START" << endl;
+  x=0;
+  int reco_dR_event[2][3][50];
+  int gen_dR_event[2][3][50];
+  int dR_pur[2][3][50];
+  int dR_eff[2][3][50];
+  int reco_M_event[2][3][30];
+  int gen_M_event[2][3][30];
+  int M_pur[2][3][30];
+  int M_eff[2][3][30];
+  
+  for(int i=0; i<2; ++i){
+    for(int j=0; j<3; ++j){
+      for(int k=0; k<50; ++k){
+        reco_dR_event[i][j][k]=0;
+	gen_dR_event[i][j][k]=0;
+	dR_pur[i][j][k]=0;
+	dR_eff[i][j][k]=0;
+      }
+      for(int l=0; l<30; ++l){
+        reco_M_event[i][j][l]=0;
+	gen_M_event[i][j][l]=0;
+	M_pur[i][j][l]=0;
+	M_eff[i][j][l]=0;
+      }
+    }
+  }
+
+  while(gentreeReader.Next()){
+    const int genEvent = *gen_event;
+    auto v_itr = find_if(v_event.begin(), v_event.end(),
+	[genEvent](int event)->bool{ return genEvent == event; });
+
+    if( v_itr == v_event.end() ) continue;
+    int iIndex=0;
+    for(int i=0;i<v_event.size(); ++i){
+      if( *v_itr == v_event[i] ) iIndex = i;
+    }
+
+    TLorentzVector gen_addBjet1, gen_addBjet2;
+    double gen_Bjets_DeltaR = 999;
+    double gen_Bjets_InvMass = 999;
+    gen_addBjet1.SetPtEtaPhiE(*addbjet1_pt, *addbjet1_eta, *addbjet1_phi, *addbjet1_e);
+    gen_addBjet2.SetPtEtaPhiE(*addbjet2_pt, *addbjet2_eta, *addbjet2_phi, *addbjet2_e);
+
+    gen_Bjets_DeltaR = gen_addBjet1.DeltaR(gen_addBjet2);
+    gen_Bjets_InvMass = (gen_addBjet1+gen_addBjet2).M();
+
+
+    if( v_channel[iIndex] == 0 ){
+      for(int i=0; i<50; ++i){
+	if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	  ++reco_dR_event[0][0][i];
+	  if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	    ++dR_pur[0][0][i];
+	  }
+	}
+	if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	  ++gen_dR_event[0][0][i];
+	  if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	    ++dR_eff[0][0][i];
+	  }
+	}
+      }  
+      for(int i=0; i<30; ++i){
+	if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	  ++reco_M_event[0][0][i];
+	  if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	    ++M_pur[0][0][i];
+	  }
+	}
+	if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	  ++gen_M_event[0][0][i];
+	  if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	    ++M_eff[0][0][i];
+	  }
+	}
+      }
+
+      h_reco_AddBjets_DeltaR[0][0]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+      h_reco_AddBjets_InvMass[0][0]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+      h_gen_AddBjets_DeltaR[0][0]->Fill(gen_Bjets_DeltaR);
+      h_gen_AddBjets_InvMass[0][0]->Fill(gen_Bjets_InvMass);
+      h_respMatrix_deltaR[0][0]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+      h_respMatrix_InvMass[0][0]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_InvMass);
+      if( v_njets[iIndex] >= 6 ){
+	for(int i=0; i<50; ++i){
+	  if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	    ++reco_dR_event[0][1][i];
+	    if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	      ++dR_pur[0][1][i];
+	    }
+	  }
+	  if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	    ++gen_dR_event[0][1][i];
+	    if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	      ++dR_eff[0][1][i];
+	    }
+	  }
+	}  
+	for(int i=0; i<30; ++i){
+	  if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	    ++reco_M_event[0][1][i];
+	    if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	      ++M_pur[0][1][i];
+	    }
+	  }
+	  if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	    ++gen_M_event[0][1][i];
+	    if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	      ++M_eff[0][1][i];
+	    }
+	  }
+	}
+	h_reco_AddBjets_DeltaR[0][1]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+	h_reco_AddBjets_InvMass[0][1]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+	h_gen_AddBjets_DeltaR[0][1]->Fill(gen_Bjets_DeltaR);
+	h_gen_AddBjets_InvMass[0][1]->Fill(gen_Bjets_InvMass);
+        h_respMatrix_deltaR[0][1]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+        h_respMatrix_InvMass[0][1]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_InvMass);
+	if( v_nbjets_t[iIndex] == 2 ){
+	  for(int i=0; i<50; ++i){
+	    if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	      ++reco_dR_event[0][2][i];
+	      if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+		++dR_pur[0][2][i];
+	      }
+	    }
+	    if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	      ++gen_dR_event[0][2][i];
+	      if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+		++dR_eff[0][2][i];
+	      }
+	    }
+	  }  
+	  for(int i=0; i<30; ++i){
+	    if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	      ++reco_M_event[0][2][i];
+	      if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+		++M_pur[0][2][i];
+	      }
+	    }
+	    if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	      ++gen_M_event[0][2][i];
+	      if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+		++M_eff[0][2][i];
+	      }
+	    }
+	  }  
+	  h_reco_AddBjets_DeltaR[0][2]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+	  h_reco_AddBjets_InvMass[0][2]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+	  h_gen_AddBjets_DeltaR[0][2]->Fill(gen_Bjets_DeltaR);
+	  h_gen_AddBjets_InvMass[0][2]->Fill(gen_Bjets_InvMass);
+	  h_respMatrix_deltaR[0][2]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+	  h_respMatrix_InvMass[0][2]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_InvMass);
+	}//v_nbjets >= 2
+	if( v_nbjets_t[iIndex] == 3 ){
+	  h_reco_AddBjets_DeltaR[0][3]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+	  h_reco_AddBjets_InvMass[0][3]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+	  h_gen_AddBjets_DeltaR[0][3]->Fill(gen_Bjets_DeltaR);
+	  h_gen_AddBjets_InvMass[0][3]->Fill(gen_Bjets_InvMass);
+	  h_respMatrix_deltaR[0][3]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+	  h_respMatrix_InvMass[0][3]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_InvMass);
+   	}//v_nbjets >= 3
+      }//v_njets >=6
+    }//muon channel   
+     
+    if( v_channel[iIndex] == 1 ){
+      for(int i=0; i<50; ++i){
+	if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	  ++reco_dR_event[1][0][i];
+	  if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	    ++dR_pur[1][0][i];
+	  }
+	}
+	if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	  ++gen_dR_event[1][0][i];
+	  if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	    ++dR_eff[1][0][i];
+	  }
+	}
+      }  
+      for(int i=0; i<30; ++i){
+	if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	  ++reco_M_event[1][0][i];
+	  if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	    ++M_pur[1][0][i];
+	  }
+	}
+	if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	  ++gen_M_event[1][0][i];
+	  if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	    ++M_eff[1][0][i];
+	  }
+	}
+      }
+      h_reco_AddBjets_DeltaR[1][0]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+      h_reco_AddBjets_InvMass[1][0]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+      h_gen_AddBjets_DeltaR[1][0]->Fill(gen_Bjets_DeltaR);
+      h_gen_AddBjets_InvMass[1][0]->Fill(gen_Bjets_InvMass);
+      h_respMatrix_deltaR[1][0]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+      h_respMatrix_InvMass[1][0]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_InvMass);
+      if( v_njets[iIndex] >= 6 ){
+	for(int i=0; i<50; ++i){
+	  if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	    ++reco_dR_event[1][1][i];
+	    if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	      ++dR_pur[1][1][i];
+	    }
+	  }
+	  if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	    ++gen_dR_event[1][1][i];
+	    if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	      ++dR_eff[1][1][i];
+	    }
+	  }
+	}  
+	for(int i=0; i<30; ++i){
+	  if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	    ++reco_M_event[1][1][i];
+	    if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	      ++M_pur[1][1][i];
+	    }
+	  }
+	  if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	    ++gen_M_event[1][1][i];
+	    if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	      ++M_eff[1][1][i];
+	    }
+	  }
+	}
+        h_reco_AddBjets_DeltaR[1][1]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+	h_reco_AddBjets_InvMass[1][1]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+	h_gen_AddBjets_DeltaR[1][1]->Fill(gen_Bjets_DeltaR);
+	h_gen_AddBjets_InvMass[1][1]->Fill(gen_Bjets_InvMass);
+        h_respMatrix_deltaR[1][1]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+        h_respMatrix_InvMass[1][1]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_InvMass);
+	if( v_nbjets_t[iIndex] == 2 ){
+	  for(int i=0; i<50; ++i){
+	    if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+	      ++reco_dR_event[1][2][i];
+	      if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+		++dR_pur[1][2][i];
+	      }
+	    }
+	    if(gen_Bjets_DeltaR > 0.2*i && gen_Bjets_DeltaR < 0.2*(i+1)){
+	      ++gen_dR_event[1][2][i];
+	      if(v_reco_AddJets_DeltaR[iIndex] > 0.2*i && v_reco_AddJets_DeltaR[iIndex] < 0.2*(i+1)){
+		++dR_eff[1][2][i];
+	      }
+	    }
+	  }  
+	  for(int i=0; i<30; ++i){
+	    if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+	      ++reco_M_event[1][2][i];
+	      if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+		++M_pur[1][2][i];
+	      }
+	    }
+	    if(gen_Bjets_InvMass > 10.0*i && gen_Bjets_InvMass < 10.0*(i+1)){
+	      ++gen_M_event[1][2][i];
+	      if(v_reco_AddJets_InvMass[iIndex] > 10.0*i && v_reco_AddJets_InvMass[iIndex] < 10.0*(i+1)){
+		++M_eff[1][2][i];
+	      }
+	    }
+	  }
+	  h_reco_AddBjets_DeltaR[1][2]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+	  h_reco_AddBjets_InvMass[1][2]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+	  h_gen_AddBjets_DeltaR[1][2]->Fill(gen_Bjets_DeltaR);
+	  h_gen_AddBjets_InvMass[1][2]->Fill(gen_Bjets_InvMass);
+	  h_respMatrix_deltaR[1][2]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+	  h_respMatrix_InvMass[1][2]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_InvMass);
+	}//v_nbjets >= 2
+	if( v_nbjets_t[iIndex] == 3 ){
+	  h_reco_AddJets_DeltaR[1][3]->Fill(v_reco_AddBjets_DeltaR[iIndex]);
+	  h_reco_AddJets_InvMass[1][3]->Fill(v_reco_AddBjets_InvMass[iIndex]);
+	  h_gen_AddBjets_DeltaR[1][3]->Fill(gen_Bjets_DeltaR);
+	  h_gen_AddBjets_InvMass[1][3]->Fill(gen_Bjets_InvMass);
+	  h_respMatrix_deltaR[1][3]->Fill(v_reco_AddJets_DeltaR[iIndex],gen_Bjets_DeltaR);
+	  h_respMatrix_InvMass[1][3]->Fill(v_reco_AddJets_InvMass[iIndex],gen_Bjets_DeltaR);
+	}//v_nbjets >= 3
+      }//v_njets >=6
+    }//electron channel
+    if( x % 1000 == 0 ) cout << "event : " << x << endl; ++x;
+  }//while((treeReader->fGentreeReader).Next())
+  cout <<"LOOP2 END" << endl;
+
+  cout << "==============================================================" << endl;
+  int dR_pur_tot[2][3], dR_eff_tot[2][3], gen_dR_tot[2][3],reco_dR_tot[2][3];
+  int M_pur_tot[2][3], M_eff_tot[2][3], gen_M_tot[2][3], reco_M_tot[2][3];
+  for(int iChannel=0;iChannel<2;++iChannel){
+    for(int iStep=0;iStep<3;++iStep){
+       dR_pur_tot[iChannel][iStep]=0;
+       dR_eff_tot[iChannel][iStep]=0;
+       gen_dR_tot[iChannel][iStep]=0;
+       reco_dR_tot[iChannel][iStep]=0;
+       M_pur_tot[iChannel][iStep]=0;
+       M_eff_tot[iChannel][iStep]=0;
+       gen_M_tot[iChannel][iStep]=0;
+       reco_M_tot[iChannel][iStep]=0;
+       for(int i=0;i<50;++i){
+	 double purity = 0.0;
+	 double efficiency = 0.0;
+	 if( reco_dR_event[iChannel][iStep][i] != 0 ) purity = (double)dR_pur[iChannel][iStep][i]/reco_dR_event[iChannel][iStep][i];
+	 if( gen_dR_event[iChannel][iStep][i] != 0 ) efficiency = (double)dR_eff[iChannel][iStep][i]/gen_dR_event[iChannel][iStep][i];
+	 h_purity_DeltaR[iChannel][iStep]->SetBinContent(i,purity);
+	 h_efficiency_DeltaR[iChannel][iStep]->SetBinContent(i,efficiency);
+	  
+	 dR_pur_tot[iChannel][iStep] += dR_pur[iChannel][iStep][i];
+	 dR_eff_tot[iChannel][iStep]+= dR_eff[iChannel][iStep][i];
+	 gen_dR_tot[iChannel][iStep] += gen_dR_event[iChannel][iStep][i];
+	 reco_dR_tot[iChannel][iStep] += reco_dR_event[iChannel][iStep][i];
+       }     
+       //cout << Form("Channel %i Step %i", iChannel,iStep) << endl;
+       for(int i=0;i<30;++i){
+	 double purity = 0.0;
+	 double efficiency = 0.0;
+     	 if( reco_M_event[iChannel][iStep][i] != 0 ) purity = (double)M_pur[iChannel][iStep][i]/reco_M_event[iChannel][iStep][i];
+	 if( gen_M_event[iChannel][iStep][i] != 0 ) efficiency = (double)M_eff[iChannel][iStep][i]/gen_M_event[iChannel][iStep][i];
+         h_purity_InvMass[iChannel][iStep]->SetBinContent(i,purity);
+         h_efficiency_InvMass[iChannel][iStep]->SetBinContent(i,efficiency);
+	
+	 //cout << Form("%ith M_pur : ", i) << M_pur[iChannel][iStep][i] << endl;
+	 //cout << Form("%ith M_eff : ", i) << M_eff[iChannel][iStep][i] << endl;
+	 //cout << Form("%ith reco_M_event : ", i) << reco_M_event[iChannel][iStep][i] << endl;
+	 //cout << Form("%ith gen_M_event : ", i) << gen_M_event[iChannel][iStep][i] << endl;
+	 //cout << Form("%ith bins purity :", i) << purity << endl;
+	 //cout << Form("%ith bins efficiency :", i) << efficiency << endl;
+	 
+	 M_pur_tot[iChannel][iStep] += M_pur[iChannel][iStep][i];
+	 M_eff_tot[iChannel][iStep] += M_eff[iChannel][iStep][i];
+	 gen_M_tot[iChannel][iStep] += gen_M_event[iChannel][iStep][i];
+	 reco_M_tot[iChannel][iStep] += reco_M_event[iChannel][iStep][i];
+      }
+      cout << Form("Ch.%s Step%i total efficiency of dR : ",chName[iChannel].c_str(), iStep) << (double)dR_eff_tot[iChannel][iStep]/gen_dR_tot[iChannel][iStep] << endl;
+      cout << Form("Ch.%s Step%i total purity of dR     : ",chName[iChannel].c_str(), iStep) << (double)dR_pur_tot[iChannel][iStep]/reco_dR_tot[iChannel][iStep] << endl;
+      cout << "--------------------------------------------------------------" << endl;
+      cout << Form("Ch.%s Step%i total efficiency of InvMass : ",chName[iChannel].c_str(), iStep) << (double)M_eff_tot[iChannel][iStep]/gen_M_tot[iChannel][iStep] << endl;
+      cout << Form("Ch.%s Step%i total purity of InvMass     : ",chName[iChannel].c_str(), iStep) << (double)M_pur_tot[iChannel][iStep]/reco_M_tot[iChannel][iStep] << endl;
+      cout << "--------------------------------------------------------------" << endl;
+    }
+  }
+  cout << "==============================================================" << endl;
+  
+  outFile->Write();
+  outFile->Close();
+}
