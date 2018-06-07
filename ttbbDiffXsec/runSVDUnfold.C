@@ -9,8 +9,8 @@ TH1 *runSVDUnfold(TH1 *h_in_, TH2 *h_resp_, int reg){
   
   auto h_in = h_in_;
   auto h_resp = h_resp_;
-  TH1 *h_reco = h_resp->ProjectionX();
-  TH1 *h_gen = h_resp->ProjectionY();
+  auto h_reco = h_resp->ProjectionX();
+  auto h_gen = h_resp->ProjectionY();
 
   RooUnfold::ErrorTreatment err = RooUnfold::kCovariance;
   RooUnfoldResponse *roo_resp;

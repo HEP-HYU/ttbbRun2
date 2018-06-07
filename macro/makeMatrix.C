@@ -8,7 +8,7 @@ using namespace std;
 void makeMatrix(){
   //FILE
   TFile *inFile = TFile::Open(Form("/data/users/seohyun/ntuple/hep2017/v806/TT_powheg_ttbb.root"));
-  TFile *outFile = TFile::Open(Form("../root/hist_respMatrix_ttbb_test.root"),"recreate");
+  TFile *outFile = TFile::Open(Form("../output/root/hist_respMatrix_ttbb_test.root"),"recreate");
 
   //TREE READER
   TTreeReader treeReader("ttbbLepJets/tree",inFile);
@@ -121,7 +121,7 @@ void makeMatrix(){
     int passchannel = -999;
     int passcut = 0;
     if(passmuon && !passelectron) passchannel = MUON_;
-    else if(!passmuon && passelectro) passchannel = ELECTRON_;
+    else if(!passmuon && passelectron) passchannel = ELECTRON_;
     else continue;
 
     if(njets >= NUMBER_OF_JETS_) ++passcut; //number of jets >= 6

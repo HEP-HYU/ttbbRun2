@@ -114,11 +114,15 @@ Bool_t MyAnalysis::Process(Long64_t entry){
  
   if(passmuon && !passelectron) passchannel = MUON_;
   else if(!passmuon && passelectron) passchannel = ELECTRON_;
-  else return kTRUE;
+  //else return kTRUE;
 
-  if(njets >= NUMBER_OF_JETS_) ++passcut;
-  else if(nbjets >= NUMBER_OF_BJETS_) ++passcut;
-  else if(nbjets >= NUMBER_OF_BJETS_+1) ++passcut;
+  if(njets >= NUMBER_OF_JETS_){
+    ++passcut;
+    if(nbjets >= NUMBER_OF_BJETS_){
+      ++passcut;
+      if(nbjets >= NUMBER_OF_BJETS_+1) ++passcut;
+    }
+  }
 
   for(int iCut=0; iCut <= passcut; ++iCut){
     h_control->h_lepton_pt[passchannel][iCut]->Fill(lepton.Pt(),EventWeight);

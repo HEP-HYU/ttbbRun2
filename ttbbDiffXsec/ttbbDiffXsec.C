@@ -26,7 +26,7 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
   const bool fixTau = fixTau_;
   const float fixedTau = fixedTau_;
  
-  gErrorIgnoreLevel = kWarning;
+  gErrorIgnoreLevel = kFatal; //kWarning;
   gROOT->ProcessLine("setTDRStyle();");
 
   TPaveText *label_cms = tdrCMSlabel();
@@ -87,6 +87,8 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
       }
     }
   }
+
+  cout << "Done" << endl;
 
   TH1 *h_gen_nosel_dR_lep = (TH1 *)h_gen_nosel_dR[0]->Clone();
   h_gen_nosel_dR_lep->Add(h_gen_nosel_dR[1]);
@@ -256,24 +258,25 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     c->~TCanvas();
     leg->~TLegend();
   }
-  
+
+  cout << "Start Unfolding..." << endl;
   std::string method;
   for(int iChannel=0; iChannel<nChannel; ++iChannel){
     TH1 *h_unfoldedMC_dR, *h_unfoldedData_dR, *h_unfoldedMC_M, *h_unfoldedData_M;
     
-    int reg = 3;
+    int reg_dR = 4, reg_M = 3;
     if(!useTUnfold){
       //runSVDUnfold(TH1 *h_in, TH2 *h_response_matrix, int reg);
-      method = Form("SVD_k%d",reg);
-      h_unfoldedMC_dR = runSVDUnfold(h_reco_dR[iChannel], h_resp_dR[iChannel], reg);
-      h_unfoldedData_dR = runSVDUnfold(h_data_dR[iChannel], h_resp_dR[iChannel], reg);
-      h_unfoldedMC_M = runSVDUnfold(h_reco_M[iChannel], h_resp_M[iChannel], reg);
-      h_unfoldedData_M = runSVDUnfold(h_data_M[iChannel], h_resp_M[iChannel], reg);
+      method = Form("SVD");
+      h_unfoldedMC_dR = runSVDUnfold(h_reco_dR[iChannel], h_resp_dR[iChannel], reg_dR);
+      h_unfoldedData_dR = runSVDUnfold(h_data_dR[iChannel], h_resp_dR[iChannel], reg_dR);
+      h_unfoldedMC_M = runSVDUnfold(h_reco_M[iChannel], h_resp_M[iChannel], reg_M);
+      h_unfoldedData_M = runSVDUnfold(h_data_M[iChannel], h_resp_M[iChannel], reg_M);
 
       const bool findBestK = true;
       if(findBestK){
 	vector<TH1 *> v_unfoldedMC_dR, v_unfoldedMC_M, v_unfoldedData_dR, v_unfoldedData_M;
-	for(int i=2; i<=h_unfoldedMC_dR->GetNbinsX(); ++i){
+	for(int i=2; i<=6; ++i){
 	  TH1 *h_tmpMC_dR = runSVDUnfold(h_reco_dR[iChannel], h_resp_dR[iChannel], i);
 	  TH1 *h_tmpData_dR = runSVDUnfold(h_reco_dR[iChannel], h_resp_dR[iChannel], i);
 	  //h_tmpMC_dR = calculateDiffXsec(h_tmpMC_dR, 0, iChannel, false);
@@ -281,7 +284,7 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
 	  v_unfoldedMC_dR.push_back(h_tmpMC_dR);
 	  v_unfoldedData_dR.push_back(h_tmpData_dR);
 	}
-	for(int i=2; i<=h_unfoldedMC_M->GetNbinsX(); ++i){
+	for(int i=2; i<=4; ++i){
 	  TH1 *h_tmpMC_M = runSVDUnfold(h_reco_M[iChannel], h_resp_M[iChannel], i);
 	  TH1 *h_tmpData_M = runSVDUnfold(h_reco_M[iChannel], h_resp_M[iChannel], i);
 	  //h_tmpMC_M = calculateDiffXsec(h_tmpMC_M, 1, iChannel, false);
@@ -329,6 +332,7 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     h_gen_dR_copy->SetLineColor(kRed);
     h_gen_dR_copy->SetMarkerColor(kRed);
    
+    if(!useTUnfold)leg->SetHeader(Form("k = %d",reg_dR),"C");
     leg->AddEntry(grp_unfoldedMC_dR, "unfolded MC", "lp");
     leg->AddEntry(h_gen_dR_copy, "Powheg + Pythia", "l");
   
@@ -353,6 +357,7 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     h_gen_M_copy->SetLineColor(kRed);
     h_gen_M_copy->SetMarkerColor(kRed);
    
+    if(!useTUnfold)leg->SetHeader(Form("k = %d",reg_M),"C");
     leg->AddEntry(grp_unfoldedMC_M, "unfolded MC", "lp");
     leg->AddEntry(h_gen_M_copy, "Powheg + Pythia", "l");
    
@@ -382,6 +387,7 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     h_MC_diffXsec_nosel_dR->SetFillColor(kRed);
     h_MC_diffXsec_nosel_dR->SetMarkerSize(0);
 
+    if(!useTUnfold)leg->SetHeader(Form("k = %d",reg_dR),"C");
     leg->AddEntry(grp_MC_diffXsec_dR, "Unfolded t#bar{t}b#bar{b} MC", "lp");
     leg->AddEntry(h_MC_diffXsec_nosel_dR, "Powheg + Pythia", "F");
 
@@ -391,6 +397,7 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     h_MC_diffXsec_nosel_dR->SetMinimum(0.0);
     h_MC_diffXsec_nosel_dR->GetXaxis()->SetTitleOffset(1.2);
     
+    h_MC_diffXsec_nosel_dR->SetMaximum(h_MC_diffXsec_dR->GetMaximum()*2);
     h_MC_diffXsec_nosel_dR->Draw("axis");
     h_MC_diffXsec_nosel_dR->Draw("hist");
     grp_MC_diffXsec_dR->Draw("p e same");
@@ -407,9 +414,11 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     grp_data_diffXsec_dR->SetLineColor(kBlack);
     grp_data_diffXsec_dR->SetMarkerColor(kBlack);
 
+    if(!useTUnfold)leg->SetHeader(Form("k = %d",reg_dR),"C");
     leg->AddEntry(grp_data_diffXsec_dR, "Unfolded Data", "lp");
     leg->AddEntry(h_MC_diffXsec_nosel_dR, "Powheg + Pythia", "F");
 
+    h_MC_diffXsec_nosel_dR->SetMaximum(h_data_diffXsec_dR->GetMaximum()*2);
     h_MC_diffXsec_nosel_dR->Draw("hist");
     grp_data_diffXsec_dR->Draw("p e same");
     label_cms->Draw("same");
@@ -429,9 +438,11 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     h_MC_diffXsec_nosel_M->SetFillColor(kRed);
     h_MC_diffXsec_nosel_M->SetMarkerSize(0);
 
+    if(!useTUnfold)leg->SetHeader(Form("k = %d",reg_M),"C");
     leg->AddEntry(grp_MC_diffXsec_M, "Unfolded t#bar{t}b#bar{b} MC", "lp");
     leg->AddEntry(h_MC_diffXsec_nosel_M, "Powheg + Pythia", "F");
 
+    h_MC_diffXsec_nosel_M->SetMaximum(h_MC_diffXsec_M->GetMaximum()*2);
     h_MC_diffXsec_nosel_M->Draw("axis");
     h_MC_diffXsec_nosel_M->GetYaxis()->SetTitle("#frac{d#sigma^{full}}{dm_{b#bar{b}}}[pb/GeV]");
     h_MC_diffXsec_nosel_M->GetYaxis()->SetTitleOffset(1.9);
@@ -455,9 +466,11 @@ void ttbbDiffXsec(bool useTUnfold_ = false, bool scanbyLcurve_ = true, double ta
     grp_data_diffXsec_M->SetLineColor(kBlack);
     grp_data_diffXsec_M->SetMarkerColor(kBlack);
 
+    if(!useTUnfold)leg->SetHeader(Form("k = %d",reg_M),"C");
     leg->AddEntry(grp_data_diffXsec_M, "Unfolded Data", "lp");
     leg->AddEntry(h_MC_diffXsec_nosel_M, "Powheg + Pythia", "F");
 
+    h_MC_diffXsec_nosel_M->SetMaximum(h_data_diffXsec_M->GetMaximum()*2);
     h_MC_diffXsec_nosel_M->Draw("hist");
     grp_data_diffXsec_M->Draw("p e same");
     label_cms->Draw("same");

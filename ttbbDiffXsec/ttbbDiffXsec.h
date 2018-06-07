@@ -2,7 +2,7 @@
 #include <TGraphErrors.h>
 #include <TCanvas.h>
 
-#include "../include/HistoBook.h"
+#include "../include/histBook.h"
 #include "../include/tdrstyle.C"
 
 const int _DELTAR = 0;
@@ -186,19 +186,17 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
 
   TPaveText *label_cms = tdrCMSlabel();
   TCanvas *c = new TCanvas("","",800,800);
-  TLegend *leg = new TLegend(0.6,0.7,0.88,0.88);
-  c->Print(Form("%d_%d_truth_%d.pdf",data,variable,channel),"pdf");
-  c->Clear();
+  TLegend *leg = new TLegend(0.75,0.7,0.88,0.88);
 
   vector<TGraph *> v_grp;
   vector<TGraph *> v_grp2;
-  for(int i=0; i<h_in.size(); ++i){
-    TH1 *h_tmp = h_in.at(i);
+  for(auto v_itr = h_in.begin(); v_itr != h_in.end(); ++v_itr){
+    TH1 *h_tmp = *v_itr;
     TGraph *grp = new TGraph();
     TGraph *grp2 = new TGraph();
 
     for(int j=1; j<=h_tmp->GetNbinsX(); ++j){
-      const double y = h_tmp->GetBinError(j);
+      const double y = (h_tmp->GetBinError(j)/h_tmp->GetBinContent(j))*100;
       grp->SetPoint(j-1, h_tmp->GetBinCenter(j), y);
 
       const double yy = (h_truth->GetBinContent(j)-h_tmp->GetBinContent(j))/h_truth->GetBinContent(j);
@@ -210,7 +208,7 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
 
   TGraph *grp_truth = new TGraph();
   for(int i=1; i<=h_truth->GetNbinsX(); ++i){
-    const double y = sqrt(h_truth->GetBinContent(i));
+    const double y = (sqrt(h_truth->GetBinContent(i))/h_truth->GetBinContent(i))*100;
     grp_truth->SetPoint(i-1, h_truth->GetBinCenter(i), y);
   }
   grp_truth->SetLineStyle(8);
@@ -220,8 +218,9 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
 
   c->cd();
   TH1 *h_tmp = (TH1 *)(h_in.at(0))->Clone();
+  h_tmp->SetMaximum(80);
   h_tmp->SetMinimum(-0.01);
-  h_tmp->GetYaxis()->SetTitle("Statistical Uncertainty");
+  h_tmp->GetYaxis()->SetTitle("Statistical Uncertainty(%)");
   h_tmp->GetXaxis()->SetTitleOffset(1.2);
   h_tmp->Draw("axis");
   for(int i=0; i<v_grp.size(); ++i){
@@ -232,7 +231,7 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
     
     v_grp.at(i)->Draw("C p same");
   }
-  leg->AddEntry(grp_truth, "MC truth", "lp");
+  leg->AddEntry(grp_truth, "MC input", "lp");
   grp_truth->Draw("C p same");
   
   leg->Draw("same");
@@ -243,8 +242,8 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
 
   c->cd();
   TH1 *h_tmp2 = (TH1 *)(h_in.at(0))->Clone();
-  h_tmp2->SetMaximum(0.5);
-  h_tmp2->SetMinimum(-0.2);
+  h_tmp2->SetMaximum(0.3);
+  h_tmp2->SetMinimum(-0.5);
   h_tmp2->GetYaxis()->SetTitle("(N_{truth}-N_{unfolded})/N_{truth}");
   h_tmp2->GetXaxis()->SetTitleOffset(1.2);
   h_tmp2->Draw("axis");

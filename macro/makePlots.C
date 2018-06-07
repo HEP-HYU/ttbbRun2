@@ -9,79 +9,11 @@
 #include <TLegend.h>
 #include <TPaveText.h>
 
-
 #include "../include/makePlots.h"
 
-string INPUT = "../output/root/";
-string OUTPUT = "../output/pdf/";
-
-//const double SF_ttbb = 0.992;
-//const double SF_ttbj = 0.997;
-//const double SF_ttcc = 0.871;
-//const double SF_ttLF = 0.890;
-
-DataFile::DataFile(string input_data){
-  string fileName = INPUT + "hist_" + input_data + ".root";
-  this->file = TFile::Open(fileName.c_str());
-  this->data = input_data;
-
-  int tmp = 0;
-  TIter next(file->GetListOfKeys());
-  TKey *key;
-  TObject *obj;
-  while((key = (TKey*)next())){
-    obj = key->ReadObj();
-    ++tmp;
-    string tmp = obj->GetName();
-    ReplaceAll(tmp, this->data, "");
-    this->v_histName.push_back(tmp);
-  }
-  this->nHist = tmp;
-}
-
-MonteFile::MonteFile(string input_sample, string input_category, int input_color, double xsec){
-  string fileName = INPUT + "hist_" + input_sample + ".root";
-  this->file = TFile::Open(fileName.c_str());
-  this->color = input_color;
-  this->sample = input_sample;
-  this->category = input_category;
-
-  int tmp = 0;
-  TIter next(file->GetListOfKeys());
-  TKey *key;
-  TObject *obj;
-  while((key = (TKey*)next())){
-    obj = key->ReadObj();
-    ++tmp;
-    string tmp = obj->GetName();
-    ReplaceAll(tmp, this->sample, "");
-    this->v_histName.push_back(tmp);
-  }
-  this->nHist = tmp;
-  TH1D *EventInfo = (TH1D *)this->file->Get("EventInfo");
-
-  this->scale_Mu = (LUMINOSITY_*xsec)/EventInfo->GetBinContent(2);
-  this->scale_El = (LUMINOSITY_*xsec)/EventInfo->GetBinContent(2);
-
-  if(this->sample == "ttbb"){
-    this->scale_Mu *= SF_ttbb;
-    this->scale_El *= SF_ttbb;
-  }
-  if(this->sample == "ttbj"){
-    this->scale_Mu *= SF_ttbj;
-    this->scale_El *= SF_ttbj;
-  }
-  if(this->sample == "ttcc"){
-    this->scale_Mu *= SF_ttcc;
-    this->scale_El *= SF_ttcc;
-  }
-  if(this->sample == "ttLF"){
-    this->scale_Mu *= SF_ttLF;
-    this->scale_El *= SF_ttLF;
-  }
-}
-
 void makePlots(){
+  gErrorIgnoreLevel = kFatal;
+  
   ofstream outTxt("../output/nEvent.txt");
 
   std::map<string, DataFile *> m_Data;
@@ -95,7 +27,7 @@ void makePlots(){
   v_Monte.push_back(new MonteFile(NAME_[TTCC_], "t#bar{t}+cc", kRed+2, XSEC_[TTCC_]));
   //v_Monte.push_back(new MonteFile(NAME_[TTJJ_], "ttjj", kRed+1, XSEC_[TTJJ_]));
   v_Monte.push_back(new MonteFile(NAME_[TTLF_], "t#bar{t}+LF", kRed, XSEC_[TTLF_]));
-  v_Monte.push_back(new MonteFile(NAME_[TTBKG_], "t#bar{t}+other", kPink, XSEC_[TTBKG_]));
+  v_Monte.push_back(new MonteFile(NAME_[TTBKG_], "t#bar{t}+bkg", kPink, XSEC_[TTBKG_]));
   v_Monte.push_back(new MonteFile(NAME_[WJETS_], "W+Jets", kYellow, XSEC_[WJETS_]));
   v_Monte.push_back(new MonteFile(NAME_[ZJETS_], "Z+Jets", kBlue, XSEC_[ZJETS_]));
   v_Monte.push_back(new MonteFile(NAME_[ZJETS10TO50_], "Z+Jets", kBlue, XSEC_[ZJETS10TO50_]));
@@ -106,9 +38,9 @@ void makePlots(){
   v_Monte.push_back(new MonteFile(NAME_[WW_], "DiBoson", kCyan, XSEC_[WW_]));
   v_Monte.push_back(new MonteFile(NAME_[WZ_], "DiBoson", kCyan, XSEC_[WZ_]));
   v_Monte.push_back(new MonteFile(NAME_[ZZ_], "DiBoson", kCyan, XSEC_[ZZ_]));
-  v_Monte.push_back(new MonteFile(NAME_[TTH_], "t#bar{t}+H", kViolet, XSEC_[TTH_]));
-  v_Monte.push_back(new MonteFile(NAME_[TTW_], "t#bar{t}+V", kGreen, XSEC_[TTW_]));
-  v_Monte.push_back(new MonteFile(NAME_[TTZ_], "t#bar{t}+V", kGreen, XSEC_[TTZ_]));
+  //v_Monte.push_back(new MonteFile(NAME_[TTH_], "t#bar{t}+H", kViolet, XSEC_[TTH_]));
+  //v_Monte.push_back(new MonteFile(NAME_[TTW_], "t#bar{t}+V", kGreen, XSEC_[TTW_]));
+  //v_Monte.push_back(new MonteFile(NAME_[TTZ_], "t#bar{t}+V", kGreen, XSEC_[TTZ_]));
 
   int nHist=0;
   for(auto v_itr = v_Monte[TTBB_]->v_histName.begin(); v_itr != v_Monte[TTBB_]->v_histName.end(); ++v_itr){
@@ -133,18 +65,6 @@ void makePlots(){
     label->SetFillStyle(0);
     label->SetBorderSize(0);
     label->SetTextSize(0.04);
-
-    TPaveText *label2 = new TPaveText();
-    label2->SetX1NDC(0.07);
-    label2->SetX2NDC(0.5);
-    label2->SetY1NDC(0.89);
-    label2->SetY2NDC(0.95);
-    label2->SetTextFont(42);
-    label2->SetTextColor(kRed);
-    label2->AddText("Work in progress");
-    label2->SetFillStyle(0);
-    label2->SetBorderSize(0);
-    label2->SetTextSize(0.06);
 
     TPaveText *label3 = new TPaveText();
     label3->SetX1NDC(0.13);
@@ -205,7 +125,6 @@ void makePlots(){
 	h_tmp->Scale((*v_itr2)->scale_Mu); 
       }
       else if(channel == 1){
-	cout << "scale : " << (*v_itr2)->scale_El << endl;
 	h_tmp->Scale((*v_itr2)->scale_El);
       }
       else continue;
@@ -234,8 +153,6 @@ void makePlots(){
 
       outTxt << setprecision(10) << (*v_itr2)->sample << " : " << (double)h_tmp->Integral() << endl;
     }
-    
-    cout << "FIJFIJFIJFIJ" << endl;
     
     TH1D * h_data;
     string hName;
@@ -281,7 +198,6 @@ void makePlots(){
     hs_tmp->Draw("hist SAME");
     h_data->Draw("PSAME");
     label->Draw("SAME");
-    label2->Draw("SAME");
     label3->Draw("SAME");
     leg->Draw("SAME");
     pad1->RedrawAxis();

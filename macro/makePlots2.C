@@ -15,7 +15,7 @@
 
 #include "../include/tdrstyle.C"
 
-void makePlots2(string inputFile, string outputLocation){
+void makePlots2(string inputFile, string outputLocation = "../output/pdf/"){
   //gROOT->ProcessLine(".L ../include/tdrstyle.C");
   gROOT->ProcessLine("setTDRStyle();");
   
@@ -23,7 +23,7 @@ void makePlots2(string inputFile, string outputLocation){
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
   gStyle->SetPadRightMargin(0.05);
-  gStyle->SetErrorX(00);
+  //gStyle->SetErrorX(00);
   TGaxis::SetMaxDigits(3);
 
   TPaveText *label_cms = tdrCMSlabel();
@@ -54,6 +54,7 @@ void makePlots2(string inputFile, string outputLocation){
     else if( obj->InheritsFrom(TH2D::Class())){
       auto h = (TH2D *) obj;
       h->Draw("box");
+      label_cms->Draw("same");
       c->Print(Form("%s/%s.pdf",outputLocation.c_str(), obj->GetName()),"pdf");
     }
     else{

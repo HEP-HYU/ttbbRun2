@@ -15,6 +15,17 @@
 #include <TPad.h>
 
 #include "histBook.h"
+#include "tdrstyle.C"
+
+string INPUT = "../output/root/";
+string OUTPUT = "../output/pdf/";
+
+std::string ReplaceAll(std::string &str, const std::string &from, const std::string &to);
+ 
+//const double SF_ttbb = 0.992;
+//const double SF_ttbj = 0.997;
+//const double SF_ttcc = 0.871;
+//const double SF_ttLF = 0.890;
 
 //-----------------------------------------------------------------//
 //  Histogram file reader                                          //
@@ -48,6 +59,67 @@ class MonteFile{
     MonteFile(MonteFile &MonetFile){};
     ~MonteFile(){};
 };
+
+DataFile::DataFile(string input_data){
+  string fileName = INPUT + "hist_" + input_data + ".root";
+  this->file = TFile::Open(fileName.c_str());
+  this->data = input_data;
+
+  int tmp = 0;
+  TIter next(file->GetListOfKeys());
+  TKey *key;
+  TObject *obj;
+  while((key = (TKey*)next())){
+    obj = key->ReadObj();
+    ++tmp;
+    string tmp = obj->GetName();
+    ReplaceAll(tmp, this->data, "");
+    this->v_histName.push_back(tmp);
+  }
+  this->nHist = tmp;
+}
+
+MonteFile::MonteFile(string input_sample, string input_category, int input_color, double xsec){
+  string fileName = INPUT + "hist_" + input_sample + ".root";
+  this->file = TFile::Open(fileName.c_str());
+  this->color = input_color;
+  this->sample = input_sample;
+  this->category = input_category;
+
+  int tmp = 0;
+  TIter next(file->GetListOfKeys());
+  TKey *key;
+  TObject *obj;
+  while((key = (TKey*)next())){
+    obj = key->ReadObj();
+    ++tmp;
+    string tmp = obj->GetName();
+    ReplaceAll(tmp, this->sample, "");
+    this->v_histName.push_back(tmp);
+  }
+  this->nHist = tmp;
+  TH1D *EventInfo = (TH1D *)this->file->Get("EventInfo");
+
+  this->scale_Mu = (LUMINOSITY_*xsec)/EventInfo->GetBinContent(2);
+  this->scale_El = (LUMINOSITY_*xsec)/EventInfo->GetBinContent(2);
+
+  /*if(this->sample == "ttbb"){
+    this->scale_Mu *= SF_ttbb;
+    this->scale_El *= SF_ttbb;
+  }
+  if(this->sample == "ttbj"){
+    this->scale_Mu *= SF_ttbj;
+    this->scale_El *= SF_ttbj;
+  }
+  if(this->sample == "ttcc"){
+    this->scale_Mu *= SF_ttcc;
+    this->scale_El *= SF_ttcc;
+  }
+  if(this->sample == "ttLF"){
+    this->scale_Mu *= SF_ttLF;
+    this->scale_El *= SF_ttLF;
+  }*/
+}
 
 std::string ReplaceAll(std::string &str, const std::string &from, const std::string &to){
   size_t start_pos = 0;
