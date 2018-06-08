@@ -1,11 +1,11 @@
 #include "../include/histBook.h"
 #include "../include/tdrstyle.C"
 
-void makeStability(){
-  string input = "../output/root/";
-  string output = "../output/root/";
+string input = "../output/root/";
+string output = "../output/root/";
+string output_pdf = "../output/pdf";
 
-  cout << "FIJ" << endl;
+void makeStability(){
   //FILES
   TFile *f_ttbb = TFile::Open(Form("%shist_ttbb.root",input.c_str()));
   TFile *f_matrix = TFile::Open(Form("%shist_respMatrix_ttbb_test.root",input.c_str()));
@@ -144,7 +144,6 @@ void makeStability(){
     }
     cout << "Inclusive Acceptance : " << h_gen_addbjets_afterSel_invMass[iChannel]->Integral()/(h_gen_addbjets_nosel_invMass[0]->Integral()+h_gen_addbjets_nosel_invMass[1]->Integral()) << endl;
   }//Channel
-  
   f_outFile->Write();
   
   gROOT->ProcessLine("setTDRStyle();");
@@ -154,115 +153,68 @@ void makeStability(){
   gStyle->SetOptTitle(0);
   TGaxis::SetMaxDigits(3);
 
-  TPaveText *label_cms = tdrCMSlabel();
-  TCanvas *c = new TCanvas("c","c",800,800);
-  
   for(int iChannel=0; iChannel<nChannel; ++iChannel){
     auto h_tmp = (TH1D *)h_stb->h_acceptance_deltaR[iChannel]->Clone();
     h_tmp->Scale(100);
-    auto h_tmp2 = (TH1D *)h_tmp->Clone();
-
-    h_tmp->SetMaximum(h_tmp->GetMaximum()*1.05);
-    h_tmp->SetMinimum(h_tmp->GetMinimum()*0.95);
     h_tmp->GetYaxis()->SetTitle("Acceptance(%)");
-    h_tmp->GetYaxis()->SetTitleOffset(1.5);
-    h_tmp->GetXaxis()->SetTitleOffset(1.2);
-    h_tmp->SetLineWidth(2);
-    h_tmp->SetLineColor(kBlue);
-    h_tmp2->SetFillStyle(3013);
-    h_tmp2->SetFillColor(kBlue);
-    h_tmp->Draw("hist");
-    h_tmp2->Draw("e2 same");
-    label_cms->Draw("same");
-    c->Print(Form("../output/pdf/%s.pdf", h_tmp->GetName()),"pdf");
-    c->Clear();
+    drawHist(h_tmp, true);
     h_tmp->~TH1D();
-    h_tmp2->~TH1D();
 
     h_tmp = (TH1D *)h_stb->h_acceptance_invMass[iChannel]->Clone();
     h_tmp->Scale(100);
-    h_tmp2 = (TH1D *)h_tmp->Clone();
-
-    h_tmp->SetMaximum(h_tmp->GetMaximum()*1.05);
-    h_tmp->SetMinimum(h_tmp->GetMinimum()*0.95);
     h_tmp->GetYaxis()->SetTitle("Acceptance(%)");
-    h_tmp->GetYaxis()->SetTitleOffset(1.5);
-    h_tmp->GetXaxis()->SetTitleOffset(1.2);
-    h_tmp->SetLineWidth(2);
-    h_tmp->SetLineColor(kBlue);
-    h_tmp2->SetFillStyle(3013);
-    h_tmp2->SetFillColor(kBlue);
-    h_tmp->Draw("hist");
-    h_tmp2->Draw("e2 same");
-    label_cms->Draw("same");
-    c->Print(Form("../output/pdf/%s.pdf", h_tmp->GetName()),"pdf");
-    c->Clear();
+    drawHist(h_tmp, true);
     h_tmp->~TH1D();
-    h_tmp2->~TH1D();
       
     h_tmp = (TH1D *)h_stb->h_purity_deltaR[iChannel][3]->Clone();
     h_tmp->Scale(100);
-
-    h_tmp->SetMaximum(h_tmp->GetMaximum()*1.05);
-    h_tmp->SetMinimum(h_tmp->GetMinimum()*0.95);
     h_tmp->GetYaxis()->SetTitle("Purity(%)");
-    h_tmp->GetYaxis()->SetTitleOffset(1.5);
-    h_tmp->GetXaxis()->SetTitleOffset(1.2);
-    h_tmp->SetLineWidth(2);
-    h_tmp->SetLineColor(kBlue);
-    h_tmp->Draw("hist");
-    label_cms->Draw("same");
-    c->Print(Form("../output/pdf/%s.pdf", h_tmp->GetName()),"pdf");
-    c->Clear();   
+    drawHist(h_tmp, false);
     h_tmp->~TH1D();
     
     h_tmp = (TH1D *)h_stb->h_purity_invMass[iChannel][3]->Clone();
     h_tmp->Scale(100);
-
-    h_tmp->SetMaximum(h_tmp->GetMaximum()*1.05);
-    h_tmp->SetMinimum(h_tmp->GetMinimum()*0.95);
     h_tmp->GetYaxis()->SetTitle("Purity(%)");
-    h_tmp->GetYaxis()->SetTitleOffset(1.5);
-    h_tmp->GetXaxis()->SetTitleOffset(1.2);
-    h_tmp->SetLineWidth(2);
-    h_tmp->SetLineColor(kBlue);
-    h_tmp->Draw("hist");
-    label_cms->Draw("same");
-    c->Print(Form("../output/pdf/%s.pdf", h_tmp->GetName()),"pdf");
-    c->Clear();
+    drawHist(h_tmp, false);
     h_tmp->~TH1D();
 
     h_tmp = (TH1D *)h_stb->h_stability_deltaR[iChannel][3]->Clone();
     h_tmp->Scale(100);
-
-    h_tmp->SetMaximum(h_tmp->GetMaximum()*1.05);
-    h_tmp->SetMinimum(h_tmp->GetMinimum()*0.95);
     h_tmp->GetYaxis()->SetTitle("Stability(%)");
-    h_tmp->GetYaxis()->SetTitleOffset(1.5);
-    h_tmp->GetXaxis()->SetTitleOffset(1.2);
-    h_tmp->SetLineWidth(2);
-    h_tmp->SetLineColor(kBlue);
-    h_tmp->Draw("hist");
-    label_cms->Draw("same");
-    c->Print(Form("../output/pdf/%s.pdf", h_tmp->GetName()),"pdf");
-    c->Clear();   
+    drawHist(h_tmp, false);
     h_tmp->~TH1D();
     
     h_tmp = (TH1D *)h_stb->h_stability_invMass[iChannel][3]->Clone();
     h_tmp->Scale(100);
-
-    h_tmp->SetMaximum(h_tmp->GetMaximum()*1.05);
-    h_tmp->SetMinimum(h_tmp->GetMinimum()*0.95);
     h_tmp->GetYaxis()->SetTitle("Stability(%)");
-    h_tmp->GetYaxis()->SetTitleOffset(1.5);
-    h_tmp->GetXaxis()->SetTitleOffset(1.2);
-    h_tmp->SetLineWidth(2);
-    h_tmp->SetLineColor(kBlue);
-    h_tmp->Draw("hist");
-    label_cms->Draw("same");
-    c->Print(Form("../output/pdf/%s.pdf", h_tmp->GetName()),"pdf");
-    c->Clear();
+    drawHist(h_tmp, false);
     h_tmp->~TH1D();
   }
   f_outFile->Close();
+}
+
+void drawHist(TH1* h_in_, bool drawError){
+  auto h_in = (TH1 *)h_in_->Clone();
+  auto h_err = (Th1 *)h_in->Clone();
+
+  TCanvas *c = new TCanvas("","",800,800);
+  TPaveText *label_cms = tdrCMSlabel();
+
+  h_in->SetMaximum(h_in->GetMaximum()*1.05);
+  h_in->GetYaxis()->SetTitleOffset(1.5);
+  h_in->GetXaxis()->SetTitleOffset(1.2);
+  h_in->SetLineWidth(2);
+  h_in->SetLineColor(kBlue);
+  h_in->Draw("hist");
+  if(drawError){
+    h_err->SetFillStyle(3013);
+    h_err->SetFillColor(kBlue);
+    h_err->Draw("e2 same");
+  }
+
+  label_cms->Draw("same");
+  c->Print(Form("%s/%s.pdf", output_pdf.c_str(), h_in->GetName()),"pdf");
+
+  c->~TCanvas();
+  h_in->~TH1();
 }
