@@ -1,6 +1,8 @@
 #include "../include/histBook.h"
 #include "../include/tdrstyle.C"
 
+void drawHist(TH1 *h_in, bool drawError);
+
 string input = "../output/root/";
 string output = "../output/root/";
 string output_pdf = "../output/pdf";
