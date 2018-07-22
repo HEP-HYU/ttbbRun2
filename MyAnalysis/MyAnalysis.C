@@ -21,6 +21,13 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       fOutput->Add(h_control->h_lepton_eta[iChannel][iStep]);
       fOutput->Add(h_control->h_njets[iChannel][iStep]);
       fOutput->Add(h_control->h_nbjets[iChannel][iStep]);
+      fOutput->Add(h_control->h_trans_mass[iChannel][iStep]);
+      fOutput->Add(h_control->h_jet_pt_sum[iChannel][iStep]);
+      for(int iJet=0; iJet<nJet; ++iJet){
+        fOutput->Add(h_control->h_jet_pt[iChannel][iStep][iJet]);
+	fOutput->Add(h_control->h_jet_eta[iChannel][iStep][iJet]);
+	fOutput->Add(h_control->h_b_discrimi[iChannel][iStep][iJet]);
+      }
       fOutput->Add(h_control->h_reco_addjets_deltaR[iChannel][iStep]);
       fOutput->Add(h_control->h_reco_addjets_invMass[iChannel][iStep]);
     }
@@ -50,12 +57,11 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   const double apt = TMath::Abs(met);
   const double met_x = apt*TMath::Cos(met_phi);
   const double met_y = apt*TMath::Sin(met_phi);
-  p4met.SetPxPyPzE( met_x, met_y, 0, met);
+  p4met.SetPxPyPzE(met_x, met_y, 0, met);
 
   TLorentzVector lepton;
   lepton.SetPtEtaPhiE(*lepton_pT, *lepton_eta, *lepton_phi, *lepton_E);
 
-  const double transverseM = transverseMass(lepton, p4met);
   //const bool isQCD = transverseM < 20;
   //const bool doQCDestimation = false; // change this flags if you want to do the QCD estimation
   //const bool isIso = doQCDestimation ? *lepton_isIso  : false ;
@@ -71,8 +77,9 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     EventWeight *= jet_SF_CSV[0];
   }
 
-  //multimap<float /*jet_CSV*/, TLorentzVector /*jet_4-momentum*/> m_jetCSV;
-  vector<TLorentzVector /*kinJet_4-momentum*/> v_reco_bjets;
+  double jet_pt_sum = 0.0;
+  multimap<float /*jet_CSV*/, TLorentzVector /*jet_4-momentum*/> m_jets;
+  vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
   for (unsigned int iJet = 0; iJet < jet_pT.GetSize() ; ++iJet) {
     float jetSystVar = 1.0;
     if( !process.Contains("Data") ) jetSystVar = jet_JER_Nom[iJet];
@@ -80,6 +87,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     jet.SetPtEtaPhiE(jet_pT[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
     jet *= jetSystVar;
     if ( jet.Pt() <= JET_PT_ || abs(jet.Eta()) >= JET_ETA_ ) continue;
+    m_jets.insert(pair<float,TLorentzVector>(jet_CSV[iJet],jet));
+    jet_pt_sum += jet.Pt();
     ++njets;
     //if( jet_CSV[iJet] > JET_CSV_MEDIUM_ ) ++nbjets;
     if( jet_CSV[iJet] > JET_CSV_TIGHT_ ){
@@ -87,6 +96,18 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       v_reco_bjets.push_back(jet);
     }
     //if( jet_CvsL[iJet] > -0.1 && jet_CvsL[iJet] > 0.08 )  ++ncjets_m;
+  }
+
+  double a_jetCSV[6] = {0,0,0,0,0,0};
+  double a_jetPt[6] = {0,0,0,0,0,0};
+  double a_jetEta[6] = {0,0,0,0,0,0};
+  int tmp_idx = 0;
+  for(auto m_itr = m_jets.begin(); m_itr != m_jets.end(); ++m_itr){
+    if(tmp_idx >= 6) continue;
+    a_jetCSV[tmp_idx] = m_itr->first;
+    a_jetPt[tmp_idx] = (m_itr->second).Pt();
+    a_jetEta[tmp_idx] = (m_itr->second).Eta();
+    ++tmp_idx;
   }
 
   TLorentzVector reco_addJet1, reco_addJet2;
@@ -111,7 +132,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
  
   int passchannel = -999;
   int passcut = 0;
- 
+
   if(passmuon && !passelectron) passchannel = MUON_;
   else if(!passmuon && passelectron) passchannel = ELECTRON_;
   //else return kTRUE;
@@ -129,8 +150,15 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     h_control->h_lepton_eta[passchannel][iCut]->Fill(abs(lepton.Eta()),EventWeight);
     h_control->h_njets[passchannel][iCut]->Fill(njets,EventWeight);
     h_control->h_nbjets[passchannel][iCut]->Fill(nbjets,EventWeight);
+    h_control->h_trans_mass[passchannel][iCut]->Fill(transverseMass(lepton,p4met), EventWeight);
+    h_control->h_jet_pt_sum[passchannel][iCut]->Fill(jet_pt_sum, EventWeight);
     h_control->h_reco_addjets_deltaR[passchannel][iCut]->Fill(reco_addJet_deltaR,EventWeight);
     h_control->h_reco_addjets_invMass[passchannel][iCut]->Fill(reco_addJet_invMass,EventWeight);
+    for(int iJet=0; iJet<nJet; ++iJet){
+      h_control->h_jet_pt[passchannel][iCut][iJet]->Fill(a_jetPt[iJet], EventWeight);
+      h_control->h_jet_eta[passchannel][iCut][iJet]->Fill(a_jetEta[iJet], EventWeight);
+      h_control->h_b_discrimi[passchannel][iCut][iJet]->Fill(a_jetCSV[iJet], EventWeight);
+    }
   }
   
   return kTRUE;
@@ -143,22 +171,67 @@ void MyAnalysis::SlaveTerminate(){
     for(int iStep=0; iStep<nStep; ++iStep){
       h_control->h_lepton_pt[iChannel][iStep]->AddBinContent(h_control->xNbins_lepton_pt,
 	  h_control->h_lepton_pt[iChannel][iStep]->GetBinContent(h_control->xNbins_lepton_pt+1));
+      h_control->h_lepton_pt[iChannel][iStep]->AddBinContent(1,
+	  h_control->h_lepton_pt[iChannel][iStep]->GetBinContent(0));
       h_control->h_lepton_pt[iChannel][iStep]->ClearUnderflowAndOverflow();
+
       h_control->h_lepton_eta[iChannel][iStep]->AddBinContent(h_control->xNbins_lepton_eta,
 	  h_control->h_lepton_pt[iChannel][iStep]->GetBinContent(h_control->xNbins_lepton_eta+1));
+      h_control->h_lepton_eta[iChannel][iStep]->AddBinContent(1,
+	  h_control->h_lepton_pt[iChannel][iStep]->GetBinContent(0));
       h_control->h_lepton_eta[iChannel][iStep]->ClearUnderflowAndOverflow();
+      
       h_control->h_njets[iChannel][iStep]->AddBinContent(h_control->xNbins_njets,
-	  h_control->h_njets[iChannel][iStep]->GetBinContent(h_control->xNbins_njets+1));
+	  h_control->h_njets[iChannel][iStep]->GetBinContent(h_control->xNbins_njets+1));      
+      h_control->h_njets[iChannel][iStep]->AddBinContent(1,
+	  h_control->h_njets[iChannel][iStep]->GetBinContent(0));
       h_control->h_njets[iChannel][iStep]->ClearUnderflowAndOverflow();
+      
       h_control->h_nbjets[iChannel][iStep]->AddBinContent(h_control->xNbins_nbjets,
 	  h_control->h_nbjets[iChannel][iStep]->GetBinContent(h_control->xNbins_nbjets+1));
+      h_control->h_nbjets[iChannel][iStep]->AddBinContent(1,
+	  h_control->h_nbjets[iChannel][iStep]->GetBinContent(0));
       h_control->h_nbjets[iChannel][iStep]->ClearUnderflowAndOverflow();
+      
+      h_control->h_jet_pt_sum[iChannel][iStep]->AddBinContent(h_control->xNbins_jet_pt,
+	  h_control->h_jet_pt_sum[iChannel][iStep]->GetBinContent(h_control->xNbins_jet_pt+1));
+      h_control->h_jet_pt_sum[iChannel][iStep]->AddBinContent(1,
+	  h_control->h_jet_pt_sum[iChannel][iStep]->GetBinContent(0));
+      h_control->h_jet_pt_sum[iChannel][iStep]->ClearUnderflowAndOverflow();
+    
+      h_control->h_trans_mass[iChannel][iStep]->AddBinContent(h_control->xNbins_wmass,
+	  h_control->h_trans_mass[iChannel][iStep]->GetBinContent(h_control->xNbins_wmass+1));
+      h_control->h_trans_mass[iChannel][iStep]->AddBinContent(1,
+	  h_control->h_trans_mass[iChannel][iStep]->GetBinContent(0));
+      h_control->h_trans_mass[iChannel][iStep]->ClearUnderflowAndOverflow();
+
       h_control->h_reco_addjets_deltaR[iChannel][iStep]->AddBinContent(h_control->xNbins_reco_addjets_dR,
 	  h_control->h_reco_addjets_deltaR[iChannel][iStep]->GetBinContent(h_control->xNbins_reco_addjets_dR+1));
       h_control->h_reco_addjets_deltaR[iChannel][iStep]->ClearUnderflowAndOverflow();
+      
       h_control->h_reco_addjets_invMass[iChannel][iStep]->AddBinContent(h_control->xNbins_reco_addjets_M,
 	  h_control->h_reco_addjets_invMass[iChannel][iStep]->GetBinContent(h_control->xNbins_reco_addjets_M+1));
       h_control->h_reco_addjets_invMass[iChannel][iStep]->ClearUnderflowAndOverflow();
+
+      for(int iJet=0; iJet<nJet; ++iJet){
+        h_control->h_jet_pt[iChannel][iStep][iJet]->AddBinContent(h_control->xNbins_jet_pt,
+	    h_control->h_jet_pt[iChannel][iStep][iJet]->GetBinContent(h_control->xNbins_jet_pt+1));
+        h_control->h_jet_pt[iChannel][iStep][iJet]->AddBinContent(1,
+	    h_control->h_jet_pt[iChannel][iStep][iJet]->GetBinContent(0));
+	h_control->h_jet_pt[iChannel][iStep][iJet]->ClearUnderflowAndOverflow();
+
+        h_control->h_jet_eta[iChannel][iStep][iJet]->AddBinContent(h_control->xNbins_jet_eta,
+	    h_control->h_jet_eta[iChannel][iStep][iJet]->GetBinContent(h_control->xNbins_jet_eta+1));
+        h_control->h_jet_eta[iChannel][iStep][iJet]->AddBinContent(1,
+	    h_control->h_jet_eta[iChannel][iStep][iJet]->GetBinContent(0));
+	h_control->h_jet_eta[iChannel][iStep][iJet]->ClearUnderflowAndOverflow();
+
+	h_control->h_b_discrimi[iChannel][iStep][iJet]->AddBinContent(h_control->xNbins_b_discrimi,
+	    h_control->h_b_discrimi[iChannel][iStep][iJet]->GetBinContent(h_control->xNbins_b_discrimi));
+	h_control->h_b_discrimi[iChannel][iStep][iJet]->AddBinContent(1,
+	    h_control->h_b_discrimi[iChannel][iStep][iJet]->GetBinContent(0));
+        h_control->h_b_discrimi[iChannel][iStep][iJet]->ClearUnderflowAndOverflow();
+      }
     }
   }
 }
@@ -175,9 +248,16 @@ void MyAnalysis::Terminate(){
       fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_ETA_,iChannel,iStep,option.Data()))->Write();
       fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_JETS_,iChannel,iStep,option.Data()))->Write();
       fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_BJETS_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_TRANSVERSE_MASS_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_sum_Ch%d_S%d_%s",RECO_JET_PT_,iChannel,iStep,option.Data()))->Write();
+      for(int iJet=0; iJet<nJet; ++iJet){
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_PT_,iJet,iChannel,iStep,option.Data()))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_ETA_,iJet,iChannel,iStep,option.Data()))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_B_DISCRIMINATOR_,iJet,iChannel,iStep,option.Data()))->Write();
+      }
       fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_DELTAR_,iChannel,iStep,option.Data()))->Write();
       fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_INVARIANT_MASS_,iChannel,iStep,option.Data()))->Write();
-    }
+         }
   }
   out->Write();
   out->Close();

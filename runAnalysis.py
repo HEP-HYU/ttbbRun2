@@ -20,7 +20,7 @@ def runAna(dir, file, name):
 p = TProof.Open("", "workers=8")
 
 ### background ###
-'''
+
 runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleElectron_Run2016.root","DataSingleEl")
 runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleMuon_Run2016.root","DataSingleMu")
 runAna("/data/users/seohyun/ntuple/hep2017/v806/","WJets.root","wjets")
@@ -33,17 +33,17 @@ runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTop_t.root","tchannel")
 runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTbar_t.root","tbarchannel")
 runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTop_tW.root","tWchannel")
 runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTbar_tW.root","tbarWchannel")
-'''
+
 ### signal ###
 #### Powheg + Pythia ####
-#runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_tt.root","tt")
+runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_tt.root","tt")
 runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbb.root","ttbb")
-#runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbj.root","ttbj")
-#runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttjj.root","ttjj")
-#runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttcc.root","ttcc")
-#runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttlf.root","ttLF")
+runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbj.root","ttbj")
+runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttjj.root","ttjj")
+runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttcc.root","ttcc")
+runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttlf.root","ttLF")
 #runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttother.root","ttother")
-#runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbkg.root","ttbkg")
+runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbkg.root","ttbkg")
 ###### ttbkg == ttother ######
 
 '''
