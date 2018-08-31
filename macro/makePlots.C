@@ -23,24 +23,48 @@ void makePlots(){
   m_Data["Mu"] = new DataFile("DataSingleMu");
   m_Data["El"] = new DataFile("DataSingleEl");
   v_Monte.push_back(new MonteFile(NAME_[TTBB_],"t#bar{t}+bb", kRed+4, XSEC_[TTBB_]));
-  v_Monte.push_back(new MonteFile(NAME_[TTBJ_], "t#bar{t}+b", kRed+3, XSEC_[TTBJ_]));
+  v_Monte.push_back(new MonteFile(NAME_[TTBJ_], "t#bar{t}+bj", kRed+3, XSEC_[TTBJ_]));
   v_Monte.push_back(new MonteFile(NAME_[TTCC_], "t#bar{t}+cc", kRed+2, XSEC_[TTCC_]));
   //v_Monte.push_back(new MonteFile(NAME_[TTJJ_], "ttjj", kRed+1, XSEC_[TTJJ_]));
   v_Monte.push_back(new MonteFile(NAME_[TTLF_], "t#bar{t}+LF", kRed, XSEC_[TTLF_]));
-  v_Monte.push_back(new MonteFile(NAME_[TTBKG_], "t#bar{t}+bkg", kPink, XSEC_[TTBKG_]));
-  v_Monte.push_back(new MonteFile(NAME_[WJETS_], "W+Jets", kYellow, XSEC_[WJETS_]));
+  v_Monte.push_back(new MonteFile(NAME_[TTOTHER_], "t#bar{t}+other", kPink+5, XSEC_[TTOTHER_]));
+  v_Monte.push_back(new MonteFile(NAME_[TTBKG_], "t#bar{t}+bkg", kPink-1, XSEC_[TTBKG_]));
+  v_Monte.push_back(new MonteFile(NAME_[TTH_], "t#bar{t}+H", kViolet, XSEC_[TTH_]));
+  v_Monte.push_back(new MonteFile(NAME_[TTW_], "t#bar{t}+V", kGreen, XSEC_[TTW_]));
+  v_Monte.push_back(new MonteFile(NAME_[TTZ_], "t#bar{t}+V", kGreen, XSEC_[TTZ_]));
+  v_Monte.push_back(new MonteFile(NAME_[TCHANNEL_], "Single t", kBlue-3, XSEC_[TCHANNEL_]));
+  v_Monte.push_back(new MonteFile(NAME_[TBARCHANNEL_], "Single t", kBlue-3, XSEC_[TBARCHANNEL_]));
+  v_Monte.push_back(new MonteFile(NAME_[TWCHANNEL_], "Single t", kBlue-3, XSEC_[TWCHANNEL_]));
+  v_Monte.push_back(new MonteFile(NAME_[TBARWCHANNEL_], "Single t", kBlue-3, XSEC_[TBARWCHANNEL_]));
   v_Monte.push_back(new MonteFile(NAME_[ZJETS_], "Z+Jets", kBlue, XSEC_[ZJETS_]));
   v_Monte.push_back(new MonteFile(NAME_[ZJETS10TO50_], "Z+Jets", kBlue, XSEC_[ZJETS10TO50_]));
-  v_Monte.push_back(new MonteFile(NAME_[TCHANNEL_], "Single t", 6, XSEC_[TCHANNEL_]));
-  v_Monte.push_back(new MonteFile(NAME_[TBARCHANNEL_], "Single t", 6, XSEC_[TBARCHANNEL_]));
-  v_Monte.push_back(new MonteFile(NAME_[TWCHANNEL_], "Single t", 6, XSEC_[TWCHANNEL_]));
-  v_Monte.push_back(new MonteFile(NAME_[TBARWCHANNEL_], "Single t", 6, XSEC_[TBARWCHANNEL_]));
+  v_Monte.push_back(new MonteFile(NAME_[WJETS_], "W+Jets", kYellow, XSEC_[WJETS_]));
   v_Monte.push_back(new MonteFile(NAME_[WW_], "DiBoson", kCyan, XSEC_[WW_]));
   v_Monte.push_back(new MonteFile(NAME_[WZ_], "DiBoson", kCyan, XSEC_[WZ_]));
   v_Monte.push_back(new MonteFile(NAME_[ZZ_], "DiBoson", kCyan, XSEC_[ZZ_]));
-  //v_Monte.push_back(new MonteFile(NAME_[TTH_], "t#bar{t}+H", kViolet, XSEC_[TTH_]));
-  //v_Monte.push_back(new MonteFile(NAME_[TTW_], "t#bar{t}+V", kGreen, XSEC_[TTW_]));
-  //v_Monte.push_back(new MonteFile(NAME_[TTZ_], "t#bar{t}+V", kGreen, XSEC_[TTZ_]));
+  v_Monte.push_back(new MonteFile(NAME_[ZZ_], "DiBoson", kCyan, XSEC_[ZZ_]));
+  /*
+  v_Monte.push_back(new MonteFile("qcdEl20to30", "QCD", kOrange+1, QCDXSEC_[El1]));
+  v_Monte.push_back(new MonteFile("qcdEl30to50", "QCD", kOrange+1, QCDXSEC_[El2]));
+  v_Monte.push_back(new MonteFile("qcdEl50to80", "QCD", kOrange+1, QCDXSEC_[El3]));
+  v_Monte.push_back(new MonteFile("qcdEl80to120", "QCD", kOrange+1, QCDXSEC_[El4]));
+  v_Monte.push_back(new MonteFile("qcdEl120to170", "QCD", kOrange+1, QCDXSEC_[El5]));
+  v_Monte.push_back(new MonteFile("qcdEl170to300", "QCD", kOrange+1, QCDXSEC_[El6]));
+  v_Monte.push_back(new MonteFile("qcdEl300toInf", "QCD", kOrange+1, QCDXSEC_[El7]));
+  v_Monte.push_back(new MonteFile("qcdMu20to30", "QCD", kOrange+1, QCDXSEC_[Mu1]));
+  v_Monte.push_back(new MonteFile("qcdMu30to50", "QCD", kOrange+1, QCDXSEC_[Mu2]));
+  v_Monte.push_back(new MonteFile("qcdMu50to80", "QCD", kOrange+1, QCDXSEC_[Mu3]));
+  v_Monte.push_back(new MonteFile("qcdMu80to120", "QCD", kOrange+1, QCDXSEC_[Mu4]));
+  v_Monte.push_back(new MonteFile("qcdMu120to170", "QCD", kOrange+1, QCDXSEC_[Mu5]));
+  v_Monte.push_back(new MonteFile("qcdMu170to300", "QCD", kOrange+1, QCDXSEC_[Mu6]));
+  v_Monte.push_back(new MonteFile("qcdMu300to470", "QCD", kOrange+1, QCDXSEC_[Mu7]));
+  v_Monte.push_back(new MonteFile("qcdMu470to600", "QCD", kOrange+1, QCDXSEC_[Mu8]));
+  v_Monte.push_back(new MonteFile("qcdMu600to800", "QCD", kOrange+1, QCDXSEC_[Mu9]));
+  v_Monte.push_back(new MonteFile("qcdMu800to1000", "QCD", kOrange+1, QCDXSEC_[Mu10]));
+  v_Monte.push_back(new MonteFile("qcdMu1000toInf", "QCD", kOrange+1, QCDXSEC_[Mu11]));
+  */
+
+
 
   int nHist=0;
   for(auto v_itr = v_Monte[TTBB_]->v_histName.begin(); v_itr != v_Monte[TTBB_]->v_histName.end(); ++v_itr){
@@ -93,7 +117,7 @@ void makePlots(){
     TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.20);
     pad2->SetTopMargin(0.045);
     pad2->SetBottomMargin(0.4);
-    //pad2->SetGridx();
+    pad2->SetGridx();
     pad2->SetGridy();
     pad2->SetFrameFillColor(0);
     pad2->Draw();
@@ -113,9 +137,12 @@ void makePlots(){
     cout << (*v_itr) << endl;
     cout << channel << endl;
 
+    int i = 0;
     for(auto v_itr2 = v_Monte.begin(); v_itr2 != v_Monte.end(); ++v_itr2){
       cout << "SAMPLE : " << (*v_itr2)->sample << endl;
       string histName = *v_itr + (*v_itr2)->sample;
+      //remove duplication
+
 
       auto h_tmp = (TH1D *)(*v_itr2)->file->Get(histName.c_str());
       if( h_tmp == NULL ){
@@ -132,15 +159,20 @@ void makePlots(){
       THStack *hs_same = new THStack("stsame","stack");
       auto v_itr3 = find_if(v_postSample.begin(), v_postSample.end(),
 	  [v_itr2](string postSample)->bool{ return (*v_itr2)->category == postSample; });
-      h_tmp->SetFillColor((*v_itr2)->color);
+            h_tmp->SetFillColor((*v_itr2)->color);
       h_tmp->SetLineColor((*v_itr2)->color);      
       if( v_itr3 == v_postSample.end() ){
+	//if( (*v_itr2)->category != nextSample ) h_tmp->SetLineColor(kBlack);
+	//leg->AddEntry(h_tmp, ((*v_itr2)->category).c_str(), "F");
+      }
+      if( std::next(v_itr2) != v_Monte.end() && (*v_itr2)->category != (*std::next(v_itr2))->category ){
 	h_tmp->SetLineColor(kBlack);
 	leg->AddEntry(h_tmp, ((*v_itr2)->category).c_str(), "F");
       }
-      if( std::next(v_itr2) != v_Monte.end() && (*v_itr2)->category != (*std::next(v_itr2))->category )
-	h_tmp->SetLineColor(kBlack);
-           
+      if( std::next(v_itr2) == v_Monte.end() ){
+        h_tmp->SetLineColor(kBlack);
+	leg->AddEntry(h_tmp, ((*v_itr2)->category).c_str(), "F");
+      }
       v_postSample.push_back((*v_itr2)->category);
       
       int nEvent = h_tmp->Integral();
@@ -152,6 +184,7 @@ void makePlots(){
       hs_tmp->Add(h_tmp);
 
       outTxt << setprecision(10) << (*v_itr2)->sample << " : " << (double)h_tmp->Integral() << endl;
+      ++i;
     }
     
     TH1D * h_data;
@@ -173,15 +206,15 @@ void makePlots(){
     
     double max_data = h_data->GetMaximum();
     double max_hs = hs_tmp->GetMaximum();
-    double maxfrac = 100;
+    double maxfrac = 1000;
     if( max_hs > max_data )
-      //h_data->SetMaximum(1.5*max_hs);
-      h_data->SetMaximum(max_hs+max_hs*maxfrac);
+      //h_data->SetMaximum(3*max_hs); //linear
+      h_data->SetMaximum(max_hs+max_hs*maxfrac); //log
     else
-      //h_data->SetMaximum(1.5*max_data);
-      h_data->SetMaximum(max_data+max_data*maxfrac);
+      //h_data->SetMaximum(3*max_data); //linear
+      h_data->SetMaximum(max_data+max_data*maxfrac); //log
 
-    h_data->SetMinimum(1);
+    h_data->SetMinimum(10);
     h_data->GetYaxis()->SetTitleSize(0.04);
     h_data->GetYaxis()->SetLabelSize(0.04);
     h_data->GetYaxis()->SetTitleOffset(1.2);
@@ -191,25 +224,26 @@ void makePlots(){
 
     h_data->SetStats(0);
     h_data->SetMarkerStyle(20);
-    h_data->SetMarkerSize(0.9);
+    h_data->SetMarkerSize(1.4);
 
     h_data->SetTitle("");
-    h_data->Draw("P e");
+    h_data->Draw("p");
     hs_tmp->Draw("hist SAME");
     h_data->Draw("PSAME");
     label->Draw("SAME");
     label3->Draw("SAME");
     leg->Draw("SAME");
     pad1->RedrawAxis();
+    pad1->SetEditable(false);
 
     canvas->cd();
     pad2->cd();
-
+    
     TH1D * h_div = (TH1D *)h_data->Clone("h_div");
     h_div->Divide(h_stackTohisto);
     
     h_div->SetTitle("");
-    
+    h_div->SetMarkerSize(0.9);
     h_div->GetYaxis()->SetTitle("Data/MC");
     h_div->GetYaxis()->SetTitleSize(0.15);
     h_div->GetYaxis()->SetTitleOffset(0.32);
@@ -227,6 +261,8 @@ void makePlots(){
     h_div->Sumw2();
     h_div->SetStats(0);
 
+    pad2->SetEditable(false);
+    canvas->Print(Form("%s%s.pdf",OUTPUT.c_str(),(*v_itr).c_str()),"pdf");
     if(nHist==0)
       canvas->Print(Form("%sresult.pdf(",OUTPUT.c_str()),"pdf");
     else if(nHist == (v_Monte[TTBB_]->nHist)-2)

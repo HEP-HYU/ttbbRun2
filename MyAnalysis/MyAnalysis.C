@@ -42,9 +42,11 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   const int mode = *channel;
   if(mode>2) return kTRUE;
 
-  const float genweight = *genWeight;
-  const float puweight = PUWeight[0];
+  float genweight = *genWeight;
+  float puweight = PUWeight[0];
+
   double EventWeight = puweight*genweight;
+  
   //const double relIso = *lepton_relIso;
   
   //Object selection

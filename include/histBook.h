@@ -4,8 +4,8 @@
 
 //SAMPLE LIST
 enum class Sample_List_ {
-  TTBB = 0,TTBJ,TTCC,/*TTJJ,*/TTLF,TTBKG,WJETS,ZJETS,ZJETS10TO50,
-  TCHANNEL,TBARCHANNEL,TWCHANNEL,TBARWCHANNEL,WW,WZ,ZZ,LAST
+  TTBB = 0,TTBJ,TTCC,/*TTJJ,*/TTLF,TTOTHER,TTBKG,WJETS,ZJETS,ZJETS10TO50,
+  TCHANNEL,TBARCHANNEL,TWCHANNEL,TBARWCHANNEL,WW,WZ,ZZ,TTH,TTW,TTZ,LAST
 };
 
 const int TTBB_ = static_cast<int>(Sample_List_::TTBB);
@@ -13,6 +13,7 @@ const int TTBJ_ = static_cast<int>(Sample_List_::TTBJ);
 const int TTCC_ = static_cast<int>(Sample_List_::TTCC);
 //const int TTJJ_ = static_cast<int>(Sample_List_::TTJJ);
 const int TTLF_ = static_cast<int>(Sample_List_::TTLF);
+const int TTOTHER_ = static_cast<int>(Sample_List_::TTOTHER);
 const int TTBKG_ = static_cast<int>(Sample_List_::TTBKG);
 const int WJETS_ = static_cast<int>(Sample_List_::WJETS);
 const int ZJETS_ = static_cast<int>(Sample_List_::ZJETS);
@@ -24,35 +25,115 @@ const int TBARWCHANNEL_ = static_cast<int>(Sample_List_::TBARWCHANNEL);
 const int WW_ = static_cast<int>(Sample_List_::WW);
 const int WZ_ = static_cast<int>(Sample_List_::WZ);
 const int ZZ_ = static_cast<int>(Sample_List_::ZZ);
+const int TTH_ = static_cast<int>(Sample_List_::TTH);
+const int TTW_ = static_cast<int>(Sample_List_::TTW);
+const int TTZ_ = static_cast<int>(Sample_List_::TTZ);
 
 std::vector<string> DATA_ = {"DataSingleMu","DataSingleEl"};
 std::vector<string> NAME_ = {
-  "ttbb","ttbj","ttcc",/*"ttjj",*/"ttLF","ttbkg","wjets","zjets","zjets10to50",
-  "tchannel","tbarchannel","tWchannel","tbarWchannel","ww","wz","zz"
+  "ttbb","ttbj","ttcc",/*"ttjj",*/"ttLF","ttother","ttbkg","wjets","zjets","zjets10to50",
+  "tchannel","tbarchannel","tWchannel","tbarWchannel","ww","wz","zz",
+  "ttH","ttW","ttZ"
 };
 
 //SCALE
 const double LUMINOSITY_ = 35922;
 const double BRANCHINGRATIO_ = 0.436572;//2*3*0.1086*0.67
 //const double LUMINOSITY_ = 35867;
+
 std::vector<double> XSEC_ = {
-  365.4, //ttbb 
-  365.4, //ttbj 
-  365.4, //ttcc
-  //365.4,//ttjj
-  365.4, //ttLF
-  365.4, //ttbkg
-  61524.0, //wjets
-  6025.2, //zjets
+  365.34, //ttbb 
+  365.34, //ttbj 
+  365.34, //ttcc
+  //356.34,//ttjj
+  365.34, //ttLF
+  365.34, //ttother
+  831.76, //ttbkg
+  61526.7, //wjets
+  5765.4, //6025.2, //zjets
   18610.0, //zjets10to50
   136.02, //tchannel
   80.95, //tWchannel
-  35.6, //tWchannel
-  35.6, //tbarWchannel
+  35.85, //tWchannel
+  35.85, //tbarWchannel
   118.7, //ww
   47.13, //wz
-  16.523 //zz
+  16.523, //zz
+  0.2923, //ttH
+  0.2043, //ttW
+  0.2529 //ttZ
 };
+//v808
+/*
+std::vector<double> XSEC_ = {
+  332.704, //ttbb 
+  332.704, //ttbj 
+  332.704, //ttcc
+  //332.704,//ttjj
+  332.704, //ttLF
+  332.704, //ttohter
+  831.76, //ttbkg
+  61526.7, //wjets
+  5765.4, //6025.2, //zjets
+  18610.0, //zjets10to50
+  136.02, //t tchannel
+  80.95, //tbar tchannel
+  35.85, //tWchannel
+  35.85, //tbarWchannel
+  118.7, //ww
+  47.13, //wz
+  16.523, //zz
+  0.2151, //ttH
+  0.61, //ttW
+  0.78 //ttZ
+};*/
+enum class QCD_List_ {
+  El20to30 = 0, El30to50, El50to80, El80to120, El120to170, El170to300, El300toInf,
+  Mu20to30, Mu30to50, Mu50to80, Mu80to120, Mu120to170, Mu170to300, Mu300to470, Mu470to600,
+  Mu600to800, Mu800to1000, Mu1000toInf, LAST
+};
+const int El1 = static_cast<int>(QCD_List_::El20to30);
+const int El2 = static_cast<int>(QCD_List_::El30to50);
+const int El3 = static_cast<int>(QCD_List_::El50to80);
+const int El4 = static_cast<int>(QCD_List_::El80to120);
+const int El5 = static_cast<int>(QCD_List_::El120to170);
+const int El6 = static_cast<int>(QCD_List_::El170to300);
+const int El7 = static_cast<int>(QCD_List_::El300toInf);
+const int Mu1 = static_cast<int>(QCD_List_::Mu20to30);
+const int Mu2 = static_cast<int>(QCD_List_::Mu30to50);
+const int Mu3 = static_cast<int>(QCD_List_::Mu50to80);
+const int Mu4 = static_cast<int>(QCD_List_::Mu80to120);
+const int Mu5 = static_cast<int>(QCD_List_::Mu120to170);
+const int Mu6 = static_cast<int>(QCD_List_::Mu170to300);
+const int Mu7 = static_cast<int>(QCD_List_::Mu300to470);
+const int Mu8 = static_cast<int>(QCD_List_::Mu470to600);
+const int Mu9 = static_cast<int>(QCD_List_::Mu600to800);
+const int Mu10 = static_cast<int>(QCD_List_::Mu800to1000);
+const int Mu11 = static_cast<int>(QCD_List_::Mu1000toInf);
+
+
+std::vector<double> QCDXSEC_ = {
+  5352960,
+  9928000,
+  2890800,
+  350000,
+  62964,
+  18810,
+  1350,
+  2960198.4,
+  1652471.46,
+  437504.1,
+  106033.6648,
+  25190.51514,
+  8654.49315,
+  797.35269,
+  79.02553776,
+  25.09505908,
+  4.707368272,
+  1.62131692
+};
+
+
 //tchannel : 44.33, tbarchannel : 26.38
 const double TTBAR_XSEC_ = 831.76;
 //OBJECT SELECTION
