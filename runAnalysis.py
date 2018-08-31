@@ -6,7 +6,7 @@ def runAna(dir, file, name):
   chain = TChain("ttbbLepJets/tree","events")
   chain.Add(dir+"/"+file)
   chain.SetProof();
-  chain.Process("MyAnalysis/MyAnalysis.C+",name)
+  chain.Process("macro/MyAnalysis.C+",name)
 
   f = TFile(dir+"/"+file,"read")
 
@@ -18,9 +18,8 @@ def runAna(dir, file, name):
   out.Close()
 
 p = TProof.Open("", "workers=8")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttother.root","ttother")
+
 ### v808 ###
-'''
 runAna("/data/users/seohyun/ntuple/hep2017/v808/","DataSingleEG.root","DataSingleEl")
 runAna("/data/users/seohyun/ntuple/hep2017/v808/","DataSingleMu.root","DataSingleMu")
 runAna("/data/users/seohyun/ntuple/hep2017/v808/","WJets_aMCatNLO.root","wjets")
@@ -45,8 +44,9 @@ runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttcc.root",
 runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttjj.root","ttjj")
 runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttLF.root","ttLF")
 runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttother.root","ttother")
-'''
+
 """
+### v806 ###
 runAna("/data/users/jhgoh/hep2016/v806_1/","DataSingleEG.root","DataSingleEl")
 runAna("/data/users/jhgoh/hep2016/v806_1/","DataSingleMu.root","DataSingleMu")
 runAna("/data/users/jhgoh/hep2016/v806_1/","WJets_aMCatNLO.root","wjets")
