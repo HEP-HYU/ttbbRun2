@@ -49,7 +49,7 @@ def ana(directory, inputFile, process) :
             if "weightDir" in tmp : weightDir = tmp[1]
             if "modelfile" in tmp : modelfile = tmp[1]
 
-    df = pd.read_hdf("input/array_"+process+".h5")
+    df = pd.read_hdf("input/array_"+inputFile+".h5")
 
     if 'Data' in process : data = True
     if process in ['ttbb','ttbj','ttcc','ttLF','ttother'] : ttbar = True
@@ -167,7 +167,7 @@ def ana(directory, inputFile, process) :
         genchain.Add(directory+"/"+inputFile+".root")
 
         print "GENTREE RUN"
-        for i in xrange(1000) :
+        for i in xrange(genchain.GetEntries()) :
             pp.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
             genchain.GetEntry(i)
             addbjet1 = TLorentzVector()
@@ -189,10 +189,10 @@ def ana(directory, inputFile, process) :
     print "\nTREE RUN"
     nTotal = df['event'].iloc[-1]
     f_pred = open('pred.txt','w')
-    str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)
-    selEvent = df.query(str_query)
-    selEvent.reset_index(drop=True, inplace=True)
-    jetCombi = selEvent.filter([
+    #str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)
+    #selEvent = df.query(str_query)
+    #selEvent.reset_index(drop=True, inplace=True)
+    jetCombi = df.filter([#selEvent.filter([
         'dR','dEta','dPhi',
         'nuPt','nuEta','nuPhi','nuMass',
         'lbPt','lbEta','lbPhi','lbMass',
@@ -210,7 +210,8 @@ def ana(directory, inputFile, process) :
     pred = pd.DataFrame(pred, columns=['background','signal'])
     #f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
     #f_pred.write('SelEvent\n'+str(selEvent))
-    selEvent = pd.concat([selEvent,pred], axis=1)
+    df = pd.concat([df,pred], axis=1)
+    #selEvent = pd.concat([selEvent,pred], axis=1)
     #f_pred.write('SelEvent+Pred\n'+str(selEvent))
 
     nEvents = 0
