@@ -1,12 +1,15 @@
+import os
 import multiprocessing
 import ana
 
-with open("input.txt",'r') as f:
-    while True :
-        line = f.readline()
-        if not line : break
-        tmp = line.split()
-        directory = tmp[0]
-        inputFile = tmp[1]
-        process = tmp[2]
-        ana.ana(directory, inputFile, process)
+test = False 
+inputDir = '/data/users/seohyun/array/'
+outputDir = '/home/seohyun/work/heptool/deepAna/keras/hist/'
+
+if test :
+    ana.ana(inputDir+'TTLJ_PowhegPythia_ttbb','TTLJ_PowhegPythia_ttbb','outputDir')
+
+else :
+    for process in os.listdir(inputDir) :
+        print("Start "+str(process))
+        ana.ana(inputDir+process, process, outputDir)

@@ -1,4 +1,0 @@
-ver 01
-configDir /home/seohyun/work/heptool/deepAna/keras/model/
-weightDir train
-modelfile model_5_0.7883.h5

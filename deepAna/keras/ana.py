@@ -9,6 +9,7 @@ import math
 import numpy as np
 from array import array
 from sklearn.preprocessing import StandardScaler, label_binarize
+from sklearn.utils import shuffle
 from operator import itemgetter
 from itertools import groupby
 
@@ -27,34 +28,105 @@ from keras.callbacks import Callback, ModelCheckpoint
 
 import printProgress as pp
 
-def ana(directory, inputFile, process) :
+def ana(inputDir, process, outputDir) :
     timer = ROOT.TStopwatch()
     timer.Start()
-    ver = ""
-    configDir = ""
-    weightDir = ""
-    modelfile = ""
+    df = pd.read_hdf("input/array_train_ttbb.h5")
+    df = df.filter(['signal',
+        'dR','dEta','dPhi',
+        'nuPt','nuEta','nuPhi','nuMass',
+        'lbPt','lbEta','lbPhi','lbMass',
+        'lb1Pt','lb1Eta','lb1Phi','lb1Mass',
+        'lb2Pt','lb2Eta','lb2Phi','lb2Mass',
+        'diPt','diEta','diPhi','diMass',
+        'csv1','csv2','pt1','pt2','eta1','eta2','phi1','phi2','e1','e2'])
+    train_input = df.values
+    train_out = train_input[:,0]
+    train_data = train_input[:,1:]
+
+    numbertr = len(train_out)
+
+    order = shuffle(range(numbertr),random_state=100)
+    train_out = train_out[order]
+    train_data = train_data[order,0::]
+    train_out = train_out.reshape((numbertr,1))
+
+    trainnb = 0.9
+    valid_data = train_data[int(trainnb*numbertr):numbertr,0::]
+    valid_out = train_out[int(trainnb*numbertr):numbertr]
+
+    train_data = train_data[0:int(trainnb*numbertr),0::]
+    train_data_out = train_out[0:int(trainnb*numbertr)]
+
+    model = tf.keras.models.Sequential([
+        #tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(200, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(1, activation=tf.nn.sigmoid)
+    ])
+
+    model_output_name = "keras"
+
+    if os.path.exists('model/'+model_output_name+'/model.h5') :
+        print "Model file exists already!"
+        model = keras.models.load_model('model/'+model_output_name+'/model.h5')
+    else :
+        model.compile(optimizer='adam',
+                loss='binary_crossentropy',
+                metrics=['accuracy','binary_crossentropy'])
+        history = model.fit(train_data,train_data_out, batch_size=1024, epochs=200, validation_data=(valid_data,valid_out))
+        model.save('model/'+model_output_name+'/model.h5')
+
+        evaluate = model.predict(valid_data)
+        with open('model/'+model_output_name+'/output.csv','wb') as f :
+            writer = csv.writer(f, delimiter=" ")
+            for i in range(len(valid_data)):
+                val_x = valid_out[i]
+                val_y = evaluate[i]
+                writer.writerows(zip(val_y,val_x))
+
+        history_dict = history.history
+        history_dict.keys()
+
+        import matplotlib.pyplot as plt
+
+        acc = history.history['acc']
+        val_acc = history.history['val_acc']
+        loss = history.history['loss']
+        val_loss = history.history['val_loss']
+
+        epochs = range(1, len(acc)+1)
+
+        plt.plot(epochs,loss,'bo',label='Training loss')
+        plt.plot(epochs,val_loss,'b',label='Validation loss')
+        plt.title('Training and validation loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.legend()
+        plt.savefig('model/'+model_output_name+'/loss.pdf')
+        #plt.show()
+
+    model.summary()
 
     data = False
-    ttbar = False
-    closureTest = False
-
-    with open("var.txt", "r") as f :
-        while True :
-            line = f.readline()
-            if not line : break
-            tmp = line.split()
-            if "ver" in tmp : ver = tmp[1]
-            if "configDir" in tmp : configDir = tmp[1]
-            if "weightDir" in tmp : weightDir = tmp[1]
-            if "modelfile" in tmp : modelfile = tmp[1]
-
-    df = pd.read_hdf("input/array_"+inputFile+".h5")
-
+    ttbb = False
     if 'Data' in process : data = True
-    if process in ['ttbb','ttbj','ttcc','ttLF','ttother'] : ttbar = True
-
-    model = load_model(configDir+weightDir+ver+'/'+modelfile)
+    if 'ttbb' in process : ttbb = True
+    closureTest = False
 
     muon_ch = 0
     muon_pt = 30.0
@@ -71,8 +143,8 @@ def ana(directory, inputFile, process) :
     nChannel = 2
     nStep = 4
 
-    if closureTest : f_out = ROOT.TFile("output/hist_closure.root", "recreate")
-    else : f_out = ROOT.TFile("output/hist_"+process+".root", "recreate")
+    if closureTest : f_out = ROOT.TFile("hist/hist_closure.root", "recreate")
+    else : f_out = ROOT.TFile("hist/hist_"+process+".root", "recreate")
 
     RECO_NUMBER_OF_JETS_ = "nJets"
     RECO_NUMBER_OF_BJETS_ = "nBjets"
@@ -83,11 +155,11 @@ def ana(directory, inputFile, process) :
     RESPONSE_MATRIX_DELTAR_ = "ResponseMatrixDeltaR"
     RESPONSE_MATRIX_INVARIANT_MASS_ = "ResponseMatrixInvMass"
 
-    xNbins_reco_addjets_dR = 4
-    reco_addjets_dR_width = [0.4,0.6,1.0,2.0,4.0]
+    xNbins_reco_addjets_dR = 8
+    reco_addjets_dR_width = [0.4,0.5,0.6,0.8,1.0,1.5,2.0,3.0,4.0]
 
-    xNbins_reco_addjets_M = 4
-    reco_addjets_M_width = [0.0,60.0,100.0,170.0,400.0]
+    xNbins_reco_addjets_M = 8
+    reco_addjets_M_width = [0.0,30.0,60.0,80.0,100.0,135.0,170.0,285.0,400.0]
 
     xNbins_gen_addbjets_dR = 4
     gen_addbjets_dR_width = [0.4,0.6,1.0,2.0,4.0]
@@ -162,9 +234,9 @@ def ana(directory, inputFile, process) :
             h_respMatrix_invMass[iChannel][iStep].GetYaxis().SetTitle("Gen. M_{b#bar{b}}(GeV)")
             h_respMatrix_invMass[iChannel][iStep].Sumw2()
 
-    if ttbar == True :
+    if ttbb == True :
         genchain = TChain("ttbbLepJets/gentree")
-        genchain.Add(directory+"/"+inputFile+".root")
+        genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
 
         print "GENTREE RUN"
         for i in xrange(genchain.GetEntries()) :
@@ -187,138 +259,138 @@ def ana(directory, inputFile, process) :
             else : print("Error")
 
     print "\nTREE RUN"
-    nTotal = df['event'].iloc[-1]
-    f_pred = open('pred.txt','w')
-    #str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)
-    #selEvent = df.query(str_query)
-    #selEvent.reset_index(drop=True, inplace=True)
-    jetCombi = df.filter([#selEvent.filter([
-        'dR','dEta','dPhi',
-        'nuPt','nuEta','nuPhi','nuMass',
-        'lbPt','lbEta','lbPhi','lbMass',
-        'lb1Pt','lb1Eta','lb1Phi','lb1Mass',
-        'lb2Pt','lb2Eta','lb2Phi','lb2Mass',
-        'diPt','diEta','diPhi','diMass',
-        'csv1','csv2','pt1','pt2','eta1','eta2','phi1','phi2','e1','e2'
-    ])
-    scaler = StandardScaler()
-    if len(jetCombi) is not 0 :
-        inputset = np.array(jetCombi)
-        inputset_sc = scaler.fit_transform(inputset)
-        pred = model.predict(inputset_sc, batch_size = 2000)
-
-    pred = pd.DataFrame(pred, columns=['background','signal'])
-    #f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
-    #f_pred.write('SelEvent\n'+str(selEvent))
-    df = pd.concat([df,pred], axis=1)
-    #selEvent = pd.concat([selEvent,pred], axis=1)
-    #f_pred.write('SelEvent+Pred\n'+str(selEvent))
-
     nEvents = 0
     nEvt_isMatch_DNN = 0
     nEvt_isMatch_mindR = 0
+    f_pred = open('pred.txt','w')
+    for item in os.listdir(inputDir) :
+        df = pd.read_hdf(inputDir+'/'+item)
+        str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)+' and njets >= 6 and nbjets >= 3'
+        selEvent = df.query(str_query)
+        selEvent.reset_index(drop=True, inplace=True)
+        if len(selEvent.index) == 0 : continue
+        nTotal = selEvent['event'].iloc[-1]
+        jetCombi = selEvent.filter([
+            'dR','dEta','dPhi',
+            'nuPt','nuEta','nuPhi','nuMass',
+            'lbPt','lbEta','lbPhi','lbMass',
+            'lb1Pt','lb1Eta','lb1Phi','lb1Mass',
+            'lb2Pt','lb2Eta','lb2Phi','lb2Mass',
+            'diPt','diEta','diPhi','diMass',
+            'csv1','csv2','pt1','pt2','eta1','eta2','phi1','phi2','e1','e2'
+        ])
+        scaler = StandardScaler()
+        if len(jetCombi) is not 0 :
+            inputset = np.array(jetCombi)
+            #inputset_sc = scaler.fit_transform(inputset)
+            pred = model.predict(inputset, batch_size = 2000)
 
-    idx = selEvent.groupby(['event'])['signal'].transform(max) == selEvent['signal']
-    #f_pred.write('\n'+str(idx)+'\n'+str(selEvent[idx])+'\n')
-    selEvent[idx].reset_index(drop=True, inplace=True)
+        pred = pd.DataFrame(pred, columns=['signal'])
+        #f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
+        #f_pred.write('SelEvent\n'+str(selEvent))
+        selEvent = pd.concat([selEvent,pred], axis=1)
+        #f_pred.write('SelEvent+Pred\n'+str(selEvent))
+        idx = selEvent.groupby(['event'])['signal'].transform(max) == selEvent['signal']
+        #f_pred.write('\n'+str(idx)+'\n'+str(selEvent[idx])+'\n')
+        selEvent[idx].reset_index(drop=True, inplace=True)
 
-    #selEvent.groupby('event').max('signal').reset_index(drop=True, inplace=True)
-    f_pred.write("Groupby\n"+str(selEvent[idx]))
-    #groups = selEvent.groupby('event')
-    for idx, event in selEvent[idx].iterrows() :
-        #maxval = event[1][event[1]['signal'] == event[1]['signal'].max()]
-        pp.printProgress(event['event'], nTotal, 'Progress:','Complete',1,50)
+        #selEvent.groupby('event').max('signal').reset_index(drop=True, inplace=True)
+        f_pred.write("Groupby\n"+item+"\n"+str(selEvent[idx]))
+        #groups = selEvent.groupby('event')
+        for idx, event in selEvent[idx].iterrows() :
+            #maxval = event[1][event[1]['signal'] == event[1]['signal'].max()]
+            pp.printProgress(event['event'], nTotal, 'Progress:','Complete',1,50)
 
-        eventweight = event['PUWeight']*event['genWeight']
-        if not data :  eventweight *= event['lepton_SF']*event['jet_SF_CSV']
+            eventweight = event['PUWeight']*event['genWeight']
+            if not data :  eventweight *= event['lepton_SF']*event['jet_SF_CSV']
 
-        passmuon = False
-        passelectron = False
-        if event['channel'] == 0 : passmuon = True
-        if event['channel'] == 1 : passelectron = True
+            passmuon = False
+            passelectron = False
+            if event['channel'] == 0 : passmuon = True
+            if event['channel'] == 1 : passelectron = True
 
-        njets = event['njets']
-        nbjets = event['nbjets']
+            njets = event['njets']
+            nbjets = event['nbjets']
 
-        gen_addbjet1 = TLorentzVector()
-        gen_addbjet2 = TLorentzVector()
-        gen_addbjet1.SetPtEtaPhiE(event['addbjet1_pt'],event['addbjet1_eta'],event['addbjet1_phi'],event['addbjet1_e'])
-        gen_addbjet2.SetPtEtaPhiE(event['addbjet2_pt'],event['addbjet2_eta'],event['addbjet2_phi'],event['addbjet2_e'])
+            gen_addbjet1 = TLorentzVector()
+            gen_addbjet2 = TLorentzVector()
+            gen_addbjet1.SetPtEtaPhiE(event['addbjet1_pt'],event['addbjet1_eta'],event['addbjet1_phi'],event['addbjet1_e'])
+            gen_addbjet2.SetPtEtaPhiE(event['addbjet2_pt'],event['addbjet2_eta'],event['addbjet2_phi'],event['addbjet2_e'])
 
-        gen_dR = gen_addbjet1.DeltaR(gen_addbjet2)
-        gen_M = (gen_addbjet1+gen_addbjet2).M()
+            gen_dR = gen_addbjet1.DeltaR(gen_addbjet2)
+            gen_M = (gen_addbjet1+gen_addbjet2).M()
 
-        reco_dR = 9999
-        reco_M = 9999
-        reco_addbjet1 = TLorentzVector(0,0,0,0)
-        reco_addbjet2 = TLorentzVector(0,0,0,0)
-        #additional bjets from DNN
+            reco_dR = 9999
+            reco_M = 9999
+            reco_addbjet1 = TLorentzVector(0,0,0,0)
+            reco_addbjet2 = TLorentzVector(0,0,0,0)
+            #additional bjets from DNN
 
-        reco_addbjet1.SetPtEtaPhiE(event['pt1'],event['eta1'],event['phi1'],event['e1'])
-        reco_addbjet2.SetPtEtaPhiE(event['pt2'],event['eta2'],event['phi2'],event['e2'])
+            reco_addbjet1.SetPtEtaPhiE(event['pt1'],event['eta1'],event['phi1'],event['e1'])
+            reco_addbjet2.SetPtEtaPhiE(event['pt2'],event['eta2'],event['phi2'],event['e2'])
 
-        reco_dR = reco_addbjet1.DeltaR(reco_addbjet2)
-        reco_M = (reco_addbjet1+reco_addbjet2).M()
+            reco_dR = reco_addbjet1.DeltaR(reco_addbjet2)
+            reco_M = (reco_addbjet1+reco_addbjet2).M()
 
-        #f_pred.write('Pred : '+str(maxval)+'\n')
-        #f_pred.write('Score\n'+str(event[1])+'\n')
-        #f_pred.write('jet 1 : '+str(reco_addbjet1.Pt())+' jet 2 : '+str(reco_addbjet2.Pt())+'\n')
-        #f_pred.write('genjet 1 : '+str(gen_addbjet1.Pt())+' genjet2 : '+str(gen_addbjet2.Pt())+'\n')
-        #f_pred.write('reco dR : '+str(reco_addbjet1.DeltaR(reco_addbjet2))+'gen dR : '+str(gen_addbjet1.DeltaR(gen_addbjet2))+'\n')
+            #f_pred.write('Pred : '+str(maxval)+'\n')
+            #f_pred.write('Score\n'+str(event[1])+'\n')
+            #f_pred.write('jet 1 : '+str(reco_addbjet1.Pt())+' jet 2 : '+str(reco_addbjet2.Pt())+'\n')
+            #f_pred.write('genjet 1 : '+str(gen_addbjet1.Pt())+' genjet2 : '+str(gen_addbjet2.Pt())+'\n')
+            #f_pred.write('reco dR : '+str(reco_addbjet1.DeltaR(reco_addbjet2))+'gen dR : '+str(gen_addbjet1.DeltaR(gen_addbjet2))+'\n')
 
-        passchannel = -999
-        passcut = 0
+            passchannel = -999
+            passcut = 0
 
-        #matching ratio
-        isMatch_DNN = False
-        isMatch_DNN = (reco_addbjet1.DeltaR(gen_addbjet1) < 0.5 and reco_addbjet2.DeltaR(gen_addbjet2) < 0.5) or (reco_addbjet1.DeltaR(gen_addbjet2) < 0.5 and reco_addbjet2.DeltaR(gen_addbjet1) < 0.5)
-        if passmuon == True and passelectron == False : passchannel = muon_ch
-        elif passmuon == False and passelectron == True : passchannel = electron_ch
-        else : print "Error!"
+            #matching ratio
+            isMatch_DNN = False
+            isMatch_DNN = (reco_addbjet1.DeltaR(gen_addbjet1) < 0.5 and reco_addbjet2.DeltaR(gen_addbjet2) < 0.5) or (reco_addbjet1.DeltaR(gen_addbjet2) < 0.5 and reco_addbjet2.DeltaR(gen_addbjet1) < 0.5)
+            if passmuon == True and passelectron == False : passchannel = muon_ch
+            elif passmuon == False and passelectron == True : passchannel = electron_ch
+            else : print "Error!"
 
-        if njets >= number_of_jets :
-            passcut += 1
-            if nbjets >= number_of_bjets-1 :
+            if njets >= number_of_jets :
                 passcut += 1
-                if nbjets >= number_of_bjets :
+                if nbjets >= number_of_bjets-1 :
                     passcut += 1
-                    nEvents += 1
-                    if isMatch_DNN : nEvt_isMatch_DNN += 1
+                    if nbjets >= number_of_bjets :
+                        passcut += 1
+                        nEvents += 1
+                        if isMatch_DNN : nEvt_isMatch_DNN += 1
 
-        if closureTest :
-            for iStep in range(0,passcut+1) :
-                if i%2 == 1 :
-                    h_lepton_pt[passchannel][iStep].Fill(lep.Pt(), eventweight)
-                    h_lepton_eta[passchannel][iStep].Fill(lep.Eta(), eventweight)
+            if closureTest :
+                for iStep in range(0,passcut+1) :
+                    if i%2 == 1 :
+                        h_lepton_pt[passchannel][iStep].Fill(lep.Pt(), eventweight)
+                        h_lepton_eta[passchannel][iStep].Fill(lep.Eta(), eventweight)
+                        h_njets[passchannel][iStep].Fill(njets, eventweight)
+                        h_nbjets[passchannel][iStep].Fill(nbjets, eventweight)
+                        h_reco_addjets_deltaR[passchannel][iStep].Fill(reco_dR, eventweight)
+                        h_reco_addjets_invMass[passchannel][iStep].Fill(reco_M, eventweight)
+                        h_gen_addbjets_deltaR[passchannel][iStep].Fill(gen_dR, eventweight)
+                        h_gen_addbjets_invMass[passchannel][iStep].Fill(gen_M, eventweight)
+                    else :
+                        h_respMatrix_deltaR[passchannel][iStep].Fill(reco_dR, gen_dR, eventweight)
+                        h_respMatrix_invMass[passchannel][iStep].Fill(reco_M, gen_M, eventweight)
+            else :
+                for iStep in range(0,passcut+1) :
                     h_njets[passchannel][iStep].Fill(njets, eventweight)
                     h_nbjets[passchannel][iStep].Fill(nbjets, eventweight)
                     h_reco_addjets_deltaR[passchannel][iStep].Fill(reco_dR, eventweight)
                     h_reco_addjets_invMass[passchannel][iStep].Fill(reco_M, eventweight)
-                    h_gen_addbjets_deltaR[passchannel][iStep].Fill(gen_dR, eventweight)
-                    h_gen_addbjets_invMass[passchannel][iStep].Fill(gen_M, eventweight)
-                else :
-                    h_respMatrix_deltaR[passchannel][iStep].Fill(reco_dR, gen_dR, eventweight)
-                    h_respMatrix_invMass[passchannel][iStep].Fill(reco_M, gen_M, eventweight)
-        else :
-            for iStep in range(0,passcut+1) :
-                h_njets[passchannel][iStep].Fill(njets, eventweight)
-                h_nbjets[passchannel][iStep].Fill(nbjets, eventweight)
-                h_reco_addjets_deltaR[passchannel][iStep].Fill(reco_dR, eventweight)
-                h_reco_addjets_invMass[passchannel][iStep].Fill(reco_M, eventweight)
-                if ttbar :
-                    h_gen_addbjets_deltaR[passchannel][iStep].Fill(gen_dR, eventweight)
-                    h_gen_addbjets_invMass[passchannel][iStep].Fill(gen_M, eventweight)
-                    h_respMatrix_deltaR[passchannel][iStep].Fill(reco_dR, gen_dR, eventweight)
-                    h_respMatrix_invMass[passchannel][iStep].Fill(reco_M, gen_M, eventweight)
+                    if ttbb :
+                        h_gen_addbjets_deltaR[passchannel][iStep].Fill(gen_dR, eventweight)
+                        h_gen_addbjets_invMass[passchannel][iStep].Fill(gen_M, eventweight)
+                        h_respMatrix_deltaR[passchannel][iStep].Fill(reco_dR, gen_dR, eventweight)
+                        h_respMatrix_invMass[passchannel][iStep].Fill(reco_M, gen_M, eventweight)
 
     matching_DNN = 0.0
     matching_mindR = 0.0
     if nEvents is not 0 :
         matching_DNN = float(nEvt_isMatch_DNN) / float(nEvents)
         matching_mindR = float(nEvt_isMatch_mindR) / float(nEvents)
-    print "\nSelected Events / Total Events : "+str(nEvents)+"/"+str(nTotal)
+    #print "\nSelected Events / Total Events : "+str(nEvents)+"/"+str(nTotal)
     print "Matching Ratio from DNN : "+str(matching_DNN)+"("+str(nEvt_isMatch_DNN)+"/"+str(nEvents)+")"
-    print "Matching Ratio from minimun dR : "+str(matching_mindR)+"("+str(nEvt_isMatch_mindR)+"/"+str(nEvents)+")"
+    #print "Matching Ratio from minimun dR : "+str(matching_mindR)+"("+str(nEvt_isMatch_mindR)+"/"+str(nEvents)+")"
 
     for iChannel in range(0,2) :
         for iStep in range(0,4) :

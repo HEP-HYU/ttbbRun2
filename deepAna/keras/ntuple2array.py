@@ -10,19 +10,15 @@ import deepdish.io as io
 
 import printProgress as pp
 
-def makeCombi(inputFile) :
-    inputDir =  '/data/users/seohyun/ntuple/hep2017/v808'
-    outputDir = 'input'
-    print("Process : "+str(inputFile))
+def makeCombi(inputDir,inputFile,outputDir) :
+    print(str(inputDir+"/"+inputFile)+" start")
     chain = TChain("ttbbLepJets/tree")
-    chain.Add(inputDir+"/"+inputFile+".root")
+    chain.Add(inputDir+"/"+inputFile)
 
     data = False
-    if 'Data' in inputFile : data = True
-    ttbar = False
-    if 'TTLJ_PowhegPythia' in inputFile : ttbar = True
+    if 'Data' in inputDir : data = True
     ttbb = False
-    if 'ttbb' in inputFile : ttbb = True
+    if 'ttbb' in inputDir : ttbb = True
 
     muon_ch = 0
     muon_pt = 30.0
@@ -36,9 +32,6 @@ def makeCombi(inputFile) :
 
     jetCombi = []
     for i in xrange(chain.GetEntries()) :
-        pp.printProgress(i, chain.GetEntries(), 'Progress:','Complete',1,25)
-        #if i != 0 and i%50000 == 0 :
-        #print str(inputFile)+str((i/chain.GetEntries()*100))+"% ("+str(i)+"/"+str(chain.GetEntries())+"Completed\n"
         chain.GetEntry(i)
 
         lepton_SF = 1.0
@@ -46,9 +39,10 @@ def makeCombi(inputFile) :
         if not data :
             lepton_SF = chain.lepton_SF[0]
             jet_SF_CSV = chain.jet_SF_CSV[0]
-            MET_px = chain.MET*math.cos(chain.MET_phi)
-            MET_py = chain.MET*math.sin(chain.MET_phi)
-            nu = TLorentzVector(MET_px, MET_py, 0, chain.MET)
+
+        MET_px = chain.MET*math.cos(chain.MET_phi)
+        MET_py = chain.MET*math.sin(chain.MET_phi)
+        nu = TLorentzVector(MET_px, MET_py, 0, chain.MET)
 
         lep = TLorentzVector()
         lep.SetPtEtaPhiE(chain.lepton_pT, chain.lepton_eta, chain.lepton_phi, chain.lepton_E)
@@ -75,34 +69,37 @@ def makeCombi(inputFile) :
             njets += 1
             if chain.jet_CSV[iJet] > jet_CSV_tight : nbjets += 1
 
+        if njets < 6 or nbjets < 3 : continue
+
         for j in range(len(chain.jet_pT)-1):
             for k in range(j+1, len(chain.jet_pT)):
-                #if chain.jet_CSV[j] > jet_CSV_tight and chain.jet_CSV[k] > jet_CSV_tight:
-                b1 = TLorentzVector()
-                b2 = TLorentzVector()
-                b1.SetPtEtaPhiE(chain.jet_pT[j], chain.jet_eta[j], chain.jet_phi[j], chain.jet_E[j])
-                b2.SetPtEtaPhiE(chain.jet_pT[k], chain.jet_eta[k], chain.jet_phi[k], chain.jet_E[k])
-                if not data :
-                    b1 *= chain.jet_JER_Nom[j]
-                    b2 *= chain.jet_JER_Nom[k]
-                jetCombi.append([
-                    i,chain.channel,njets,nbjets,
-                    float(chain.genweight),float(chain.PUWeight[0]),lepton_SF,jet_SF_CSV,
-                    addbjet1.Pt(),addbjet1.Eta(),addbjet1.Phi(),addbjet1.E(),
-                    addbjet2.Pt(),addbjet2.Eta(),addbjet2.Phi(),addbjet2.E(),
-                    j,b1.Pt(),b1.Eta(),b1.Phi(),b1.E(),chain.jet_CSV[j],
-                    k,b2.Pt(),b2.Eta(),b2.Phi(),b2.E(),chain.jet_CSV[k],
-                    b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
-                    (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
-                    (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
-                    (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
-                    (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
-                    (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M()
-                ])
-    print("\n")
+                if chain.jet_CSV[j] > jet_CSV_tight and chain.jet_CSV[k] > jet_CSV_tight:
+                    b1 = TLorentzVector()
+                    b2 = TLorentzVector()
+                    b1.SetPtEtaPhiE(chain.jet_pT[j], chain.jet_eta[j], chain.jet_phi[j], chain.jet_E[j])
+                    b2.SetPtEtaPhiE(chain.jet_pT[k], chain.jet_eta[k], chain.jet_phi[k], chain.jet_E[k])
+                    if not data :
+                        b1 *= chain.jet_JER_Nom[j]
+                        b2 *= chain.jet_JER_Nom[k]
+                    jetCombi.append([
+                        i,chain.channel,njets,nbjets,
+                        float(chain.genweight),float(chain.PUWeight[0]),lepton_SF,jet_SF_CSV,
+                        lep.Pt(),lep.Eta(),lep.Phi(),lep.E(),
+                        addbjet1.Pt(),addbjet1.Eta(),addbjet1.Phi(),addbjet1.E(),
+                        addbjet2.Pt(),addbjet2.Eta(),addbjet2.Phi(),addbjet2.E(),
+                        j,b1.Pt(),b1.Eta(),b1.Phi(),b1.E(),chain.jet_CSV[j],
+                        k,b2.Pt(),b2.Eta(),b2.Phi(),b2.E(),chain.jet_CSV[k],
+                        b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
+                        (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
+                        (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
+                        (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
+                        (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
+                        (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M()
+                    ])
     combi = pd.DataFrame(jetCombi, columns=[
         'event','channel','njets','nbjets',
         'genWeight','PUWeight','lepton_SF','jet_SF_CSV',
+        'leptonPt','leptonEta','leptonPhi','leptonE',
         'addbjet1_pt','addbjet1_eta','addbjet1_phi','addbjet1_e',
         'addbjet2_pt','addbjet2_eta','addbjet2_phi','addbjet2_e',
         'b1','pt1','eta1','phi1','e1','csv1',
@@ -114,13 +111,15 @@ def makeCombi(inputFile) :
         'lb2Pt','lb2Eta','lb2Phi','lb2Mass',
         'diPt','diEta','diPhi','diMass'
     ])
-    io.save(outputDir+"/array_"+inputFile+".h5",combi)
+    tmp = inputFile[:-5]
+    io.save(outputDir+"/array_"+tmp+".h5",combi)
+    print(str(inputDir+"/"+inputFile)+" end")
     #combi.style.format('table')
     #combi.to_csv(outputDir+"/array_"+process+".csv")
     #combi.to_hdf(outputDir+"/array_"+process+".h5",combi)
     #combi.to_pickle(outputDir+"/array_"+process+".pickle")
 
-def makeTrainingInput(outputDir, output) :
+def makeTrainingInput(outputDir) :
     chain = TChain("ttbbLepJets/tree")
     chain.Add("/data/users/seohyun/ntuple/hep2017/v808/TTLJ_PowhegPythia_ttbb.root")
 
@@ -217,4 +216,4 @@ def makeTrainingInput(outputDir, output) :
         'diPt','diEta','diPhi','diMass',
         'csv1','csv2','pt1','pt2','eta1','eta2','phi1','phi2','e1','e2'
     ])
-    io.save(outputDir+"/"+output,combi)
+    io.save(outputDir+"array_train_ttbb.h5",combi)
