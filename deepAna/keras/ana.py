@@ -31,103 +31,32 @@ import printProgress as pp
 def ana(inputDir, process, outputDir) :
     timer = ROOT.TStopwatch()
     timer.Start()
-    df = pd.read_hdf("input/array_train_ttbb.h5")
-    df = df.filter(['signal',
-        'dR','dEta','dPhi',
-        'nuPt','nuEta','nuPhi','nuMass',
-        'lbPt','lbEta','lbPhi','lbMass',
-        'lb1Pt','lb1Eta','lb1Phi','lb1Mass',
-        'lb2Pt','lb2Eta','lb2Phi','lb2Mass',
-        'diPt','diEta','diPhi','diMass',
-        'csv1','csv2','pt1','pt2','eta1','eta2','phi1','phi2','e1','e2'])
-    train_input = df.values
-    train_out = train_input[:,0]
-    train_data = train_input[:,1:]
 
-    numbertr = len(train_out)
+    ver = ""
+    configDir = ""
+    weightDir = ""
+    modelfile = ""
 
-    order = shuffle(range(numbertr),random_state=100)
-    train_out = train_out[order]
-    train_data = train_data[order,0::]
-    train_out = train_out.reshape((numbertr,1))
+    with open('var.txt', 'r') as f :
+        while True :
+            line = f.readline()
+            if not line : break
+            tmp = line.split()
+            if 'ver' in tmp : ver = tmp[1]
+            if 'configDir' in tmp : configDir = tmp[1]
+            if 'weightDir' in tmp : weightDir = tmp[1]
+            if 'modelfile' in tmp : modelfile = tmp[1]
 
-    trainnb = 0.9
-    valid_data = train_data[int(trainnb*numbertr):numbertr,0::]
-    valid_out = train_out[int(trainnb*numbertr):numbertr]
-
-    train_data = train_data[0:int(trainnb*numbertr),0::]
-    train_data_out = train_out[0:int(trainnb*numbertr)]
-
-    model = tf.keras.models.Sequential([
-        #tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(200, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.1),
-        tf.keras.layers.Dense(1, activation=tf.nn.sigmoid)
-    ])
-
-    model_output_name = "keras"
-
-    if os.path.exists('model/'+model_output_name+'/model.h5') :
-        print "Model file exists already!"
-        model = keras.models.load_model('model/'+model_output_name+'/model.h5')
-    else :
-        model.compile(optimizer='adam',
-                loss='binary_crossentropy',
-                metrics=['accuracy','binary_crossentropy'])
-        history = model.fit(train_data,train_data_out, batch_size=1024, epochs=200, validation_data=(valid_data,valid_out))
-        model.save('model/'+model_output_name+'/model.h5')
-
-        evaluate = model.predict(valid_data)
-        with open('model/'+model_output_name+'/output.csv','wb') as f :
-            writer = csv.writer(f, delimiter=" ")
-            for i in range(len(valid_data)):
-                val_x = valid_out[i]
-                val_y = evaluate[i]
-                writer.writerows(zip(val_y,val_x))
-
-        history_dict = history.history
-        history_dict.keys()
-
-        import matplotlib.pyplot as plt
-
-        acc = history.history['acc']
-        val_acc = history.history['val_acc']
-        loss = history.history['loss']
-        val_loss = history.history['val_loss']
-
-        epochs = range(1, len(acc)+1)
-
-        plt.plot(epochs,loss,'bo',label='Training loss')
-        plt.plot(epochs,val_loss,'b',label='Validation loss')
-        plt.title('Training and validation loss')
-        plt.xlabel('Epochs')
-        plt.ylabel('Loss')
-        plt.legend()
-        plt.savefig('model/'+model_output_name+'/loss.pdf')
-        #plt.show()
-
+    print "Load modelfile : "+str(modelfile)
+    model = load_model(configDir+weightDir+ver+'/model_90_0.7809.h5')
     model.summary()
-
     data = False
     ttbb = False
     if 'Data' in process : data = True
     if 'ttbb' in process : ttbb = True
     closureTest = False
 
+    df = pd.read_hdf("input/array_train_ttbb.h5")
     muon_ch = 0
     muon_pt = 30.0
     muon_eta = 2.1
@@ -239,7 +168,7 @@ def ana(inputDir, process, outputDir) :
         genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
 
         print "GENTREE RUN"
-        for i in xrange(genchain.GetEntries()) :
+        for i in xrange(1000) :
             pp.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
             genchain.GetEntry(i)
             addbjet1 = TLorentzVector()
@@ -264,6 +193,7 @@ def ana(inputDir, process, outputDir) :
     nEvt_isMatch_mindR = 0
     f_pred = open('pred.txt','w')
     for item in os.listdir(inputDir) :
+        #print "Load file : "+str(inputDir)+'/'+str(item)
         df = pd.read_hdf(inputDir+'/'+item)
         str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)+' and njets >= 6 and nbjets >= 3'
         selEvent = df.query(str_query)
@@ -285,7 +215,7 @@ def ana(inputDir, process, outputDir) :
             #inputset_sc = scaler.fit_transform(inputset)
             pred = model.predict(inputset, batch_size = 2000)
 
-        pred = pd.DataFrame(pred, columns=['signal'])
+        pred = pd.DataFrame(pred, columns=['background','signal'])
         #f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
         #f_pred.write('SelEvent\n'+str(selEvent))
         selEvent = pd.concat([selEvent,pred], axis=1)
@@ -299,7 +229,7 @@ def ana(inputDir, process, outputDir) :
         #groups = selEvent.groupby('event')
         for idx, event in selEvent[idx].iterrows() :
             #maxval = event[1][event[1]['signal'] == event[1]['signal'].max()]
-            pp.printProgress(event['event'], nTotal, 'Progress:','Complete',1,50)
+            pp.printProgress(event['event'], nTotal, str(item)+':','Complete',1,25)
 
             eventweight = event['PUWeight']*event['genWeight']
             if not data :  eventweight *= event['lepton_SF']*event['jet_SF_CSV']
