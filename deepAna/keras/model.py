@@ -55,12 +55,13 @@ for item in test:
     if item.endswith(".pdf") or item.endswith(".h5") or item.endswith("log"):
         os.remove(os.path.join(configDir+weightDir+ver, item))
 
-#Clean up model directory
-#shutil.rmtree(configDir+weightDir+ver)
-
 #MultiGPU option
 multiGPU = True
 if os.environ["CUDA_VISIBLE_DEVICES"] in ["0","1","2","3"] : multiGPU = False
+
+#list for scores plotting
+auc_list = []
+val_auc_list = []
 
 #######################
 #Plot correlaton matrix
@@ -161,16 +162,18 @@ class roc_callback(Callback):
         y_pred_val = self.model.predict(self.x_val, batch_size=2000)
         roc_val = roc_auc_score(self.y_val, y_pred_val)
         print('\rroc-auc: %s - roc-auc_val: %s' % (str(round(roc,4)), str(round(roc_val,4))),end=100*' '+'\n')
+        auc_list.append(roc)
+        val_auc_list.append(roc_val)
 
         ###################
         #Calculate f1 score
         ###################
-        #val_predict = (y_pred_val[:,1]).round()
-        #val_targ = self.y_val[:,1]
-        #val_f1 = f1_score(val_targ, val_predict)
-        #val_recall = recall_score(val_targ, val_predict)
-        #val_precision = precision_score(val_targ, val_predict)
-        #print('val_f1: %.4f, val_precision: %.4f, val_recall %.4f' %(val_f1, val_precision, val_recall))
+        val_predict = (y_pred_val[:,1]).round()
+        val_targ = self.y_val[:,1]
+        val_f1 = f1_score(val_targ, val_predict)
+        val_recall = recall_score(val_targ, val_predict)
+        val_precision = precision_score(val_targ, val_predict)
+        print('val_f1: %.4f, val_precision: %.4f, val_recall %.4f' %(val_f1, val_precision, val_recall))
 
         ###############
         #Plot ROC curve
@@ -187,7 +190,7 @@ class roc_callback(Callback):
         plt.xlabel('Signal Efficiency')
         plt.ylabel('Background Rejection')
         plt.title('ROC Curve')
-        plt.legend(['Train', 'Test'], loc='lower left')
+        plt.legend(['Test', 'Train'], loc='lower left')
         plt.savefig(os.path.join(configDir, weightDir+ver, 'fig_roc_%d_%.4f.pdf' %(epoch+1,round(roc_val,4))))
         plt.gcf().clear()
 
@@ -308,8 +311,8 @@ X_test = data_test_sc
 #################################
 #Keras model compile and training
 #################################
-a = 200
-b = 0.2
+a = 300
+b = 0.08
 init = 'glorot_uniform'
 
 with tf.device("/cpu:0") :
@@ -317,98 +320,95 @@ with tf.device("/cpu:0") :
     x = Dense(a, kernel_regularizer=l2(1E-2))(inputs)
     x = Dropout(b)(x)
     x = BatchNormalization()(x)
-
     #branch_point1 = Dense(a, name='branch_point1')(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     x = BatchNormalization()(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     #x = add([x, branch_point1])
-
     x = BatchNormalization()(x)
-
     #branch_point2 = Dense(a, name='branch_point2')(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     x = BatchNormalization()(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     #x = add([x, branch_point2])
-
     x = BatchNormalization()(x)
-
     #branch_point3 = Dense(a, name='branch_point3')(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     x = BatchNormalization()(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     #x = add([x, branch_point3])
-
     x = BatchNormalization()(x)
-
     #branch_point4 = Dense(a, name='branch_point4')(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     x = BatchNormalization()(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
     #x = add([x, branch_point4])
-
     x = BatchNormalization()(x)
-
     #branch_point5 = Dense(a, name='branch_point5')(x)
-
     x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     x = Dropout(b)(x)
-
-    #x = BatchNormalization()(x)
-    #x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
-    #x = Dropout(b)(x)
-
+    x = BatchNormalization()(x)
+    x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
+    x = Dropout(b)(x)
     #x = add([x, branch_point5])
-
     #x = BatchNormalization()(x)
     #x = Dense(a, activation='relu', kernel_initializer=init, bias_initializer='zeros')(x)
     #x = Dropout(b)(x)
-
     predictions = Dense(2, activation='softmax')(x)
-    #predictions = Dense(2, activation='sigmoid')(x)
     model = Model(inputs=inputs, outputs=predictions)
 
 if multiGPU : train_model = multi_gpu_model(model, gpus=4)
 else : train_model = model
 
 adam=keras.optimizers.Adam(lr=1E-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1E-3)
-#train_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy','binary_accuracy'])
-train_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy','categorical_accuracy'])
+train_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy','binary_accuracy'])
+#train_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy','categorical_accuracy'])
 
 modelfile = 'model_{epoch:02d}_{val_binary_accuracy:.4f}.h5'
 checkpoint = ModelCheckpoint(configDir+weightDir+ver+'/'+modelfile, monitor='val_binary_accuracy', verbose=1, save_best_only=False)#, mode='max')
 
 history = train_model.fit(X_train, Y_train,
-                             epochs=200, batch_size=1024,
+                             epochs=100, batch_size=1024,
                              validation_data=(X_test,Y_test),
                              #class_weight={ 0: 14, 1: 1 }, 
                              callbacks=[roc_callback(training_data=(X_train,Y_train), validation_data=(X_test,Y_test), model=model)]
                              )
+
+print("Plotting scores")
+plt.plot(history.history['binary_accuracy'])
+plt.plot(history.history['val_binary_accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train','Test'], loc='lower right')
+plt.savefig(os.path.join(configDir,weightDir+ver,'fig_score_acc.pdf'))
+plt.gcf().clear()
+
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('Binary crossentropy')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train','Test'],loc='upper right')
+plt.savefig(os.path.join(configDir,weightDir+ver,'fig_score_loss.pdf'))
+plt.gcf().clear()
+
+plt.plot(auc_list)
+plt.plot(val_auc_list)
+plt.title('Area under curve')
+plt.ylabel('AUC')
+plt.xlabel('Epoch')
+plt.legend(['Train','Test'], loc='upper right')
+plt.savefig(os.path.join(configDir,weightDir+ver,'fig_score_auc.pdf'))
+plt.gcf().clear()
 
 print("Now predict score with test set")
 bestModel = ""
@@ -417,7 +417,7 @@ for filename in os.listdir(configDir+weightDir+ver):
     if not "h5" in filename : continue
     tmp = filename.split('.')
     tmp_acc = float("0."+tmp[1])
-    if tmp_acc > best_acc : 
+    if tmp_acc > best_acc :
         best_acc = tmp_acc
         bestModel = filename
 
@@ -434,4 +434,3 @@ with open("var.txt", "w") as f :
     f.write("configDir "+configDir+"\n")
     f.write("weightDir "+weightDir+"\n")
     f.write("modelfile "+str(bestModel)+"\n")
-

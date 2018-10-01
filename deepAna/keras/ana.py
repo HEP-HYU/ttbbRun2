@@ -28,7 +28,7 @@ from keras.callbacks import Callback, ModelCheckpoint
 
 import printProgress as pp
 
-def ana(inputDir, process, outputDir) :
+def ana(inputDir, process, outputDir,flag1=False) :
     timer = ROOT.TStopwatch()
     timer.Start()
 
@@ -48,15 +48,34 @@ def ana(inputDir, process, outputDir) :
             if 'modelfile' in tmp : modelfile = tmp[1]
 
     print "Load modelfile : "+str(modelfile)
-    model = load_model(configDir+weightDir+ver+'/model_90_0.7809.h5')
+    model = load_model(configDir+weightDir+ver+'/'+modelfile)
     model.summary()
+
+    if not os.path.exists(outputDir+'/'+modelfile):
+        os.makedirs(outputDir+'/'+modelfile)
+
+    closureTest = flag1
     data = False
     ttbb = False
     if 'Data' in process : data = True
     if 'ttbb' in process : ttbb = True
-    closureTest = False
 
-    df = pd.read_hdf("input/array_train_ttbb.h5")
+    df = pd.read_hdf("array/array_train_ttbb.h5")
+    nMatchable = 4864
+    countMatchable = False
+    if countMatchable :
+        df = df.filter(['signal','event','dR'], axis=1)
+        df = df.query('signal > 0')
+        tmpId = df.groupby(['event'])['dR'].transform(max) == df['dR']
+        df = df[tmpId]
+        df.reset_index(drop=True, inplace=True)
+        nMatchable = len(df.index)
+        print(nMatchable)
+    #f_tmp = open('matchable.txt','w')
+    #f_tmp.write(str(nMatchable))
+    #f_tmp.write(str(df))
+    #f_tmp.close()
+
     muon_ch = 0
     muon_pt = 30.0
     muon_eta = 2.1
@@ -72,8 +91,8 @@ def ana(inputDir, process, outputDir) :
     nChannel = 2
     nStep = 4
 
-    if closureTest : f_out = ROOT.TFile("hist/hist_closure.root", "recreate")
-    else : f_out = ROOT.TFile("hist/hist_"+process+".root", "recreate")
+    if closureTest : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_closure.root', 'recreate')
+    else : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+'.root', 'recreate')
 
     RECO_NUMBER_OF_JETS_ = "nJets"
     RECO_NUMBER_OF_BJETS_ = "nBjets"
@@ -168,7 +187,7 @@ def ana(inputDir, process, outputDir) :
         genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
 
         print "GENTREE RUN"
-        for i in xrange(1000) :
+        for i in xrange(genchain.GetEntries()) :
             pp.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
             genchain.GetEntry(i)
             addbjet1 = TLorentzVector()
@@ -212,22 +231,24 @@ def ana(inputDir, process, outputDir) :
         scaler = StandardScaler()
         if len(jetCombi) is not 0 :
             inputset = np.array(jetCombi)
-            #inputset_sc = scaler.fit_transform(inputset)
-            pred = model.predict(inputset, batch_size = 2000)
+            inputset_sc = scaler.fit_transform(inputset)
+            pred = model.predict(inputset_sc, batch_size = 2000)
 
         pred = pd.DataFrame(pred, columns=['background','signal'])
+        #pred = pd.DataFrame(pred, columns=['signal'])
         #f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
         #f_pred.write('SelEvent\n'+str(selEvent))
         selEvent = pd.concat([selEvent,pred], axis=1)
         #f_pred.write('SelEvent+Pred\n'+str(selEvent))
         idx = selEvent.groupby(['event'])['signal'].transform(max) == selEvent['signal']
         #f_pred.write('\n'+str(idx)+'\n'+str(selEvent[idx])+'\n')
-        selEvent[idx].reset_index(drop=True, inplace=True)
+        selEvent = selEvent[idx]
+        selEvent.reset_index(drop=True, inplace=True)
 
         #selEvent.groupby('event').max('signal').reset_index(drop=True, inplace=True)
-        f_pred.write("Groupby\n"+item+"\n"+str(selEvent[idx]))
+        f_pred.write("Groupby\n"+item+"\n"+str(selEvent))
         #groups = selEvent.groupby('event')
-        for idx, event in selEvent[idx].iterrows() :
+        for index, event in selEvent.iterrows() :
             #maxval = event[1][event[1]['signal'] == event[1]['signal'].max()]
             pp.printProgress(event['event'], nTotal, str(item)+':','Complete',1,25)
 
@@ -290,8 +311,6 @@ def ana(inputDir, process, outputDir) :
             if closureTest :
                 for iStep in range(0,passcut+1) :
                     if i%2 == 1 :
-                        h_lepton_pt[passchannel][iStep].Fill(lep.Pt(), eventweight)
-                        h_lepton_eta[passchannel][iStep].Fill(lep.Eta(), eventweight)
                         h_njets[passchannel][iStep].Fill(njets, eventweight)
                         h_nbjets[passchannel][iStep].Fill(nbjets, eventweight)
                         h_reco_addjets_deltaR[passchannel][iStep].Fill(reco_dR, eventweight)
@@ -313,14 +332,21 @@ def ana(inputDir, process, outputDir) :
                         h_respMatrix_deltaR[passchannel][iStep].Fill(reco_dR, gen_dR, eventweight)
                         h_respMatrix_invMass[passchannel][iStep].Fill(reco_M, gen_M, eventweight)
 
-    matching_DNN = 0.0
-    matching_mindR = 0.0
-    if nEvents is not 0 :
-        matching_DNN = float(nEvt_isMatch_DNN) / float(nEvents)
-        matching_mindR = float(nEvt_isMatch_mindR) / float(nEvents)
-    #print "\nSelected Events / Total Events : "+str(nEvents)+"/"+str(nTotal)
-    print "Matching Ratio from DNN : "+str(matching_DNN)+"("+str(nEvt_isMatch_DNN)+"/"+str(nEvents)+")"
-    #print "Matching Ratio from minimun dR : "+str(matching_mindR)+"("+str(nEvt_isMatch_mindR)+"/"+str(nEvents)+")"
+    if ttbb:
+        matching_DNN = 0.0
+        #matching_mindR = 0.0
+        if nEvents is not 0 :
+            matching_DNN_able = float(nEvt_isMatch_DNN) / float(nMatchable)
+            matching_DNN = float(nEvt_isMatch_DNN) / float(nEvents)
+            #matching_mindR = float(nEvt_isMatch_mindR) / float(nEvents)
+        #print "\nSelected Events / Total Events : "+str(nEvents)+"/"+str(nTotal)
+        print "Matching ratio with matchable events from DNN : "+str(matching_DNN_able)+"("+str(nEvt_isMatch_DNN)+"/"+str(nMatchable)+")"
+        print "Matching ratio with step 3 events from DNN : "+str(matching_DNN)+"("+str(nEvt_isMatch_DNN)+"/"+str(nEvents)+")"
+        #print "Matching Ratio from minimun dR : "+str(matching_mindR)+"("+str(nEvt_isMatch_mindR)+"/"+str(nEvents)+")"
+        f_ratio = open('ratio.txt','a')
+        f_ratio.write(modelfile)
+        f_ratio.write("\nMatching ratio with matchable events from DNN: "+str(matching_DNN_able)+"("+str(nEvt_isMatch_DNN)+"/"+str(nMatchable)+")")
+        f_ratio.close()
 
     for iChannel in range(0,2) :
         for iStep in range(0,4) :
