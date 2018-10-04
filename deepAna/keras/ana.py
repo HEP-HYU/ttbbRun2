@@ -1,7 +1,7 @@
 import sys, os
 import google.protobuf
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 import pandas as pd
 import csv
@@ -62,19 +62,19 @@ def ana(inputDir, process, outputDir,flag1=False) :
 
     df = pd.read_hdf("array/array_train_ttbb.h5")
     nMatchable = 4864
-    countMatchable = False
+    countMatchable =False 
     if countMatchable :
         df = df.filter(['signal','event','dR'], axis=1)
         df = df.query('signal > 0')
-        tmpId = df.groupby(['event'])['dR'].transform(max) == df['dR']
-        df = df[tmpId]
+        #tmpId = df.groupby(['event'])['dR'].transform(max) == df['dR']
+        #df = df[tmpId]
         df.reset_index(drop=True, inplace=True)
         nMatchable = len(df.index)
         print(nMatchable)
-    #f_tmp = open('matchable.txt','w')
-    #f_tmp.write(str(nMatchable))
-    #f_tmp.write(str(df))
-    #f_tmp.close()
+        f_tmp = open('matchable.txt','w')
+        f_tmp.write(str(nMatchable))
+        f_tmp.write(str(df))
+        f_tmp.close()
 
     muon_ch = 0
     muon_pt = 30.0
@@ -310,7 +310,7 @@ def ana(inputDir, process, outputDir,flag1=False) :
 
             if closureTest :
                 for iStep in range(0,passcut+1) :
-                    if i%2 == 1 :
+                    if index%2 == 1 :
                         h_njets[passchannel][iStep].Fill(njets, eventweight)
                         h_nbjets[passchannel][iStep].Fill(nbjets, eventweight)
                         h_reco_addjets_deltaR[passchannel][iStep].Fill(reco_dR, eventweight)
@@ -370,6 +370,10 @@ def ana(inputDir, process, outputDir,flag1=False) :
             for iYaxis in range(1, xNbins_gen_addbjets_M+1) :
                 tmp = h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M, iYaxis)+h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M+1, iYaxis)
                 h_respMatrix_invMass[iChannel][iStep].SetBinContent(xNbins_reco_addjets_M, iYaxis,tmp)
+            tmp = h_respMatrix_deltaR[iChannel][iStep].GetBinContent(xNbins_reco_addjets_dR+1,xNbins_gen_addbjets_dR+1)+h_respMatrix_deltaR[iChannel][iStep].GetBinContent(xNbins_reco_addjets_dR,xNbins_gen_addbjets_dR)
+            h_respMatrix_deltaR[iChannel][iStep].SetBinContent(xNbins_reco_addjets_dR,xNbins_gen_addbjets_dR,tmp)
+            tmp = h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M+1,xNbins_gen_addbjets_M+1)+h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M,xNbins_gen_addbjets_M)
+            h_respMatrix_invMass[iChannel][iStep].SetBinContent(xNbins_reco_addjets_M,xNbins_gen_addbjets_M,tmp)
 
             h_njets[iChannel][iStep].ClearUnderflowAndOverflow()
             h_nbjets[iChannel][iStep].ClearUnderflowAndOverflow()
