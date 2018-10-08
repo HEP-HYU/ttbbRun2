@@ -172,3 +172,17 @@ TPaveText * tdrCMSlabel(){
 
   return label;
 }
+TPaveText * tdrCMSSimlabel(){
+  TPaveText *label = new TPaveText();
+  label->SetX1NDC(0.48);
+  label->SetX2NDC(0.90);
+  label->SetY1NDC(0.94);
+  label->SetY2NDC(0.98);
+  label->SetTextFont(42);
+  label->AddText("CMS Simulation");
+  label->SetFillStyle(0);
+  label->SetBorderSize(0);
+  label->SetTextSize(0.04);
+
+  return label;
+}

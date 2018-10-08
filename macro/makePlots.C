@@ -42,7 +42,6 @@ void makePlots(){
   v_Monte.push_back(new MonteFile(NAME_[WW_], "DiBoson", kCyan, XSEC_[WW_]));
   v_Monte.push_back(new MonteFile(NAME_[WZ_], "DiBoson", kCyan, XSEC_[WZ_]));
   v_Monte.push_back(new MonteFile(NAME_[ZZ_], "DiBoson", kCyan, XSEC_[ZZ_]));
-  v_Monte.push_back(new MonteFile(NAME_[ZZ_], "DiBoson", kCyan, XSEC_[ZZ_]));
   /*
   v_Monte.push_back(new MonteFile("qcdEl20to30", "QCD", kOrange+1, QCDXSEC_[El1]));
   v_Monte.push_back(new MonteFile("qcdEl30to50", "QCD", kOrange+1, QCDXSEC_[El2]));
@@ -63,8 +62,6 @@ void makePlots(){
   v_Monte.push_back(new MonteFile("qcdMu800to1000", "QCD", kOrange+1, QCDXSEC_[Mu10]));
   v_Monte.push_back(new MonteFile("qcdMu1000toInf", "QCD", kOrange+1, QCDXSEC_[Mu11]));
   */
-
-
 
   int nHist=0;
   for(auto v_itr = v_Monte[TTBB_]->v_histName.begin(); v_itr != v_Monte[TTBB_]->v_histName.end(); ++v_itr){

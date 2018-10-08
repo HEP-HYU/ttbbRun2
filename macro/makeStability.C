@@ -5,30 +5,30 @@ void drawHist(TH1 *h_in, bool drawError);
 
 string input = "../output/root/";
 string output = "../output/root/";
-string output_pdf = "../output/pdf";
+string output_pdf = "../output/pdf/";
 
 void makeStability(){
   //FILES
   TFile *f_ttbb = TFile::Open(Form("%shist_ttbb.root",input.c_str()));
-  TFile *f_matrix = TFile::Open(Form("%shist_respMatrix_ttbb_test.root",input.c_str()));
+  TFile *f_matrix = TFile::Open(Form("%shist_respMatrix_ttbb.root",input.c_str()));
   TFile *f_outFile = TFile::Open(Form("%shist_stability_ttbb.root",output.c_str()),"recreate");
   
   //NORMALIZATION
   TH1 *EventInfo = (TH1 *)f_ttbb->Get("EventInfo");
   const double scale = LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
-  //const double scale = 1;
+  //const double scale = LUMINOSITY_*831.76/EventInfo->GetBinContent(2);
 
   //HISTOGRAMS
   HistoBook *h_stb = new HistoBook(3,NAME_[TTBB_].c_str());
 
-  TH2D *h_respMatrix_deltaR[nChannel][nStep];
-  TH2D *h_respMatrix_invMass[nChannel][nStep];
+  TH2D *h_respMatrix_deltaR[nChannel];
+  TH2D *h_respMatrix_invMass[nChannel];
 
-  TH1D *h_gen_addbjets_deltaR[nChannel][nStep];
-  TH1D *h_gen_addbjets_invMass[nChannel][nStep];
+  TH1D *h_gen_addbjets_deltaR[nChannel];
+  TH1D *h_gen_addbjets_invMass[nChannel];
 
-  TH1D *h_reco_addjets_deltaR[nChannel][nStep];
-  TH1D *h_reco_addjets_invMass[nChannel][nStep];
+  TH1D *h_reco_addjets_deltaR[nChannel];
+  TH1D *h_reco_addjets_invMass[nChannel];
 
   TH1D *h_gen_addbjets_nosel_deltaR[nChannel];
   TH1D *h_gen_addbjets_nosel_invMass[nChannel];
@@ -36,120 +36,121 @@ void makeStability(){
   TH1D *h_gen_addbjets_afterSel_invMass[nChannel];
 
   for(int iChannel=0; iChannel<nChannel; ++iChannel){    
-    h_gen_addbjets_nosel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_%s_Ch%d_nosel_%s",GEN_ADDBJETS_DELTAR_,iChannel,NAME_[TTBB_].c_str()));
+    h_gen_addbjets_nosel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetDeltaR_Ch%d_nosel_ttbb",iChannel));
     h_gen_addbjets_nosel_deltaR[iChannel]->Scale(scale);
-    h_gen_addbjets_nosel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_%s_Ch%d_nosel_%s",GEN_ADDBJETS_INVARIANT_MASS_,iChannel,NAME_[TTBB_].c_str()));
+    h_gen_addbjets_nosel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetInvMass_Ch%d_nosel_%s",iChannel,NAME_[TTBB_].c_str()));
     h_gen_addbjets_nosel_invMass[iChannel]->Scale(scale);
-    h_gen_addbjets_afterSel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_%s_Ch%d_S3_%s",GEN_ADDBJETS_DELTAR_,iChannel,NAME_[TTBB_].c_str()));
+    h_gen_addbjets_afterSel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetDeltaR_Ch%d_S3_%s",iChannel,NAME_[TTBB_].c_str()));
     h_gen_addbjets_afterSel_deltaR[iChannel]->Scale(scale);
-    h_gen_addbjets_afterSel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_%s_Ch%d_S3_%s",GEN_ADDBJETS_INVARIANT_MASS_,iChannel,NAME_[TTBB_].c_str()));
+    h_gen_addbjets_afterSel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetInvMass_Ch%d_S3_%s",iChannel,NAME_[TTBB_].c_str()));
     h_gen_addbjets_afterSel_invMass[iChannel]->Scale(scale);
 
-    for(int iStep=0; iStep<nStep; ++iStep){
-      h_respMatrix_deltaR[iChannel][iStep] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S%d_%s",RESPONSE_MATRIX_DELTAR_,iChannel,iStep,NAME_[TTBB_].c_str()));
-      h_respMatrix_deltaR[iChannel][iStep]->Scale(scale);
-      h_respMatrix_invMass[iChannel][iStep] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S%d_%s",RESPONSE_MATRIX_INVARIANT_MASS_,iChannel,iStep,NAME_[TTBB_].c_str()));
-      h_respMatrix_invMass[iChannel][iStep]->Scale(scale);
+    h_respMatrix_deltaR[iChannel] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S3_%s",RESPONSE_MATRIX_DELTAR_,iChannel,NAME_[TTBB_].c_str()));
+    h_respMatrix_deltaR[iChannel]->Scale(scale);
+    h_respMatrix_invMass[iChannel] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S3_%s",RESPONSE_MATRIX_INVARIANT_MASS_,iChannel,NAME_[TTBB_].c_str()));
+    h_respMatrix_invMass[iChannel]->Scale(scale);
 
-      h_gen_addbjets_deltaR[iChannel][iStep] = h_respMatrix_deltaR[iChannel][iStep]->ProjectionY();
-      h_gen_addbjets_invMass[iChannel][iStep] = h_respMatrix_invMass[iChannel][iStep]->ProjectionY();
+    h_gen_addbjets_deltaR[iChannel] = h_respMatrix_deltaR[iChannel]->ProjectionY();
+    h_gen_addbjets_invMass[iChannel] = h_respMatrix_invMass[iChannel]->ProjectionY();
 
-      h_reco_addjets_deltaR[iChannel][iStep] = h_respMatrix_deltaR[iChannel][iStep]->ProjectionX();
-      h_reco_addjets_invMass[iChannel][iStep] = h_respMatrix_invMass[iChannel][iStep]->ProjectionX();
-    }
+    h_reco_addjets_deltaR[iChannel] = h_respMatrix_deltaR[iChannel]->ProjectionX();
+    h_reco_addjets_invMass[iChannel] = h_respMatrix_invMass[iChannel]->ProjectionX();
   }
  
   for(int iChannel=0; iChannel<nChannel; ++iChannel){
     cout << "=======================================" << endl;
     cout << "Channel : " << iChannel << endl;
-    for(int iStep=0; iStep < nStep; ++iStep){
-      cout << "Step : " << iStep << endl;
-      cout << "----------------------------------------" << endl;
-      cout << "Variable : delta R" << endl;
-      cout << "********** Purity **********" << endl;
-      for(int iBin=1; iBin<h_stb->xNbins_reco_addjets_dR+1; ++iBin){
-	//PURITY
-	cout << iBin << "th Bin" << endl;
-	double purity_dR = 0.0;
-	if(h_reco_addjets_deltaR[iChannel][iStep]->GetBinContent(iBin) != 0.0){
-	  auto xlow = h_respMatrix_deltaR[iChannel][iStep]->GetXaxis()->GetBinLowEdge(iBin);
-	  auto ybin = h_respMatrix_deltaR[iChannel][iStep]->GetYaxis()->FindBin(xlow);
-	  purity_dR = h_respMatrix_deltaR[iChannel][iStep]->GetBinContent(iBin,ybin)/h_reco_addjets_deltaR[iChannel][iStep]->GetBinContent(iBin);
+    cout << "----------------------------------------" << endl;
+    cout << "Variable : delta R" << endl;
+    cout << "********** Purity **********" << endl;
+    for(int iBin=1; iBin<h_stb->xNbins_reco_addjets_dR+1; ++iBin){
+      //PURITY
+      cout << iBin << "th Bin" << endl;
+      double purity_dR = 0.0;
+      if(h_reco_addjets_deltaR[iChannel]->GetBinContent(iBin) != 0.0){
+	auto xlow = h_respMatrix_deltaR[iChannel]->GetXaxis()->GetBinLowEdge(iBin);
+	auto ybin = h_respMatrix_deltaR[iChannel]->GetYaxis()->FindBin(xlow);
+	purity_dR = h_respMatrix_deltaR[iChannel]->GetBinContent(iBin,ybin)/h_reco_addjets_deltaR[iChannel]->GetBinContent(iBin);
 	 
-	  cout << "x low : " << xlow << endl;
-	  cout << "y bin number : " << ybin << endl;
-	  cout << "value : " << purity_dR << endl;
-	}
-	h_stb->h_purity_deltaR[iChannel][iStep]->SetBinContent(iBin, purity_dR);
+	cout << "x low : " << xlow << endl;
+	cout << "y bin number : " << ybin << endl;
+	cout << "xBinContent : " << h_reco_addjets_deltaR[iChannel]->GetBinContent(iBin) << endl;
+	cout << "yBinContent : " << h_respMatrix_deltaR[iChannel]->GetBinContent(iBin,ybin) << endl;
+	cout << "value : " << purity_dR << endl;
       }
+      h_stb->h_purity_deltaR[iChannel]->SetBinContent(iBin, purity_dR);
+    }
+
+    cout << "********** Stability  **********" << endl;
+    for(int iBin=1; iBin<h_stb->xNbins_gen_addbjets_dR+1; ++iBin){
+      //STABILITY
+      cout << iBin << "th Bin" << endl;
+      double stability_dR = 0.0;
+      if(h_gen_addbjets_deltaR[iChannel]->GetBinContent(iBin) != 0.0){
+        auto ylow = h_respMatrix_deltaR[iChannel]->GetYaxis()->GetBinLowEdge(iBin);
+        auto ymax = h_respMatrix_deltaR[iChannel]->GetYaxis()->GetBinLowEdge(iBin+1);
+        auto xlow = h_respMatrix_deltaR[iChannel]->GetXaxis()->FindBin(ylow);
+        auto xmax = h_respMatrix_deltaR[iChannel]->GetXaxis()->FindBin(ymax);
+        if(xlow == xmax && xmax == h_respMatrix_deltaR[iChannel]->GetNbinsX()) ++xmax;
+        double xbincontent = 0.;
+        for(int ixbin = xlow; ixbin < xmax; ++ixbin)
+	  xbincontent += h_respMatrix_deltaR[iChannel]->GetBinContent(ixbin,iBin);
+        stability_dR = xbincontent/h_gen_addbjets_deltaR[iChannel]->GetBinContent(iBin);
+        cout << "y low : " << ylow << ", max : " << ymax << endl;
+        cout << "x low : " << xlow << ", max : " << xmax << endl;
+        cout << "xBinContent : " << xbincontent << endl;
+        cout << "yBinContent : " << h_gen_addbjets_deltaR[iChannel]->GetBinContent(iBin) << endl;
+        cout << "value :" << stability_dR << endl;
+      }
+      h_stb->h_stability_deltaR[iChannel]->SetBinContent(iBin, stability_dR);
+    }
+    cout << "----------------------------------------" << endl;
+    cout << "Variable : invariant mass" << endl;
+    cout << "********** Purity **********" << endl;
+
+    for(int iBin=1; iBin<h_stb->xNbins_reco_addjets_M+1; ++iBin){
+      //PURITY
+      cout << iBin << "th Bin" << endl;
+      double purity_M = 0.0;
+      if(h_reco_addjets_invMass[iChannel]->GetBinContent(iBin) != 0.0){
+        auto xlow = h_respMatrix_invMass[iChannel]->GetXaxis()->GetBinLowEdge(iBin);
+        auto ybin = h_respMatrix_invMass[iChannel]->GetYaxis()->FindBin(xlow);
+        purity_M = h_respMatrix_invMass[iChannel]->GetBinContent(iBin,ybin)/h_reco_addjets_invMass[iChannel]->GetBinContent(iBin);
       
-      cout << "********** Stability  **********" << endl;
-      for(int iBin=1; iBin<h_stb->xNbins_gen_addbjets_dR+1; ++iBin){
-	//STABILITY
-	cout << iBin << "th Bin" << endl;
-	double stability_dR = 0.0;
-	if(h_gen_addbjets_deltaR[iChannel][iStep]->GetBinContent(iBin) != 0.0){
-	  auto ylow = h_respMatrix_deltaR[iChannel][iStep]->GetYaxis()->GetBinLowEdge(iBin);
-	  auto ymax = h_respMatrix_deltaR[iChannel][iStep]->GetYaxis()->GetBinLowEdge(iBin+1);
-	  auto xlow = h_respMatrix_deltaR[iChannel][iStep]->GetXaxis()->FindBin(ylow);
-	  auto xmax = h_respMatrix_deltaR[iChannel][iStep]->GetXaxis()->FindBin(ymax);
-	  if(xlow == xmax && xmax == h_respMatrix_deltaR[iChannel][iStep]->GetNbinsX()) ++xmax;
-	  double xbincontent = 0.;
-	  for(int ixbin = xlow; ixbin < xmax; ++ixbin)
-	    xbincontent += h_respMatrix_deltaR[iChannel][iStep]->GetBinContent(ixbin,iBin);
-	  stability_dR = xbincontent/h_gen_addbjets_deltaR[iChannel][iStep]->GetBinContent(iBin);
-	  cout << "y low : " << ylow << ", max : " << ymax << endl;
-	  cout << "x low : " << xlow << ", max : " << xmax << endl;
-	  cout << "xBinContent : " << xbincontent << endl;
-	  cout << "value :" << stability_dR << endl;
-	}
-	h_stb->h_stability_deltaR[iChannel][iStep]->SetBinContent(iBin, stability_dR);
+        cout << "x low : " << xlow << endl;
+        cout << "y bin number : " << ybin << endl;
+        cout << "xBinContent : " << h_reco_addjets_invMass[iChannel]->GetBinContent(iBin) << endl;
+        cout << "yBinContent : " << h_respMatrix_invMass[iChannel]->GetBinContent(iBin,ybin) << endl;
+        cout << "value : " << purity_M << endl;
       }
-      cout << "----------------------------------------" << endl;
-      cout << "Variable : invariant mass" << endl;
-      cout << "********** Purity **********" << endl;
-     
-      for(int iBin=1; iBin<h_stb->xNbins_reco_addjets_M+1; ++iBin){
-	//PURITY
-	cout << iBin << "th Bin" << endl;
-	double purity_M = 0.0;
-	if(h_reco_addjets_invMass[iChannel][iStep]->GetBinContent(iBin) != 0.0){
-	  auto xlow = h_respMatrix_invMass[iChannel][iStep]->GetXaxis()->GetBinLowEdge(iBin);
-	  auto ybin = h_respMatrix_invMass[iChannel][iStep]->GetYaxis()->FindBin(xlow);
-	  purity_M = h_respMatrix_invMass[iChannel][iStep]->GetBinContent(iBin,ybin)/h_reco_addjets_invMass[iChannel][iStep]->GetBinContent(iBin);
-	  
-	  cout << "x low : " << xlow << endl;
-	  cout << "y bin number : " << ybin << endl;
-	  cout << "value : " << purity_M << endl;
-	}
-	h_stb->h_purity_invMass[iChannel][iStep]->SetBinContent(iBin, purity_M);
+      h_stb->h_purity_invMass[iChannel]->SetBinContent(iBin, purity_M);
+    }
+
+    cout << "********** Stability  **********" << endl;
+    for(int iBin=1; iBin<h_stb->xNbins_gen_addbjets_M+1; ++iBin){
+      //STABILITY
+      cout << iBin << "th Bin" << endl;
+      double stability_M = 0.0;
+      if(h_gen_addbjets_invMass[iChannel]->GetBinContent(iBin) != 0.0){
+        auto ylow = h_respMatrix_invMass[iChannel]->GetYaxis()->GetBinLowEdge(iBin);
+        auto ymax = h_respMatrix_invMass[iChannel]->GetYaxis()->GetBinLowEdge(iBin+1);
+        auto xlow = h_respMatrix_invMass[iChannel]->GetXaxis()->FindBin(ylow);
+        auto xmax = h_respMatrix_invMass[iChannel]->GetXaxis()->FindBin(ymax);
+        if(xlow == xmax && xmax == h_respMatrix_invMass[iChannel]->GetNbinsX()) ++xmax;
+        double xbincontent = 0.;
+        for(int ixbin = xlow; ixbin < xmax; ++ixbin)
+	  xbincontent += h_respMatrix_invMass[iChannel]->GetBinContent(ixbin,iBin);
+        stability_M = xbincontent/h_gen_addbjets_invMass[iChannel]->GetBinContent(iBin);
+      
+        cout << "y low : " << ylow << ", max : " << ymax << endl;
+        cout << "x low : " << xlow << ", max : " << xmax << endl;
+        cout << "xBinContent : " << xbincontent << endl;
+        cout << "yBinContent : " << h_gen_addbjets_invMass[iChannel]->GetBinContent(iBin) << endl;
+        cout << "value :" << stability_M << endl;
       }
-	
-      cout << "********** Stability  **********" << endl;
-      for(int iBin=1; iBin<h_stb->xNbins_gen_addbjets_M+1; ++iBin){
-	//STABILITY
-	cout << iBin << "th Bin" << endl;
-	double stability_M = 0.0;
-	if(h_gen_addbjets_invMass[iChannel][iStep]->GetBinContent(iBin) != 0.0){
-	  auto ylow = h_respMatrix_invMass[iChannel][iStep]->GetYaxis()->GetBinLowEdge(iBin);
-	  auto ymax = h_respMatrix_invMass[iChannel][iStep]->GetYaxis()->GetBinLowEdge(iBin+1);
-	  auto xlow = h_respMatrix_invMass[iChannel][iStep]->GetXaxis()->FindBin(ylow);
-	  auto xmax = h_respMatrix_invMass[iChannel][iStep]->GetXaxis()->FindBin(ymax);
-	  if(xlow == xmax && xmax == h_respMatrix_invMass[iChannel][iStep]->GetNbinsX()) ++xmax;
-	  double xbincontent = 0.;
-	  for(int ixbin = xlow; ixbin < xmax; ++ixbin)
-	    xbincontent += h_respMatrix_invMass[iChannel][iStep]->GetBinContent(ixbin,iBin);
-	  stability_M = xbincontent/h_gen_addbjets_invMass[iChannel][iStep]->GetBinContent(iBin);
-	  
-	  cout << "y low : " << ylow << ", max : " << ymax << endl;
-	  cout << "x low : " << xlow << ", max : " << xmax << endl;
-	  cout << "xBinContent : " << xbincontent << endl;
-	  cout << "value :" << stability_M << endl;
-	}
-	h_stb->h_stability_invMass[iChannel][iStep]->SetBinContent(iBin, stability_M);
-      }
-      cout << "----------------------------------------" << endl;
-    }//Step
+      h_stb->h_stability_invMass[iChannel]->SetBinContent(iBin, stability_M);
+    }
+    cout << "----------------------------------------" << endl;
 
     //ACCEPTANCE
     for(int iBin=1; iBin<h_stb->xNbins_gen_addbjets_dR+1;++iBin){
@@ -198,25 +199,25 @@ void makeStability(){
     drawHist(h_tmp, true);
     h_tmp->~TH1D();
       
-    h_tmp = (TH1D *)h_stb->h_purity_deltaR[iChannel][3]->Clone();
+    h_tmp = (TH1D *)h_stb->h_purity_deltaR[iChannel]->Clone();
     h_tmp->Scale(100);
     h_tmp->GetYaxis()->SetTitle("Purity(%)");
     drawHist(h_tmp, false);
     h_tmp->~TH1D();
     
-    h_tmp = (TH1D *)h_stb->h_purity_invMass[iChannel][3]->Clone();
+    h_tmp = (TH1D *)h_stb->h_purity_invMass[iChannel]->Clone();
     h_tmp->Scale(100);
     h_tmp->GetYaxis()->SetTitle("Purity(%)");
     drawHist(h_tmp, false);
     h_tmp->~TH1D();
 
-    h_tmp = (TH1D *)h_stb->h_stability_deltaR[iChannel][3]->Clone();
+    h_tmp = (TH1D *)h_stb->h_stability_deltaR[iChannel]->Clone();
     h_tmp->Scale(100);
     h_tmp->GetYaxis()->SetTitle("Stability(%)");
     drawHist(h_tmp, false);
     h_tmp->~TH1D();
     
-    h_tmp = (TH1D *)h_stb->h_stability_invMass[iChannel][3]->Clone();
+    h_tmp = (TH1D *)h_stb->h_stability_invMass[iChannel]->Clone();
     h_tmp->Scale(100);
     h_tmp->GetYaxis()->SetTitle("Stability(%)");
     drawHist(h_tmp, false);

@@ -187,7 +187,7 @@ const char * RECO_ADDBJETS_INVARIANT_MASS_ = "RecobJetInvMass";
 const char * RECO_TOTJETS_INVARIANT_MASS_ = "RecoTotJetInvMass";
 const char * GEN_ADDJETS_DELTAR_ = "GenJetDeltaR";
 const char * GEN_ADDJETS_INVARIANT_MASS_ = "GenJetInvMass";
-const char * GEN_ADDBJETS_DELTAR_ = "GenbJetDetlaR";
+const char * GEN_ADDBJETS_DELTAR_ = "GenbJetDeltaR";
 const char * GEN_ADDBJETS_INVARIANT_MASS_ = "GenbJetInvMass";
 const char * GEN_TOTJETS_INVARIANT_MASS_ = "GenTotJetInvMass";
 const char * RESPONSE_MATRIX_DELTAR_ = "ResponseMatrixDeltaR";
@@ -273,11 +273,11 @@ class HistoBook{
     TH1D *h_gen_addbjets_deltaR[nChannel][nStep];
     TH1D *h_gen_addbjets_invMass[nChannel][nStep];
     //etc : mode = 3
-    TH1D *h_stability_deltaR[nChannel][nStep];
-    TH1D *h_purity_deltaR[nChannel][nStep];
+    TH1D *h_stability_deltaR[nChannel];
+    TH1D *h_purity_deltaR[nChannel];
     TH1D *h_acceptance_deltaR[nChannel];
-    TH1D *h_stability_invMass[nChannel][nStep];
-    TH1D *h_purity_invMass[nChannel][nStep];
+    TH1D *h_stability_invMass[nChannel];
+    TH1D *h_purity_invMass[nChannel];
     TH1D *h_acceptance_invMass[nChannel];
 };
 
@@ -450,43 +450,42 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_acceptance_invMass[iChannel]->SetXTitle("M_{b#bar{b}}(GeV)");
       h_acceptance_invMass[iChannel]->SetYTitle("acceptance");
       h_acceptance_invMass[iChannel]->Sumw2();
-      for(int iStep=0; iStep<nStep; ++iStep){
-	h_stability_deltaR[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",BIN_STABILITY_DELTAR_,iChannel,iStep,_process),"",
-	    xNbins_gen_addbjets_dR,
-	    //gen_addbjets_dR_min, gen_addbjets_dR_max
-	    gen_addbjets_dR_width
-	    );
-	h_stability_deltaR[iChannel][iStep]->SetXTitle("#DeltaR_{b#bar{b}}");
-	h_stability_deltaR[iChannel][iStep]->SetYTitle("stability");
-	h_stability_deltaR[iChannel][iStep]->Sumw2();
+	
+      h_stability_deltaR[iChannel] = new TH1D(Form("h_%s_Ch%d_S3_%s",BIN_STABILITY_DELTAR_,iChannel,_process),"",
+	  xNbins_gen_addbjets_dR,
+	  //gen_addbjets_dR_min, gen_addbjets_dR_max
+	  gen_addbjets_dR_width
+	  );
+      h_stability_deltaR[iChannel]->SetXTitle("#DeltaR_{b#bar{b}}");
+      h_stability_deltaR[iChannel]->SetYTitle("stability");
+      h_stability_deltaR[iChannel]->Sumw2();
 
-	h_purity_deltaR[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",BIN_PURITY_DELTAR_,iChannel,iStep,_process),"",
-	    xNbins_gen_addbjets_dR,
-	    //gen_addbjets_dR_min, gen_addbjets_dR_max
-	    gen_addbjets_dR_width
-	    );
-	h_purity_deltaR[iChannel][iStep]->SetXTitle("#DeltaR_{b#bar{b}}");
-	h_purity_deltaR[iChannel][iStep]->SetYTitle("purity");
-	h_purity_deltaR[iChannel][iStep]->Sumw2();
+      h_purity_deltaR[iChannel] = new TH1D(Form("h_%s_Ch%d_S3_%s",BIN_PURITY_DELTAR_,iChannel,_process),"",
+	  xNbins_gen_addbjets_dR,
+	  //gen_addbjets_dR_min, gen_addbjets_dR_max
+	  gen_addbjets_dR_width
+	  );
+      h_purity_deltaR[iChannel]->SetXTitle("#DeltaR_{b#bar{b}}");
+      h_purity_deltaR[iChannel]->SetYTitle("purity");
+      h_purity_deltaR[iChannel]->Sumw2();
 
-	h_stability_invMass[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",BIN_STABILITY_INVARIANT_MASS_,iChannel,iStep,_process),"",
-	    xNbins_gen_addbjets_M,
-	    //gen_addbjets_M_min, gen_addbjets_M_max
-	    gen_addbjets_M_width
-	    );
-	h_stability_invMass[iChannel][iStep]->SetXTitle("M_{b#bar{b}}(GeV)");
-	h_stability_invMass[iChannel][iStep]->SetYTitle("stability");
-	h_stability_invMass[iChannel][iStep]->Sumw2();
+      h_stability_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d_S3_%s",BIN_STABILITY_INVARIANT_MASS_,iChannel,_process),"",
+	  xNbins_gen_addbjets_M,
+	  //gen_addbjets_M_min, gen_addbjets_M_max
+	  gen_addbjets_M_width
+	  );
+      h_stability_invMass[iChannel]->SetXTitle("M_{b#bar{b}}(GeV)");
+      h_stability_invMass[iChannel]->SetYTitle("stability");
+      h_stability_invMass[iChannel]->Sumw2();
 
-	h_purity_invMass[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",BIN_PURITY_INVARIANT_MASS_,iChannel,iStep,_process),"",
-	    xNbins_gen_addbjets_M,
-	    //gen_addbjets_M_min, gen_addbjets_M_max
-	    gen_addbjets_M_width
-	    );
-	h_purity_invMass[iChannel][iStep]->SetXTitle("M_{b#bar{b}}(GeV)");
-	h_purity_invMass[iChannel][iStep]->SetYTitle("purity");
-	h_purity_invMass[iChannel][iStep]->Sumw2();
-      }//step
+      h_purity_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d_S3_%s",BIN_PURITY_INVARIANT_MASS_,iChannel,_process),"",
+	  xNbins_gen_addbjets_M,
+	  //gen_addbjets_M_min, gen_addbjets_M_max
+	  gen_addbjets_M_width
+	  );
+      h_purity_invMass[iChannel]->SetXTitle("M_{b#bar{b}}(GeV)");
+      h_purity_invMass[iChannel]->SetYTitle("purity");
+      h_purity_invMass[iChannel]->Sumw2();
     }//channel
   }//mode
   else
