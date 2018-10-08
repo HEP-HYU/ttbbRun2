@@ -13,8 +13,8 @@
 using namespace std;
 
 string input = "/home/seohyun/work/ttbb/heptool/tmp/";
-string output = "/home/seohyun/work/ttbb/heptool/output/";
-string ntuple = "/data/users/seohyun/ntuple/hep2017/v808/nosplit/"
+string output = "/home/seohyun/work/ttbb/heptool/output/root/";
+string ntuple = "/data/users/seohyun/ntuple/hep2017/v808/nosplit/";
 
 void merge(){
   vector<string> v_histName;
@@ -38,7 +38,7 @@ void merge(){
   TFile *f_mu[nData], *f_el[nData];
   for(int i=0; i<nData; ++i){
     f_mu[i] = TFile::Open(Form("%s/hist_%s.root",input.c_str(),v_dataName_mu[i].c_str()));
-    f_el[i] = TFile::Open(Form("%s/hist_%s.root",input.c_str(),v_dataName_el[i].c_str()));
+    f_el[i] = TFile::Open(Form("%s/hist_%s.root",input.c_str(),v_dataName_eg[i].c_str()));
   }
   TFile *f_out_mu = TFile::Open(Form("%s/hist_DataSingleMu.root",output.c_str()),"recreate");
   TFile *f_out_el = TFile::Open(Form("%s/hist_DataSingleEl.root",output.c_str()),"recreate");
@@ -94,18 +94,18 @@ void merge(){
 
   TFile *f_in[nSample],*f_out[nSample],*f_tree[nSample];
   for(int i=0;i<20;++i){
-    f_in[i] = TFile::Open(Form("%s/hist_%s.root",input.c_str(),sampleName[i].c_str()));
-    f_out[i] = TFile::Open(Form("%s/hist_%s.root",output.c_str(),dataName[i].c_str()),"recreate");
-    f_tree[i] = TFile::Open(Form("%s/%s.root",ntuple.c_str(),sampleName[i].c_str()));
+    f_in[i] = TFile::Open(Form("%s/hist_%s.root",input.c_str(),v_sampleName[i].c_str()));
+    f_out[i] = TFile::Open(Form("%s/hist_%s.root",output.c_str(),v_sampleName_out[i].c_str()),"recreate");
+    f_tree[i] = TFile::Open(Form("%s/%s.root",ntuple.c_str(),v_sampleName[i].c_str()));
   }
 
   
   for(int i=0; i<nSample; ++i){
     f_out[i]->cd();
     for(int j=0; j<nHist; ++j){
-      string histName = v_histName.at(j)+sampleName[i];
+      string histName = v_histName.at(j)+v_sampleName.at(i);
       auto h_tmp = (TH1 *)f_in[i]->Get(histName.c_str());
-      string histName2 = v_histName.at(j)+dataName[i];
+      string histName2 = v_histName.at(j)+v_sampleName_out.at(i);
       h_tmp->SetName(histName2.c_str());
       h_tmp->Write();
     }
@@ -116,7 +116,7 @@ void merge(){
     f_tree[i]->Close();
   }
 
-  TFile *f_matrix = TFile::Open(Form("%s/hist_respMatrix_ttbb.root",output),"recreate");
+  TFile *f_matrix = TFile::Open(Form("%s/hist_respMatrix_ttbb.root",output.c_str()),"recreate");
 
   vector<string> v_histNameMatrix;
   for(int i=0; i<2; ++i){
@@ -128,7 +128,7 @@ void merge(){
     v_histNameMatrix.push_back(Form("h_ResponseMatrixInvMass_Ch%d_S3_TTLJ_PowhegPythia_ttbb",i));
   }
   f_matrix->cd();
-  for(int i=0; i<v_histNameMatrix.size();++i){
+  for(unsigned i=0; i<v_histNameMatrix.size();++i){
     auto h_tmp = (TH1 *)f_in[5]->Get((v_histNameMatrix.at(i)).c_str());
     h_tmp->Write();
   }
