@@ -174,6 +174,8 @@ TH1 *avoidVoid(TH1 *h_in,int variable, int channel){
 }
 
 void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_truth_){
+  gROOT->ProcessLine("setTDRStyle();"); 
+  
   vector<string> var = {"deltaR", "invMass"};
   vector<string> dat = {"Data", "MC"};
   vector<int> markerStyle = { kFullCircle, kFullSquare, kFullTriangleUp, kFullTriangleDown,
@@ -220,8 +222,12 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
   TH1 *h_tmp = (TH1 *)(h_in.at(0))->Clone();
   h_tmp->SetMaximum(80);
   h_tmp->SetMinimum(-0.01);
+  h_tmp->GetYaxis()->SetTitleOffset(1.6);
+  h_tmp->GetYaxis()->SetTitleSize(0.04);
   h_tmp->GetYaxis()->SetTitle("Statistical Uncertainty(%)");
   h_tmp->GetXaxis()->SetTitleOffset(1.2);
+  if(var.at(variable) == "deltaR") h_tmp->GetXaxis()->SetTitle("#DeltaR_{b#bar{b}}");
+  else h_tmp->GetXaxis()->SetTitle("m_{b#bar{b}}");
   h_tmp->Draw("axis");
   for(int i=0; i<v_grp.size(); ++i){
     v_grp.at(i)->SetMarkerSize(1.5);
@@ -244,8 +250,12 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
   TH1 *h_tmp2 = (TH1 *)(h_in.at(0))->Clone();
   h_tmp2->SetMaximum(0.3);
   h_tmp2->SetMinimum(-0.5);
+  h_tmp2->GetYaxis()->SetTitleOffset(1.6);
+  h_tmp2->GetYaxis()->SetTitleSize(0.04);
   h_tmp2->GetYaxis()->SetTitle("(N_{truth}-N_{unfolded})/N_{truth}");
   h_tmp2->GetXaxis()->SetTitleOffset(1.2);
+  if(var.at(variable) == "deltaR") h_tmp2->GetXaxis()->SetTitle("#DeltaR_{b#bar{b}}");
+  else h_tmp2->GetXaxis()->SetTitle("m_{b#bar{b}}");
   h_tmp2->Draw("axis");
   for(int i=0; i<v_grp2.size(); ++i){
     v_grp2.at(i)->SetMarkerSize(1.5);
@@ -262,3 +272,96 @@ void findBestk(vector<TH1 *>h_in_, int data, int variable, int channel, TH1 *h_t
   c->~TCanvas();
 }
 
+enum opt_legend {kReco = 0, kGen, kRespX, kRespY, kUnfoldedData, kDataBkgSub};
+
+void DrawHist(string outname, TH1 *h_in1, TH1 *h_in2, int opt1, int opt2, int cor1, int cor2,
+  bool dR = false, bool diffXsec = false, bool unfold = false ,bool useTUnfold = false, int reg = 0, 
+  bool h1togrp = false, bool h2togrp = false){
+  gROOT->ProcessLine("setTDRStyle();"); 
+  vector<string> v_legname = {
+    "t#bar{t}b#bar{b} MC", "Powheg+Pythia", "X-axis projection", "Y-axis projection",
+    "Unfolded data", "Data - Background" 
+  };
+
+  TCanvas *c = new TCanvas("","",800,800);
+  TLegend *leg = new TLegend(0.6,0.7,0.88,0.88);
+  TPaveText *label_cms;
+  if(opt1 >= kUnfoldedData || opt2 >= kUnfoldedData) label_cms = tdrCMSlabel();
+  else label_cms = tdrCMSSimlabel();
+
+  TGraphErrors *grp1, *grp2;
+  if(h1togrp){
+    grp1 = buildGraphFromHist(h_in1);
+    grp1->SetLineColor(cor1);
+    grp1->SetMarkerColor(cor1);
+  }
+  if(h2togrp){
+    grp2 = buildGraphFromHist(h_in2);
+    grp2->SetLineColor(cor2);
+    grp2->SetMarkerColor(cor2);
+  }
+
+  if(unfold && !(useTUnfold))
+    leg->SetHeader(Form("k = %d",reg),"C");
+
+  if(opt1 >= kUnfoldedData)
+    leg->AddEntry(h_in1, v_legname[opt1].c_str(), "lp");
+  else if(opt1 == kGen){
+    leg->AddEntry(h_in1, v_legname[opt1].c_str(), "F");
+    h_in1->SetFillColor(cor1);
+  }
+  else
+    leg->AddEntry(h_in1, v_legname[opt1].c_str(), "l");
+  if(opt2 >= kUnfoldedData)
+    leg->AddEntry(h_in2, v_legname[opt2].c_str(), "lp");
+  else if(opt2 == kGen){
+    leg->AddEntry(h_in2, v_legname[opt2].c_str(), "F");
+    h_in2->SetFillColor(cor2);
+  }
+  else
+    leg->AddEntry(h_in2, v_legname[opt2].c_str(), "l");
+
+
+  h_in1->SetLineColor(cor1);
+  h_in2->SetLineColor(cor2);
+  h_in1->GetYaxis()->SetTitleOffset(1.6);
+  h_in1->GetXaxis()->SetTitleOffset(1.2);
+  h_in1->SetMinimum(0.0);
+  if(diffXsec && dR){
+    h_in1->GetYaxis()->SetTitleSize(0.04);
+    h_in1->GetYaxis()->SetTitle("#frac{d#sigma^{full}}{d#DeltaR}[pb]");
+    h_in1->SetMaximum(3.0);
+  }
+  else if(diffXsec && !(dR)){
+    h_in1->GetYaxis()->SetTitleSize(0.04);
+    h_in1->GetYaxis()->SetLabelSize(0.025);
+    h_in1->GetYaxis()->SetTitle("#frac{d#sigma^{full}}{dm_{b#bar{b}}}[pb/GeV]");
+    h_in1->SetMaximum(0.04);
+  }
+  else{
+    h_in1->GetYaxis()->SetTitle("Events");
+    h_in1->SetMaximum(h_in1->GetMaximum()*1.5);
+  }
+
+  if(dR) h_in1->GetXaxis()->SetTitle("#DeltaR_{b#bar{b}}");
+  else h_in1->GetXaxis()->SetTitle("m_{b#bar{b}}");
+
+  h_in1->Draw("axis");
+  
+  if(h1togrp){
+    h_in2->Draw("hist same");
+    grp1->Draw("p e same");
+  }
+  else if(h2togrp){
+    h_in1->Draw("hist same");
+    grp2->Draw("p e same");
+  }
+  else{
+    h_in2->Draw("hist same");
+    h_in1->Draw("hist same");
+  }
+  leg->Draw("same");
+  label_cms->Draw("same");
+
+  c->Print(Form("result/%s.pdf",outname.c_str()),"pdf");
+}

@@ -27,7 +27,8 @@ void makePlots2(string inputFile, string outputLocation = "../output/pdf/"){
   TGaxis::SetMaxDigits(3);
 
   TPaveText *label_cms = tdrCMSlabel();
-  
+  TPaveText *label_sim = tdrCMSSimlabel();
+
   TFile *file = TFile::Open(inputFile.c_str());
 
   TCanvas *c = new TCanvas("c","c",800,800);
@@ -37,9 +38,10 @@ void makePlots2(string inputFile, string outputLocation = "../output/pdf/"){
   TObject *obj;
   while((key = (TKey*)next())){
     obj = key->ReadObj();
-    if( obj->InheritsFrom(TH1D::Class())){
+    if(obj->InheritsFrom(TH1D::Class())){
       auto h = (TH1D *)obj;
       auto e = (TH1D *)h->Clone();
+      string histname = h.GetName();
       h->SetLineWidth(2);
       h->SetLineColor(kBlue);
       e->SetFillStyle(3013);
@@ -48,13 +50,20 @@ void makePlots2(string inputFile, string outputLocation = "../output/pdf/"){
       e->Draw("e2 same");
       h->GetYaxis()->SetTitleOffset(1.5);
       h->GetXaxis()->SetTitleOffset(1.2);
-      label_cms->Draw("same");
+      if((pos = histname.find("Data")) != std::string::npos)
+	label_cms->Draw("same");
+      else 
+	label_sim->Draw("same");
       c->Print(Form("%s/%s.pdf",outputLocation.c_str(), obj->GetName()),"pdf");
     }
-    else if( obj->InheritsFrom(TH2D::Class())){
+    else if(obj->InheritsFrom(TH2D::Class())){
       auto h = (TH2D *) obj;
+      string histname = h.GetName();
       h->Draw("box");
-      label_cms->Draw("same");
+      if((pos = histname.find("Data")) != std::string::npos)
+	label_cms->Draw("same");
+      else 
+	label_sim->Draw("same");
       c->Print(Form("%s/%s.pdf",outputLocation.c_str(), obj->GetName()),"pdf");
     }
     else{

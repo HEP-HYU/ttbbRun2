@@ -9,12 +9,12 @@ string output_pdf = "../output/pdf/";
 
 void makeStability(){
   //FILES
-  TFile *f_ttbb = TFile::Open(Form("%shist_ttbb.root",input.c_str()));
+  TFile *f_ttbb = TFile::Open("/data/users/seohyun/ntuple/hep2017/v808/nosplit/TTLJ_PowhegPythia_ttbb.root");
   TFile *f_matrix = TFile::Open(Form("%shist_respMatrix_ttbb.root",input.c_str()));
   TFile *f_outFile = TFile::Open(Form("%shist_stability_ttbb.root",output.c_str()),"recreate");
   
   //NORMALIZATION
-  TH1 *EventInfo = (TH1 *)f_ttbb->Get("EventInfo");
+  TH1 *EventInfo = (TH1 *)f_ttbb->Get("ttbbLepJets/EventInfo");
   const double scale = LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
   //const double scale = LUMINOSITY_*831.76/EventInfo->GetBinContent(2);
 
@@ -36,18 +36,18 @@ void makeStability(){
   TH1D *h_gen_addbjets_afterSel_invMass[nChannel];
 
   for(int iChannel=0; iChannel<nChannel; ++iChannel){    
-    h_gen_addbjets_nosel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetDeltaR_Ch%d_nosel_ttbb",iChannel));
+    h_gen_addbjets_nosel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetDeltaR_Ch%d_nosel_TTLJ_PowhegPythia_ttbb",iChannel));
     h_gen_addbjets_nosel_deltaR[iChannel]->Scale(scale);
-    h_gen_addbjets_nosel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetInvMass_Ch%d_nosel_%s",iChannel,NAME_[TTBB_].c_str()));
+    h_gen_addbjets_nosel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetInvMass_Ch%d_nosel_TTLJ_PowhegPythia_%s",iChannel,NAME_[TTBB_].c_str()));
     h_gen_addbjets_nosel_invMass[iChannel]->Scale(scale);
-    h_gen_addbjets_afterSel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetDeltaR_Ch%d_S3_%s",iChannel,NAME_[TTBB_].c_str()));
+    h_gen_addbjets_afterSel_deltaR[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetDeltaR_Ch%d_S3_TTLJ_PowhegPythia_%s",iChannel,NAME_[TTBB_].c_str()));
     h_gen_addbjets_afterSel_deltaR[iChannel]->Scale(scale);
-    h_gen_addbjets_afterSel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetInvMass_Ch%d_S3_%s",iChannel,NAME_[TTBB_].c_str()));
+    h_gen_addbjets_afterSel_invMass[iChannel] = (TH1D *)f_matrix->Get(Form("h_GenbJetInvMass_Ch%d_S3_TTLJ_PowhegPythia_%s",iChannel,NAME_[TTBB_].c_str()));
     h_gen_addbjets_afterSel_invMass[iChannel]->Scale(scale);
 
-    h_respMatrix_deltaR[iChannel] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S3_%s",RESPONSE_MATRIX_DELTAR_,iChannel,NAME_[TTBB_].c_str()));
+    h_respMatrix_deltaR[iChannel] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S3_TTLJ_PowhegPythia_%s",RESPONSE_MATRIX_DELTAR_,iChannel,NAME_[TTBB_].c_str()));
     h_respMatrix_deltaR[iChannel]->Scale(scale);
-    h_respMatrix_invMass[iChannel] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S3_%s",RESPONSE_MATRIX_INVARIANT_MASS_,iChannel,NAME_[TTBB_].c_str()));
+    h_respMatrix_invMass[iChannel] = (TH2D *)f_matrix->Get(Form("h_%s_Ch%d_S3_TTLJ_PowhegPythia_%s",RESPONSE_MATRIX_INVARIANT_MASS_,iChannel,NAME_[TTBB_].c_str()));
     h_respMatrix_invMass[iChannel]->Scale(scale);
 
     h_gen_addbjets_deltaR[iChannel] = h_respMatrix_deltaR[iChannel]->ProjectionY();
@@ -229,11 +229,29 @@ void makeStability(){
 void drawHist(TH1* h_in_, bool drawError){
   auto h_in = (TH1 *)h_in_->Clone();
   auto h_err = (TH1 *)h_in->Clone();
+  string histname = h_in->GetName();
 
   TCanvas *c = new TCanvas("","",800,800);
-  TPaveText *label_cms = tdrCMSlabel();
+  TPaveText *label_sim = tdrCMSSimlabel();
 
+  ssize_t pos;
   h_in->SetMaximum(h_in->GetMaximum()*1.05);
+  if((pos = histname.find("AcceptanceDeltaR")) != string::npos){
+    h_in->SetMaximum(1.2);
+    h_in->SetMinimum(0.6);
+  }
+  if((pos = histname.find("AcceptanceInvMass")) != string::npos){
+    h_in->SetMaximum(2.0);
+    h_in->SetMinimum(0.0);
+  }
+  if((pos = histname.find("Purity")) != string::npos){
+    h_in->SetMaximum(70);
+    h_in->SetMinimum(30);
+  }
+  if((pos = histname.find("Stability")) != string::npos){
+    h_in->SetMaximum(70);
+    h_in->SetMinimum(30);
+  }
   h_in->GetYaxis()->SetTitleOffset(1.5);
   h_in->GetXaxis()->SetTitleOffset(1.2);
   h_in->SetLineWidth(2);
@@ -245,7 +263,8 @@ void drawHist(TH1* h_in_, bool drawError){
     h_err->Draw("e2 same");
   }
 
-  label_cms->Draw("same");
+
+  label_sim->Draw("same");
   c->Print(Form("%s/%s.pdf", output_pdf.c_str(), h_in->GetName()),"pdf");
 
   c->~TCanvas();

@@ -174,7 +174,7 @@ TPaveText * tdrCMSlabel(){
 }
 TPaveText * tdrCMSSimlabel(){
   TPaveText *label = new TPaveText();
-  label->SetX1NDC(0.48);
+  label->SetX1NDC(0.68);
   label->SetX2NDC(0.90);
   label->SetY1NDC(0.94);
   label->SetY2NDC(0.98);
