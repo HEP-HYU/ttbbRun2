@@ -1,33 +1,30 @@
-Ntuple Analyzer
+Part1. making response matrix and unfolding input
 
-update : 2017-07-24
+To run deepAna/keras/ana.py, you must convert root file to hd5 file.
 
-1. Add macro folder.
+In directory deepAna/keras, Type this: python makeArray.py
 
-2. Seperate codes.
+makeArray.py has some options:
+1. array: making hdf file for all samples.
+2. train: making DNN training sample.
 
-3. Add response matrix macro ( macro/TreeReader.C)
+You can train DNN model file to run deepAna/keras/model.py
 
-update : 2017-07-25
+To start analysis, run deepAna/keras/runAna.py
 
-1. Add additional jets deltaR and Invariant Mass plot.
+runAna.py has some options:
+1. test: with this option, test the code running well or not using TTLJ_PowhegPythia_ttbb sample.
+2. closureTest: with this, option closure test run.
 
-2. Move MyAnlaysis.h and .C to mainAnalysis
+Part2. making control plots
 
-update : 2017-07-30
+Part3. unfolding
+To start unfolding, type root -l -b -q ttbbDiffXsec.C in ttbbDiffXsec
 
-1. Add ratio plot macro
-
-2. output files will be located output folder
-
-update : 2017-08-01
-
-1. Add PlotMaker macro : That can make ratio plots and replace makePlot.py(maybe..)
-
-update : 2017-08-02
-
-1. Modify PlotMaker macro : That maybe make same plots comparison to makePlots.py
-
-Problems.
-
-*I cannot understand why MyAnalysis.C cannot find separated header file. so, carry out .h and .C file to same folder.*
+ttbbDiffXsec.C has arguments:
+bool useTUnfold_ = false
+bool scanbyLcurve_ = true
+double tauMin_ = 0.
+double tauMax_ = 0.
+bool fixTau_ = false
+float fixedTau_ = 0.
