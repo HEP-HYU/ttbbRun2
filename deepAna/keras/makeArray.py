@@ -8,7 +8,7 @@ start_time = time.time()
 
 array = True
 train = False
-inputDir = '/data/users/seohyun/ntuple/hep2017/v808/split/'
+inputDir = '/data/users/seohyun/ntuple/hep2017/v806/split/'
 outputDir = '/home/seohyun/work/heptool/deepAna/keras/array/'
 #fileSize = os.path.getsize(inputDir+process+'/Tree_ttbbLepJets_000.root')/(1024.0**3)
 if train :

@@ -62,7 +62,7 @@ def ana(inputDir, process, outputDir,flag1=False) :
 
     df = pd.read_hdf("array/array_train_ttbb.h5")
     nMatchable = 4864
-    countMatchable =False 
+    countMatchable = False
     if countMatchable :
         df = df.filter(['signal','event','dR'], axis=1)
         df = df.query('signal > 0')
@@ -103,91 +103,466 @@ def ana(inputDir, process, outputDir,flag1=False) :
     RESPONSE_MATRIX_DELTAR_ = "ResponseMatrixDeltaR"
     RESPONSE_MATRIX_INVARIANT_MASS_ = "ResponseMatrixInvMass"
 
-    xNbins_reco_addjets_dR = 8
-    reco_addjets_dR_width = [0.4,0.5,0.6,0.8,1.0,1.5,2.0,3.0,4.0]
+    nbins_reco_addjets_dr = 4
+    reco_addjets_dr_width = [0.4,0.6,1.0,2.0,4.0]
 
-    xNbins_reco_addjets_M = 8
-    reco_addjets_M_width = [0.0,30.0,60.0,80.0,100.0,135.0,170.0,285.0,400.0]
+    nbins_reco_addjets_mass = 4
+    reco_addjets_mass_width = [0.0,60.0,100.0,170.0,400.0]
 
-    xNbins_gen_addbjets_dR = 4
-    gen_addbjets_dR_width = [0.4,0.6,1.0,2.0,4.0]
+    nbins_gen_addjets_dr = 4
+    gen_addjets_dr_width = [0.4,0.6,1.0,2.0,4.0]
 
-    xNbins_gen_addbjets_M = 4
-    gen_addbjets_M_width = [0.0,60.0,100.0,170.0,400.0]
+    nbins_gen_addjets_mass = 4
+    gen_addjets_mass_width = [0.0,60.0,100.0,170.0,400.0]
 
-    h_gen_addbjets_deltaR_nosel = []
-    h_gen_addbjets_invMass_nosel = []
-    h_njets = [[0]*nStep for i in range(nChannel)]
-    h_nbjets = [[0]*nStep for i in range(nChannel)]
-    h_reco_addjets_deltaR = [[0]*nStep for i in range(nChannel)]
-    h_reco_addjets_invMass = [[0]*nStep for i in range(nChannel)]
-    h_gen_addbjets_deltaR = [[0]*nStep for i in range(nChannel)]
-    h_gen_addbjets_invMass = [[0]*nStep for i in range(nChannel)]
-    h_respMatrix_deltaR = [[0]*nStep for i in range(nChannel)]
-    h_respMatrix_invMass = [[0]*nStep for i in range(nChannel)]
+    nbins_delta_r = 20
+    delta_r_min = 0
+    delta_r_max = 4
+    #delta_r_width = []
+
+    nbins_delta_eta = 20
+    delta_eta_min = 0
+    delta_eta_max = 2.5
+    #delta_eta_width = []
+
+    nbins_delta_phi = 20
+    delta_phi_min = 0
+    delta_phi_max = math.pi
+    #delta_phi_width = []
+
+    nbins_pt = 20
+    pt_min = 0
+    pt_max = 400
+    #pt_width = []
+
+    nbins_eta = 20
+    eta_min = -2.5
+    eta_max = 2.5
+    #eta_width = []
+
+    nbins_phi = 20
+    phi_min = -math.pi
+    phi_max = math.pi
+    #phi_width = []
+
+    nbins_mass = 20
+    mass_min = 0
+    mass_max = 400
+    #mass_width = []
+
+    nbins_energy = 20
+    energy_min = 0
+    energy_max = 400
+    #energy_widht = []
+
+    nbins_csv = 20
+    csv_min = 0.95
+    csv_max = 1
+    #csv_width = []
+
+    #Histograms for unfolding
+    h_gen_addbjets_deltaR_nosel = [[0] for i in range(nChannel)]
+    h_gen_addbjets_invMass_nosel = [[0] for i in range(nChannel)]
+    h_njets = [[0] for i in range(nChannel)]
+    h_nbjets = [[0] for i in range(nChannel)]
+    h_reco_addjets_deltaR = [[0] for i in range(nChannel)]
+    h_reco_addjets_invMass = [[0] for i in range(nChannel)]
+    h_gen_addbjets_deltaR = [[0] for i in range(nChannel)]
+    h_gen_addbjets_invMass = [[0] for i in range(nChannel)]
+    h_respMatrix_deltaR = [[0] for i in range(nChannel)]
+    h_respMatrix_invMass = [[0] for i in range(nChannel)]
+    #h_respMatrix_invMass = [[0]*nStep for i in range(nChannel)]
+
+    #Histograms of DNN input variables
+    h_dR = [[0] for i in range(nChannel)]
+    h_dEta = [[0] for i in range(nChannel)]
+    h_dPhi = [[0] for i in range(nChannel)]
+    h_nuPt = [[0] for i in range(nChannel)]
+    h_nuEta = [[0] for i in range(nChannel)]
+    h_nuPhi = [[0] for i in range(nChannel)]
+    h_nuMass = [[0] for i in range(nChannel)]
+    h_lbPt = [[0] for i in range(nChannel)]
+    h_lbEta = [[0] for i in range(nChannel)]
+    h_lbPhi = [[0] for i in range(nChannel)]
+    h_lbMass = [[0] for i in range(nChannel)]
+    h_lb1Pt = [[0] for i in range(nChannel)]
+    h_lb1Eta = [[0] for i in range(nChannel)]
+    h_lb1Phi = [[0] for i in range(nChannel)]
+    h_lb1Mass = [[0] for i in range(nChannel)]
+    h_lb2Pt = [[0] for i in range(nChannel)]
+    h_lb2Eta = [[0] for i in range(nChannel)]
+    h_lb2Phi = [[0] for i in range(nChannel)]
+    h_lb2Mass = [[0] for i in range(nChannel)]
+    h_diPt = [[0] for i in range(nChannel)]
+    h_diEta = [[0] for i in range(nChannel)]
+    h_diPhi = [[0] for i in range(nChannel)]
+    h_diMass = [[0] for i in range(nChannel)]
+    h_csv1 = [[0] for i in range(nChannel)]
+    h_csv2 = [[0] for i in range(nChannel)]
+    h_pt1 = [[0] for i in range(nChannel)]
+    h_pt2 = [[0] for i in range(nChannel)]
+    h_eta1 = [[0] for i in range(nChannel)]
+    h_eta2 = [[0] for i in range(nChannel)]
+    h_phi1 = [[0] for i in range(nChannel)]
+    h_phi2 = [[0] for i in range(nChannel)]
+    h_e1 = [[0] for i in range(nChannel)]
+    h_e2 = [[0] for i in range(nChannel)]
 
     for iChannel in range(0,nChannel) :
-        h_gen_addbjets_deltaR_nosel.append(
-            ROOT.TH1D("h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_nosel_" + process, "",
-                xNbins_gen_addbjets_dR, array('d', gen_addbjets_dR_width)))
-        h_gen_addbjets_invMass_nosel.append(
-            ROOT.TH1D("h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_nosel_" + process, "",
-                xNbins_gen_addbjets_M, array('d', gen_addbjets_M_width)))
-        for iStep in range(0,nStep) :
-            h_njets[iChannel][iStep] = ROOT.TH1D("h_" + RECO_NUMBER_OF_JETS_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",10, 0, 10)
-            h_njets[iChannel][iStep].GetXaxis().SetTitle("Jet multiplicity")
-            h_njets[iChannel][iStep].GetYaxis().SetTitle("Entries")
-            h_njets[iChannel][iStep].Sumw2()
+        h_gen_addbjets_deltaR_nosel[iChannel] = ROOT.TH1D(
+                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_nosel_" + process,
+                "", nbins_gen_addjets_dr, array('d', gen_addjets_dr_width)
+                )
+        h_gen_addbjets_deltaR_nosel[iChannel].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
+        h_gen_addbjets_deltaR_nosel[iChannel].GetYaxis().SetTitle("Entries")
+        h_gen_addbjets_deltaR_nosel[iChannel].Sumw2()
 
-            h_nbjets[iChannel][iStep] = ROOT.TH1D("h_" + RECO_NUMBER_OF_BJETS_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",10, 0, 10)
-            h_nbjets[iChannel][iStep].GetXaxis().SetTitle("bJet multiplicity")
-            h_nbjets[iChannel][iStep].GetYaxis().SetTitle("Entries")
-            h_nbjets[iChannel][iStep].Sumw2()
+        h_gen_addbjets_invMass_nosel[iChannel] = ROOT.TH1D(
+                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_nosel_" + process,
+                "", nbins_gen_addjets_mass, array('d', gen_addjets_mass_width)
+                )
+        h_gen_addbjets_invMass_nosel[iChannel].GetXaxis().SetTitle("m_{b#bar{b}}(GeV)")
+        h_gen_addbjets_invMass_nosel[iChannel].GetYaxis().SetTitle("Entries")
+        h_gen_addbjets_invMass_nosel[iChannel].Sumw2()
 
-            h_reco_addjets_deltaR[iChannel][iStep] = ROOT.TH1D("h_" + RECO_ADDJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",
-                xNbins_reco_addjets_dR, array('d', reco_addjets_dR_width))
-            h_reco_addjets_deltaR[iChannel][iStep].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
-            h_reco_addjets_deltaR[iChannel][iStep].GetYaxis().SetTitle("Entries")
-            h_reco_addjets_deltaR[iChannel][iStep].Sumw2()
+        h_njets[iChannel] = ROOT.TH1D(
+                "h_" + RECO_NUMBER_OF_JETS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "",10, 0, 10
+                )
+        h_njets[iChannel].GetXaxis().SetTitle("Jet multiplicity")
+        h_njets[iChannel].GetYaxis().SetTitle("Entries")
+        h_njets[iChannel].Sumw2()
 
-            h_reco_addjets_invMass[iChannel][iStep] = ROOT.TH1D("h_" + RECO_ADDJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",
-                xNbins_reco_addjets_M, array('d', reco_addjets_M_width))
-            h_reco_addjets_invMass[iChannel][iStep].GetXaxis().SetTitle("M_{b#bar{b}}(GeV)")
-            h_reco_addjets_invMass[iChannel][iStep].GetYaxis().SetTitle("Entries")
-            h_reco_addjets_invMass[iChannel][iStep].Sumw2()
+        h_nbjets[iChannel] = ROOT.TH1D(
+                "h_" + RECO_NUMBER_OF_BJETS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "",10, 0, 10
+                )
+        h_nbjets[iChannel].GetXaxis().SetTitle("bJet multiplicity")
+        h_nbjets[iChannel].GetYaxis().SetTitle("Entries")
+        h_nbjets[iChannel].Sumw2()
 
-            h_gen_addbjets_deltaR[iChannel][iStep] = ROOT.TH1D("h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",
-                xNbins_gen_addbjets_dR, array('d', gen_addbjets_dR_width))
-            h_gen_addbjets_deltaR[iChannel][iStep].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
-            h_gen_addbjets_deltaR[iChannel][iStep].GetYaxis().SetTitle("Entries")
-            h_gen_addbjets_deltaR[iChannel][iStep].Sumw2()
+        h_reco_addjets_deltaR[iChannel] = ROOT.TH1D(
+                "h_" + RECO_ADDJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "", nbins_reco_addjets_dr, array('d', reco_addjets_dr_width)
+                )
+        h_reco_addjets_deltaR[iChannel].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
+        h_reco_addjets_deltaR[iChannel].GetYaxis().SetTitle("Entries")
+        h_reco_addjets_deltaR[iChannel].Sumw2()
 
-            h_gen_addbjets_invMass[iChannel][iStep] = ROOT.TH1D("h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",
-                xNbins_gen_addbjets_M, array('d', gen_addbjets_M_width))
-            h_gen_addbjets_invMass[iChannel][iStep].GetXaxis().SetTitle("M_{b#bar{b}}(GeV)")
-            h_gen_addbjets_invMass[iChannel][iStep].GetYaxis().SetTitle("Entries")
-            h_gen_addbjets_invMass[iChannel][iStep].Sumw2()
+        h_reco_addjets_invMass[iChannel] = ROOT.TH1D(
+                "h_" + RECO_ADDJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "", nbins_reco_addjets_mass, array('d', reco_addjets_mass_width)
+                )
+        h_reco_addjets_invMass[iChannel].GetXaxis().SetTitle("m_{b#bar{b}}(GeV)")
+        h_reco_addjets_invMass[iChannel].GetYaxis().SetTitle("Entries")
+        h_reco_addjets_invMass[iChannel].Sumw2()
 
-            h_respMatrix_deltaR[iChannel][iStep] = ROOT.TH2D("h_" + RESPONSE_MATRIX_DELTAR_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",
-                xNbins_reco_addjets_dR, array('d', reco_addjets_dR_width),
-                xNbins_gen_addbjets_dR, array('d', gen_addbjets_dR_width))
-            h_respMatrix_deltaR[iChannel][iStep].GetXaxis().SetTitle("Reco. #DeltaR_{b#bar{b}}")
-            h_respMatrix_deltaR[iChannel][iStep].GetYaxis().SetTitle("Gen. #DeltaR_{b#bar{b}}")
-            h_respMatrix_deltaR[iChannel][iStep].Sumw2()
+        h_gen_addbjets_deltaR[iChannel] = ROOT.TH1D(
+                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "", nbins_gen_addjets_dr, array('d', gen_addjets_dr_width)
+                )
+        h_gen_addbjets_deltaR[iChannel].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
+        h_gen_addbjets_deltaR[iChannel].GetYaxis().SetTitle("Entries")
+        h_gen_addbjets_deltaR[iChannel].Sumw2()
 
-            h_respMatrix_invMass[iChannel][iStep] = ROOT.TH2D("h_" + RESPONSE_MATRIX_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S" + str(iStep) + "_" + process, "",
-                xNbins_reco_addjets_M, array('d', reco_addjets_M_width),
-                xNbins_gen_addbjets_M, array('d', gen_addbjets_M_width))
-            h_respMatrix_invMass[iChannel][iStep].GetXaxis().SetTitle("Reco. M_{b#bar{b}}(GeV)")
-            h_respMatrix_invMass[iChannel][iStep].GetYaxis().SetTitle("Gen. M_{b#bar{b}}(GeV)")
-            h_respMatrix_invMass[iChannel][iStep].Sumw2()
+        h_gen_addbjets_invMass[iChannel] = ROOT.TH1D(
+                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "", nbins_gen_addjets_mass, array('d', gen_addjets_mass_width)
+                )
+        h_gen_addbjets_invMass[iChannel].GetXaxis().SetTitle("m_{b#bar{b}}(GeV)")
+        h_gen_addbjets_invMass[iChannel].GetYaxis().SetTitle("Entries")
+        h_gen_addbjets_invMass[iChannel].Sumw2()
+
+        h_respMatrix_deltaR[iChannel] = ROOT.TH2D(
+                "h_" + RESPONSE_MATRIX_DELTAR_ + "_Ch" + str(iChannel) + "_S3_" + process,"",
+                nbins_reco_addjets_dr, array('d', reco_addjets_dr_width),
+                nbins_gen_addjets_dr, array('d', gen_addjets_dr_width)
+                )
+        h_respMatrix_deltaR[iChannel].GetXaxis().SetTitle("Reco. #DeltaR_{b#bar{b}}")
+        h_respMatrix_deltaR[iChannel].GetYaxis().SetTitle("Gen. #DeltaR_{b#bar{b}}")
+        h_respMatrix_deltaR[iChannel].Sumw2()
+
+        h_respMatrix_invMass[iChannel] = ROOT.TH2D(
+                "h_" + RESPONSE_MATRIX_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "", nbins_reco_addjets_mass, array('d', reco_addjets_mass_width),
+                nbins_gen_addjets_mass, array('d', gen_addjets_mass_width)
+                )
+        h_respMatrix_invMass[iChannel].GetXaxis().SetTitle("Reco. m_{b#bar{b}}(GeV)")
+        h_respMatrix_invMass[iChannel].GetYaxis().SetTitle("Gen. m_{b#bar{b}}(GeV)")
+        h_respMatrix_invMass[iChannel].Sumw2()
+
+        h_dR[iChannel] = ROOT.TH1D(
+                "h_deltaR_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_delta_r, delta_r_min, delta_r_max #array('d', delta_r_width)
+                )
+        h_dR[iChannel].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
+        h_dR[iChannel].GetYaxis().SetTitle("Entries")
+        h_dR[iChannel].Sumw2()
+
+        h_dEta[iChannel] = ROOT.TH1D(
+                "h_deltaEta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_delta_eta, delta_eta_min, delta_eta_max #array('d', delta_eta_width)
+                )
+        h_dEta[iChannel].GetXaxis().SetTitle("#Delta#eta_{b#bar{b}}")
+        h_dEta[iChannel].GetYaxis().SetTitle("Entries")
+        h_dEta[iChannel].Sumw2()
+
+        h_dPhi[iChannel] = ROOT.TH1D(
+                "h_deltaPhi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_delta_phi, delta_phi_min, delta_phi_max #array('d', delta_phi_width)
+                )
+        h_dPhi[iChannel].GetXaxis().SetTitle("#Delta#phi_{b#bar{b}}")
+        h_dPhi[iChannel].GetYaxis().SetTitle("Entries")
+        h_dPhi[iChannel].Sumw2()
+
+        h_nuPt[iChannel] = ROOT.TH1D(
+                "h_Metb2SumPt_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_pt, pt_min, pt_max
+                )
+        h_nuPt[iChannel].GetXaxis().SetTitle("p_{T}_{#nub#bar{b}}(GeV)")
+        h_nuPt[iChannel].GetYaxis().SetTitle("Entries")
+        h_nuPt[iChannel].Sumw2()
+
+        h_nuEta[iChannel] = ROOT.TH1D(
+                "h_Metb2SumEta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_eta, eta_min, eta_max
+                )
+        h_nuEta[iChannel].GetXaxis().SetTitle("#eta_{#nub#bar{b}}")
+        h_nuEta[iChannel].GetYaxis().SetTitle("Entries")
+        h_nuEta[iChannel].Sumw2()
+
+        h_nuPhi[iChannel] = ROOT.TH1D(
+                "h_Metb2SumPhi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_phi, phi_min, phi_max
+                )
+        h_nuPhi[iChannel].GetXaxis().SetTitle("#phi_{#nub#bar{b}}")
+        h_nuPhi[iChannel].GetYaxis().SetTitle("Entries")
+        h_nuPhi[iChannel].Sumw2()
+
+        h_nuMass[iChannel] = ROOT.TH1D(
+                "h_Metb2SumMass_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_mass, mass_min, mass_max
+                )
+        h_nuMass[iChannel].GetXaxis().SetTitle("m_{#nub#bar{b}}(GeV)")
+        h_nuMass[iChannel].GetYaxis().SetTitle("Entries")
+        h_nuMass[iChannel].Sumw2()
+
+        h_lbPt[iChannel] = ROOT.TH1D(
+                "h_Leptonb4SumPt_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_pt, pt_min, pt_max
+                )
+        h_lbPt[iChannel].GetXaxis().SetTitle("p_{T}_{lb#bar{b}}(GeV)")
+        h_lbPt[iChannel].GetYaxis().SetTitle("Entries")
+        h_lbPt[iChannel].Sumw2()
+
+        h_lbEta[iChannel] = ROOT.TH1D(
+                "h_Leptonb4SumEta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_eta, eta_min, eta_max
+                )
+        h_lbEta[iChannel].GetXaxis().SetTitle("#eta_{lb#bar{b}}")
+        h_lbEta[iChannel].GetYaxis().SetTitle("Entries")
+        h_lbEta[iChannel].Sumw2()
+
+        h_lbPhi[iChannel] = ROOT.TH1D(
+                "h_Leptonb4SumPhi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_phi, phi_min, phi_max
+                )
+        h_lbPhi[iChannel].GetXaxis().SetTitle("#phi_{lb#bar{b}}")
+        h_lbPhi[iChannel].GetYaxis().SetTitle("Entries")
+        h_lbPhi[iChannel].Sumw2()
+
+        h_lbMass[iChannel] = ROOT.TH1D(
+                "h_Leptonb4SumMass_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_mass, mass_min, mass_max
+                )
+        h_lbMass[iChannel].GetXaxis().SetTitle("m_{lb#bar{b}}(GeV)")
+        h_lbMass[iChannel].GetYaxis().SetTitle("Entries")
+        h_lbMass[iChannel].Sumw2()
+
+        h_lb1Pt[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet1Pt_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_pt, pt_min, pt_max
+                )
+        h_lb1Pt[iChannel].GetXaxis().SetTitle("p_{T}_{lb_{1}}(GeV)")
+        h_lb1Pt[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb1Pt[iChannel].Sumw2()
+
+        h_lb1Eta[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet1Eta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_eta, eta_min, eta_max
+                )
+        h_lb1Eta[iChannel].GetXaxis().SetTitle("#eta_{lb_{1}}")
+        h_lb1Eta[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb1Eta[iChannel].Sumw2()
+
+        h_lb1Phi[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet1Phi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_phi, phi_min, phi_max
+                )
+        h_lb1Phi[iChannel].GetXaxis().SetTitle("#phi_{lb_{1}}")
+        h_lb1Phi[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb1Phi[iChannel].Sumw2()
+
+        h_lb1Mass[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet1Mass_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_mass, mass_min, mass_max
+                )
+        h_lb1Mass[iChannel].GetXaxis().SetTitle("m_{lb_{1}}(GeV)")
+        h_lb1Mass[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb1Mass[iChannel].Sumw2()
+
+        h_lb2Pt[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet2Pt_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_pt, pt_min, pt_max
+                )
+        h_lb2Pt[iChannel].GetXaxis().SetTitle("p_{T}_{lb_{2}}(GeV)")
+        h_lb2Pt[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb2Pt[iChannel].Sumw2()
+
+        h_lb2Eta[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet2Eta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_eta, eta_min, eta_max
+                )
+        h_lb2Eta[iChannel].GetXaxis().SetTitle("#eta_{lb_{2}}")
+        h_lb2Eta[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb2Eta[iChannel].Sumw2()
+
+        h_lb2Phi[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet2Phi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_phi, phi_min, phi_max
+                )
+        h_lb2Phi[iChannel].GetXaxis().SetTitle("#phi_{lb_{2}}")
+        h_lb2Phi[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb2Phi[iChannel].Sumw2()
+
+        h_lb2Mass[iChannel] = ROOT.TH1D(
+                "h_Leptonbjet2Mass_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_mass, mass_min, mass_max
+                )
+        h_lb2Mass[iChannel].GetXaxis().SetTitle("m_{lb_{2}}(GeV)")
+        h_lb2Mass[iChannel].GetYaxis().SetTitle("Entries")
+        h_lb2Mass[iChannel].Sumw2()
+
+        h_diPt[iChannel] = ROOT.TH1D(
+                "h_b4SumPt_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_pt, pt_min, pt_max
+                )
+        h_diPt[iChannel].GetXaxis().SetTitle("p_{T}_{b#bar{b}}(GeV)")
+        h_diPt[iChannel].GetYaxis().SetTitle("Entries")
+        h_diPt[iChannel].Sumw2()
+
+        h_diEta[iChannel] = ROOT.TH1D(
+                "h_b4SumEta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_eta, eta_min, eta_max
+                )
+        h_diEta[iChannel].GetXaxis().SetTitle("#eta_{b#bar{b}}")
+        h_diEta[iChannel].GetYaxis().SetTitle("Entries")
+        h_diEta[iChannel].Sumw2()
+
+        h_diPhi[iChannel] = ROOT.TH1D(
+                "h_b4SumPhi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_phi, phi_min, phi_max
+                )
+        h_diPhi[iChannel].GetXaxis().SetTitle("#phi_{b#bar{b}}")
+        h_diPhi[iChannel].GetYaxis().SetTitle("Entries")
+        h_diPhi[iChannel].Sumw2()
+
+        h_diMass[iChannel] = ROOT.TH1D(
+                "h_b4SumMass_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_mass, mass_min, mass_max
+                )
+        h_diMass[iChannel].GetXaxis().SetTitle("m_{b#bar{b}}(GeV)")
+        h_diMass[iChannel].GetYaxis().SetTitle("Entries")
+        h_diMass[iChannel].Sumw2()
+
+        h_csv1[iChannel] = ROOT.TH1D(
+                "h_bjet1CSV_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_csv, csv_min, csv_max
+                )
+        h_csv1[iChannel].GetXaxis().SetTitle("CSVv2_{b_{1}}")
+        h_csv1[iChannel].GetYaxis().SetTitle("Entries")
+        h_csv1[iChannel].Sumw2()
+
+        h_csv2[iChannel] = ROOT.TH1D(
+                "h_bjet2CSV_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_csv, csv_min, csv_max
+                )
+        h_csv2[iChannel].GetXaxis().SetTitle("CSVv2_{b_{2}}")
+        h_csv2[iChannel].GetYaxis().SetTitle("Entries")
+        h_csv2[iChannel].Sumw2()
+
+        h_pt1[iChannel] = ROOT.TH1D(
+                "h_bjet1Pt_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_pt, pt_min, pt_max
+                )
+        h_pt1[iChannel].GetXaxis().SetTitle("p_{T}_{b_{1}}(GeV)")
+        h_pt1[iChannel].GetYaxis().SetTitle("Entries")
+        h_pt1[iChannel].Sumw2()
+
+        h_pt2[iChannel] = ROOT.TH1D(
+                "h_bjet2Pt_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_pt, pt_min, pt_max
+                )
+        h_pt2[iChannel].GetXaxis().SetTitle("p_{T}_{b_{2}}(GeV)")
+        h_pt2[iChannel].GetYaxis().SetTitle("Entries")
+        h_pt2[iChannel].Sumw2()
+
+        h_eta1[iChannel] = ROOT.TH1D(
+                "h_bjet1Eta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_eta, eta_min, eta_max
+                )
+        h_eta1[iChannel].GetXaxis().SetTitle("#eta_{b_{1}}")
+        h_eta1[iChannel].GetYaxis().SetTitle("Entries")
+        h_eta1[iChannel].Sumw2()
+
+        h_eta2[iChannel] = ROOT.TH1D(
+                "h_bjet2Eta_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_eta, eta_min, eta_max
+                )
+        h_eta2[iChannel].GetXaxis().SetTitle("#eta_{b_{2}}")
+        h_eta2[iChannel].GetYaxis().SetTitle("Entries")
+        h_eta2[iChannel].Sumw2()
+
+        h_phi1[iChannel] = ROOT.TH1D(
+                "h_bjet1Phi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_phi, phi_min, phi_max
+                )
+        h_phi1[iChannel].GetXaxis().SetTitle("#phi_{b_{1}}")
+        h_phi1[iChannel].GetYaxis().SetTitle("Entries")
+        h_phi1[iChannel].Sumw2()
+
+        h_phi2[iChannel] = ROOT.TH1D(
+                "h_bjet2Phi_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_phi, phi_min, phi_max
+                )
+        h_phi2[iChannel].GetXaxis().SetTitle("#phi_{b_{2}}")
+        h_phi2[iChannel].GetYaxis().SetTitle("Entries")
+        h_phi2[iChannel].Sumw2()
+
+        h_e1[iChannel] = ROOT.TH1D(
+                "h_bjet1Energy_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_energy, energy_min, energy_max
+                )
+        h_e1[iChannel].GetXaxis().SetTitle("E_{b_{1}}(GeV)")
+        h_e1[iChannel].GetYaxis().SetTitle("Entries")
+        h_e1[iChannel].Sumw2()
+
+        h_e2[iChannel] = ROOT.TH1D(
+                "h_bjet2Energy_Ch"+str(iChannel)+"_S3_"+process,"",
+                nbins_energy, energy_min, energy_max
+                )
+        h_e2[iChannel].GetXaxis().SetTitle("E_{b_{2}}(GeV)")
+        h_e2[iChannel].GetYaxis().SetTitle("Entries")
+        h_e2[iChannel].Sumw2()
 
     if ttbb == True :
         genchain = TChain("ttbbLepJets/gentree")
-        genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
+        genchain.Add("/data/users/seohyun/ntuple/hep2017/v806/"+process+".root")
 
         print "GENTREE RUN"
         for i in xrange(genchain.GetEntries()) :
+            if closureTest:
+                if i%2 == 0 : continue
             pp.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
             genchain.GetEntry(i)
             addbjet1 = TLorentzVector()
@@ -298,39 +673,63 @@ def ana(inputDir, process, outputDir,flag1=False) :
             if passmuon == True and passelectron == False : passchannel = muon_ch
             elif passmuon == False and passelectron == True : passchannel = electron_ch
             else : print "Error!"
+            if isMatch_DNN : nEvt_isMatch_DNN += 1
+            nEvents += 1
 
-            if njets >= number_of_jets :
-                passcut += 1
-                if nbjets >= number_of_bjets-1 :
-                    passcut += 1
-                    if nbjets >= number_of_bjets :
-                        passcut += 1
-                        nEvents += 1
-                        if isMatch_DNN : nEvt_isMatch_DNN += 1
-
-            if closureTest :
-                for iStep in range(0,passcut+1) :
-                    if index%2 == 1 :
-                        h_njets[passchannel][iStep].Fill(njets, eventweight)
-                        h_nbjets[passchannel][iStep].Fill(nbjets, eventweight)
-                        h_reco_addjets_deltaR[passchannel][iStep].Fill(reco_dR, eventweight)
-                        h_reco_addjets_invMass[passchannel][iStep].Fill(reco_M, eventweight)
-                        h_gen_addbjets_deltaR[passchannel][iStep].Fill(gen_dR, eventweight)
-                        h_gen_addbjets_invMass[passchannel][iStep].Fill(gen_M, eventweight)
-                    else :
-                        h_respMatrix_deltaR[passchannel][iStep].Fill(reco_dR, gen_dR, eventweight)
-                        h_respMatrix_invMass[passchannel][iStep].Fill(reco_M, gen_M, eventweight)
-            else :
-                for iStep in range(0,passcut+1) :
-                    h_njets[passchannel][iStep].Fill(njets, eventweight)
-                    h_nbjets[passchannel][iStep].Fill(nbjets, eventweight)
-                    h_reco_addjets_deltaR[passchannel][iStep].Fill(reco_dR, eventweight)
-                    h_reco_addjets_invMass[passchannel][iStep].Fill(reco_M, eventweight)
-                    if ttbb :
-                        h_gen_addbjets_deltaR[passchannel][iStep].Fill(gen_dR, eventweight)
-                        h_gen_addbjets_invMass[passchannel][iStep].Fill(gen_M, eventweight)
-                        h_respMatrix_deltaR[passchannel][iStep].Fill(reco_dR, gen_dR, eventweight)
-                        h_respMatrix_invMass[passchannel][iStep].Fill(reco_M, gen_M, eventweight)
+            if closureTest:
+                if index%2 == 1:
+                    h_njets[passchannel].Fill(njets, eventweight)
+                    h_nbjets[passchannel].Fill(nbjets, eventweight)
+                    h_reco_addjets_deltaR[passchannel].Fill(reco_dR, eventweight)
+                    h_reco_addjets_invMass[passchannel].Fill(reco_M, eventweight)
+                    h_gen_addbjets_deltaR[passchannel].Fill(gen_dR, eventweight)
+                    h_gen_addbjets_invMass[passchannel].Fill(gen_M, eventweight)
+                else:
+                    h_respMatrix_deltaR[passchannel].Fill(reco_dR, gen_dR, eventweight)
+                    h_respMatrix_invMass[passchannel].Fill(reco_M, gen_M, eventweight)
+            else:
+                h_njets[passchannel].Fill(njets, eventweight)
+                h_nbjets[passchannel].Fill(nbjets, eventweight)
+                h_reco_addjets_deltaR[passchannel].Fill(reco_dR, eventweight)
+                h_reco_addjets_invMass[passchannel].Fill(reco_M, eventweight)
+                h_dR[passchannel].Fill(reco_dR, eventweight)
+                h_dEta[passchannel].Fill(event['dEta'], eventweight)
+                h_dPhi[passchannel].Fill(event['dPhi'], eventweight)
+                h_nuPt[passchannel].Fill(event['nuPt'], eventweight)
+                h_nuEta[passchannel].Fill(event['nuEta'], eventweight)
+                h_nuPhi[passchannel].Fill(event['nuPhi'], eventweight)
+                h_nuMass[passchannel].Fill(event['nuMass'], eventweight)
+                h_lbPt[passchannel].Fill(event['lbPt'], eventweight)
+                h_lbEta[passchannel].Fill(event['lbEta'], eventweight)
+                h_lbPhi[passchannel].Fill(event['lbPhi'], eventweight)
+                h_lbMass[passchannel].Fill(event['lbMass'], eventweight)
+                h_lb1Pt[passchannel].Fill(event['lb1Pt'], eventweight)
+                h_lb1Eta[passchannel].Fill(event['lb1Eta'], eventweight)
+                h_lb1Phi[passchannel].Fill(event['lb1Phi'], eventweight)
+                h_lb1Mass[passchannel].Fill(event['lb1Mass'], eventweight)
+                h_lb2Pt[passchannel].Fill(event['lb2Pt'], eventweight)
+                h_lb2Eta[passchannel].Fill(event['lb2Eta'], eventweight)
+                h_lb2Phi[passchannel].Fill(event['lb2Phi'], eventweight)
+                h_lb2Mass[passchannel].Fill(event['lb2Mass'], eventweight)
+                h_diPt[passchannel].Fill(event['diPt'], eventweight)
+                h_diEta[passchannel].Fill(event['diEta'], eventweight)
+                h_diPhi[passchannel].Fill(event['diPhi'], eventweight)
+                h_diMass[passchannel].Fill(event['diMass'], eventweight)
+                h_csv1[passchannel].Fill(event['csv1'], eventweight)
+                h_csv2[passchannel].Fill(event['csv2'], eventweight)
+                h_pt1[passchannel].Fill(event['pt1'], eventweight)
+                h_pt2[passchannel].Fill(event['pt2'], eventweight)
+                h_eta1[passchannel].Fill(event['eta1'], eventweight)
+                h_eta2[passchannel].Fill(event['eta2'], eventweight)
+                h_phi1[passchannel].Fill(event['phi1'], eventweight)
+                h_phi2[passchannel].Fill(event['phi2'], eventweight)
+                h_e1[passchannel].Fill(event['e1'], eventweight)
+                h_e2[passchannel].Fill(event['e2'], eventweight)
+                if ttbb:
+                    h_gen_addbjets_deltaR[passchannel].Fill(gen_dR, eventweight)
+                    h_gen_addbjets_invMass[passchannel].Fill(gen_M, eventweight)
+                    h_respMatrix_deltaR[passchannel].Fill(reco_dR, gen_dR, eventweight)
+                    h_respMatrix_invMass[passchannel].Fill(reco_M, gen_M, eventweight)
 
     if ttbb:
         matching_DNN = 0.0
@@ -348,41 +747,107 @@ def ana(inputDir, process, outputDir,flag1=False) :
         f_ratio.write("\nMatching ratio with matchable events from DNN: "+str(matching_DNN_able)+"("+str(nEvt_isMatch_DNN)+"/"+str(nMatchable)+")")
         f_ratio.close()
 
-    for iChannel in range(0,2) :
-        for iStep in range(0,4) :
-            h_njets[iChannel][iStep].AddBinContent(10,h_njets[iChannel][iStep].GetBinContent(11))
-            h_nbjets[iChannel][iStep].AddBinContent(10,h_nbjets[iChannel][iStep].GetBinContent(11))
-            h_reco_addjets_deltaR[iChannel][iStep].AddBinContent(xNbins_reco_addjets_dR, h_reco_addjets_deltaR[iChannel][iStep].GetBinContent(xNbins_reco_addjets_dR+1))
-            h_reco_addjets_invMass[iChannel][iStep].AddBinContent(xNbins_reco_addjets_M, h_reco_addjets_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M+1))
-            h_gen_addbjets_deltaR[iChannel][iStep].AddBinContent(xNbins_gen_addbjets_dR, h_gen_addbjets_deltaR[iChannel][iStep].GetBinContent(xNbins_gen_addbjets_dR+1))
-            h_gen_addbjets_invMass[iChannel][iStep].AddBinContent(xNbins_gen_addbjets_M, h_gen_addbjets_invMass[iChannel][iStep].GetBinContent(xNbins_gen_addbjets_M+1))
+    for iChannel in range(nChannel) :
+        h_njets[iChannel].AddBinContent(10,h_njets[iChannel].GetBinContent(11))
+        h_nbjets[iChannel].AddBinContent(10,h_nbjets[iChannel].GetBinContent(11))
+        h_reco_addjets_deltaR[iChannel].AddBinContent(nbins_reco_addjets_dr, h_reco_addjets_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr+1))
+        h_reco_addjets_invMass[iChannel].AddBinContent(nbins_reco_addjets_mass, h_reco_addjets_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1))
+        h_gen_addbjets_deltaR[iChannel].AddBinContent(nbins_gen_addjets_dr, h_gen_addbjets_deltaR[iChannel].GetBinContent(nbins_gen_addjets_dr+1))
+        h_gen_addbjets_invMass[iChannel].AddBinContent(nbins_gen_addjets_mass, h_gen_addbjets_invMass[iChannel].GetBinContent(nbins_gen_addjets_mass+1))
 
-            for iXaxis in range(1, xNbins_reco_addjets_dR+1) :
-                tmp = h_respMatrix_deltaR[iChannel][iStep].GetBinContent(iXaxis, xNbins_gen_addbjets_dR)+h_respMatrix_deltaR[iChannel][iStep].GetBinContent(iXaxis, xNbins_gen_addbjets_dR+1)
-                h_respMatrix_deltaR[iChannel][iStep].SetBinContent(iXaxis, xNbins_gen_addbjets_dR, tmp)
-            for iYaxis in range(1, xNbins_gen_addbjets_dR+1) :
-                tmp = h_respMatrix_deltaR[iChannel][iStep].GetBinContent(xNbins_reco_addjets_dR, iYaxis)+h_respMatrix_deltaR[iChannel][iStep].GetBinContent(xNbins_reco_addjets_dR+1, iYaxis)
-                h_respMatrix_deltaR[iChannel][iStep].SetBinContent(xNbins_reco_addjets_dR, iYaxis, tmp)
+        h_dR[iChannel].AddBinContent(nbins_delta_r, h_dR[iChannel].GetBinContent(nbins_delta_r+1))
+        h_dEta[iChannel].AddBinContent(nbins_delta_eta, h_dEta[iChannel].GetBinContent(nbins_delta_eta+1))
+        h_dPhi[iChannel].AddBinContent(nbins_delta_phi, h_dPhi[iChannel].GetBinContent(nbins_delta_phi+1))
+        h_nuPt[iChannel].AddBinContent(nbins_pt, h_nuPt[iChannel].GetBinContent(nbins_pt+1))
+        h_nuEta[iChannel].AddBinContent(nbins_eta, h_nuEta[iChannel].GetBinContent(nbins_eta+1))
+        h_nuPhi[iChannel].AddBinContent(nbins_phi, h_nuPhi[iChannel].GetBinContent(nbins_phi+1))
+        h_nuMass[iChannel].AddBinContent(nbins_mass, h_nuMass[iChannel].GetBinContent(nbins_mass+1))
+        h_lbPt[iChannel].AddBinContent(nbins_pt, h_lbPt[iChannel].GetBinContent(nbins_pt+1))
+        h_lbEta[iChannel].AddBinContent(nbins_eta, h_lbEta[iChannel].GetBinContent(nbins_eta+1))
+        h_lbPhi[iChannel].AddBinContent(nbins_phi, h_lbPhi[iChannel].GetBinContent(nbins_phi+1))
+        h_lbMass[iChannel].AddBinContent(nbins_mass, h_lbMass[iChannel].GetBinContent(nbins_mass+1))
+        h_lb1Pt[iChannel].AddBinContent(nbins_pt, h_lb1Pt[iChannel].GetBinContent(nbins_pt+1))
+        h_lb1Eta[iChannel].AddBinContent(nbins_eta, h_lb1Eta[iChannel].GetBinContent(nbins_eta+1))
+        h_lb1Phi[iChannel].AddBinContent(nbins_phi, h_lb1Phi[iChannel].GetBinContent(nbins_phi+1))
+        h_lb1Mass[iChannel].AddBinContent(nbins_mass, h_lb1Mass[iChannel].GetBinContent(nbins_mass+1))
+        h_lb2Pt[iChannel].AddBinContent(nbins_pt, h_lb2Pt[iChannel].GetBinContent(nbins_pt+1))
+        h_lb2Eta[iChannel].AddBinContent(nbins_eta, h_lb2Eta[iChannel].GetBinContent(nbins_eta+1))
+        h_lb2Phi[iChannel].AddBinContent(nbins_phi, h_lb2Phi[iChannel].GetBinContent(nbins_phi+1))
+        h_lb2Mass[iChannel].AddBinContent(nbins_mass, h_lb2Mass[iChannel].GetBinContent(nbins_mass+1))
+        h_diPt[iChannel].AddBinContent(nbins_pt, h_diPt[iChannel].GetBinContent(nbins_pt+1))
+        h_diEta[iChannel].AddBinContent(nbins_eta, h_diEta[iChannel].GetBinContent(nbins_eta+1))
+        h_diPhi[iChannel].AddBinContent(nbins_phi, h_diPhi[iChannel].GetBinContent(nbins_phi+1))
+        h_diMass[iChannel].AddBinContent(nbins_mass, h_diMass[iChannel].GetBinContent(nbins_mass+1))
+        h_csv1[iChannel].AddBinContent(nbins_csv, h_csv1[iChannel].GetBinContent(nbins_csv+1))
+        h_csv2[iChannel].AddBinContent(nbins_csv, h_csv2[iChannel].GetBinContent(nbins_csv+1))
+        h_pt1[iChannel].AddBinContent(nbins_pt, h_pt1[iChannel].GetBinContent(nbins_pt+1))
+        h_pt2[iChannel].AddBinContent(nbins_pt, h_pt2[iChannel].GetBinContent(nbins_pt+1))
+        h_eta1[iChannel].AddBinContent(nbins_eta, h_eta1[iChannel].GetBinContent(nbins_eta+1))
+        h_eta2[iChannel].AddBinContent(nbins_eta, h_eta2[iChannel].GetBinContent(nbins_eta+1))
+        h_phi1[iChannel].AddBinContent(nbins_phi, h_phi1[iChannel].GetBinContent(nbins_phi+1))
+        h_phi2[iChannel].AddBinContent(nbins_phi, h_phi2[iChannel].GetBinContent(nbins_phi+1))
+        h_e1[iChannel].AddBinContent(nbins_energy, h_e1[iChannel].GetBinContent(nbins_energy+1))
+        h_e2[iChannel].AddBinContent(nbins_energy, h_e2[iChannel].GetBinContent(nbins_energy+1))
 
-            for iXaxis in range(1, xNbins_reco_addjets_M+1) :
-                tmp = h_respMatrix_invMass[iChannel][iStep].GetBinContent(iXaxis, xNbins_gen_addbjets_M)+h_respMatrix_invMass[iChannel][iStep].GetBinContent(iXaxis, xNbins_gen_addbjets_M+1)
-                h_respMatrix_invMass[iChannel][iStep].SetBinContent(iXaxis, xNbins_gen_addbjets_M, tmp)
-            for iYaxis in range(1, xNbins_gen_addbjets_M+1) :
-                tmp = h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M, iYaxis)+h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M+1, iYaxis)
-                h_respMatrix_invMass[iChannel][iStep].SetBinContent(xNbins_reco_addjets_M, iYaxis,tmp)
-            tmp = h_respMatrix_deltaR[iChannel][iStep].GetBinContent(xNbins_reco_addjets_dR+1,xNbins_gen_addbjets_dR+1)+h_respMatrix_deltaR[iChannel][iStep].GetBinContent(xNbins_reco_addjets_dR,xNbins_gen_addbjets_dR)
-            h_respMatrix_deltaR[iChannel][iStep].SetBinContent(xNbins_reco_addjets_dR,xNbins_gen_addbjets_dR,tmp)
-            tmp = h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M+1,xNbins_gen_addbjets_M+1)+h_respMatrix_invMass[iChannel][iStep].GetBinContent(xNbins_reco_addjets_M,xNbins_gen_addbjets_M)
-            h_respMatrix_invMass[iChannel][iStep].SetBinContent(xNbins_reco_addjets_M,xNbins_gen_addbjets_M,tmp)
+        for iXaxis in range(1, nbins_reco_addjets_dr+1) :
+            tmp = h_respMatrix_deltaR[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_dr)+h_respMatrix_deltaR[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_dr+1)
+            h_respMatrix_deltaR[iChannel].SetBinContent(iXaxis, nbins_gen_addjets_dr, tmp)
+        for iYaxis in range(1, nbins_gen_addjets_dr+1) :
+            tmp = h_respMatrix_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr, iYaxis)+h_respMatrix_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr+1, iYaxis)
+            h_respMatrix_deltaR[iChannel].SetBinContent(nbins_reco_addjets_dr, iYaxis, tmp)
 
-            h_njets[iChannel][iStep].ClearUnderflowAndOverflow()
-            h_nbjets[iChannel][iStep].ClearUnderflowAndOverflow()
-            h_reco_addjets_deltaR[iChannel][iStep].ClearUnderflowAndOverflow()
-            h_reco_addjets_invMass[iChannel][iStep].ClearUnderflowAndOverflow()
-            h_gen_addbjets_deltaR[iChannel][iStep].ClearUnderflowAndOverflow()
-            h_gen_addbjets_invMass[iChannel][iStep].ClearUnderflowAndOverflow()
-            h_respMatrix_deltaR[iChannel][iStep].ClearUnderflowAndOverflow()
-            h_respMatrix_invMass[iChannel][iStep].ClearUnderflowAndOverflow()
+        for iXaxis in range(1, nbins_reco_addjets_mass+1) :
+            tmp = h_respMatrix_invMass[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_mass)+h_respMatrix_invMass[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_mass+1)
+            h_respMatrix_invMass[iChannel].SetBinContent(iXaxis, nbins_gen_addjets_mass, tmp)
+        for iYaxis in range(1, nbins_gen_addjets_mass+1) :
+            tmp = h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass, iYaxis)+h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1, iYaxis)
+            h_respMatrix_invMass[iChannel].SetBinContent(nbins_reco_addjets_mass, iYaxis,tmp)
+        tmp = h_respMatrix_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr+1,nbins_gen_addjets_dr+1)+h_respMatrix_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr,nbins_gen_addjets_dr)
+        h_respMatrix_deltaR[iChannel].SetBinContent(nbins_reco_addjets_dr,nbins_gen_addjets_dr,tmp)
+        tmp = h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1,nbins_gen_addjets_mass+1)+h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass,nbins_gen_addjets_mass)
+        h_respMatrix_invMass[iChannel].SetBinContent(nbins_reco_addjets_mass,nbins_gen_addjets_mass,tmp)
+
+        h_njets[iChannel].ClearUnderflowAndOverflow()
+        h_nbjets[iChannel].ClearUnderflowAndOverflow()
+        h_reco_addjets_deltaR[iChannel].ClearUnderflowAndOverflow()
+        h_reco_addjets_invMass[iChannel].ClearUnderflowAndOverflow()
+        h_gen_addbjets_deltaR[iChannel].ClearUnderflowAndOverflow()
+        h_gen_addbjets_invMass[iChannel].ClearUnderflowAndOverflow()
+        h_respMatrix_deltaR[iChannel].ClearUnderflowAndOverflow()
+        h_respMatrix_invMass[iChannel].ClearUnderflowAndOverflow()
+        h_dR[iChannel].ClearUnderflowAndOverflow()
+        h_dEta[iChannel].ClearUnderflowAndOverflow()
+        h_dPhi[iChannel].ClearUnderflowAndOverflow()
+        h_nuPt[iChannel].ClearUnderflowAndOverflow()
+        h_nuEta[iChannel].ClearUnderflowAndOverflow()
+        h_nuPhi[iChannel].ClearUnderflowAndOverflow()
+        h_nuMass[iChannel].ClearUnderflowAndOverflow()
+        h_lbPt[iChannel].ClearUnderflowAndOverflow()
+        h_lbEta[iChannel].ClearUnderflowAndOverflow()
+        h_lbPhi[iChannel].ClearUnderflowAndOverflow()
+        h_lbMass[iChannel].ClearUnderflowAndOverflow()
+        h_lb1Pt[iChannel].ClearUnderflowAndOverflow()
+        h_lb1Eta[iChannel].ClearUnderflowAndOverflow()
+        h_lb1Phi[iChannel].ClearUnderflowAndOverflow()
+        h_lb1Mass[iChannel].ClearUnderflowAndOverflow()
+        h_lb2Pt[iChannel].ClearUnderflowAndOverflow()
+        h_lb2Eta[iChannel].ClearUnderflowAndOverflow()
+        h_lb2Phi[iChannel].ClearUnderflowAndOverflow()
+        h_lb2Mass[iChannel].ClearUnderflowAndOverflow()
+        h_diPt[iChannel].ClearUnderflowAndOverflow()
+        h_diEta[iChannel].ClearUnderflowAndOverflow()
+        h_diPhi[iChannel].ClearUnderflowAndOverflow()
+        h_diMass[iChannel].ClearUnderflowAndOverflow()
+        h_csv1[iChannel].ClearUnderflowAndOverflow()
+        h_csv2[iChannel].ClearUnderflowAndOverflow()
+        h_pt1[iChannel].ClearUnderflowAndOverflow()
+        h_pt2[iChannel].ClearUnderflowAndOverflow()
+        h_eta1[iChannel].ClearUnderflowAndOverflow()
+        h_eta2[iChannel].ClearUnderflowAndOverflow()
+        h_phi1[iChannel].ClearUnderflowAndOverflow()
+        h_phi2[iChannel].ClearUnderflowAndOverflow()
+        h_e1[iChannel].ClearUnderflowAndOverflow()
+        h_e2[iChannel].ClearUnderflowAndOverflow()
 
     f_out.Write()
     f_out.Close()

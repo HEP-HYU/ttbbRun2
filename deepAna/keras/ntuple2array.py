@@ -121,7 +121,7 @@ def makeCombi(inputDir,inputFile,outputDir) :
 
 def makeTrainingInput(outputDir) :
     chain = TChain("ttbbLepJets/tree")
-    chain.Add("/data/users/seohyun/ntuple/hep2017/v808/TTLJ_PowhegPythia_ttbb.root")
+    chain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/TTLJ_PowhegPythia_ttbb.root")
 
     muon_ch = 0
     muon_pt = 30.0
@@ -135,9 +135,9 @@ def makeTrainingInput(outputDir) :
     jet_CSV_medium = 0.8484
 
     jetCombi = []
-    for i in xrange(chain.GetEntries()) :
-        pp.printProgress(i, chain.GetEntries(), 'Progress:','Complete',1,25)
-        chain.GetEntry(i)
+    for idx in xrange(chain.GetEntries()) :
+        pp.printProgress(idx, chain.GetEntries(), 'Progress:','Complete',1,25)
+        chain.GetEntry(idx)
 
         MET_px = chain.MET*math.cos(chain.MET_phi)
         MET_py = chain.MET*math.sin(chain.MET_phi)
@@ -196,7 +196,7 @@ def makeTrainingInput(outputDir) :
                     else : signal = 0
 
                     jetCombi.append([
-                        signal,b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
+                        signal,idx,b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
                         (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
                         (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
                         (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
@@ -208,7 +208,7 @@ def makeTrainingInput(outputDir) :
 
     print "\n"
     combi = pd.DataFrame(jetCombi, columns=[
-        'signal','dR','dEta','dPhi',
+        'signal','event','dR','dEta','dPhi',
         'nuPt','nuEta','nuPhi','nuMass',
         'lbPt','lbEta','lbPhi','lbMass',
         'lb1Pt','lb1Eta','lb1Phi','lb1Mass',
