@@ -557,12 +557,13 @@ def ana(inputDir, process, outputDir,flag1=False) :
 
     if ttbb == True :
         genchain = TChain("ttbbLepJets/gentree")
-        genchain.Add("/data/users/seohyun/ntuple/hep2017/v806/"+process+".root")
+        if("Herwig" in process): genchain.Add("/data/users/seohyun/ntuple/hep2017/v806/"+process+".root")
+        else: genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
 
         print "GENTREE RUN"
-        for i in xrange(genchain.GetEntries()) :
-            if closureTest:
-                if i%2 == 0 : continue
+        for i in range(1000):#xrange(genchain.GetEntries()) :
+            #if closureTest:
+            #    if i%2 == 0 : continue
             pp.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
             genchain.GetEntry(i)
             addbjet1 = TLorentzVector()
@@ -788,6 +789,39 @@ def ana(inputDir, process, outputDir,flag1=False) :
         h_phi2[iChannel].AddBinContent(nbins_phi, h_phi2[iChannel].GetBinContent(nbins_phi+1))
         h_e1[iChannel].AddBinContent(nbins_energy, h_e1[iChannel].GetBinContent(nbins_energy+1))
         h_e2[iChannel].AddBinContent(nbins_energy, h_e2[iChannel].GetBinContent(nbins_energy+1))
+        h_dR[iChannel].AddBinContent(1, h_dR[iChannel].GetBinContent(0))
+        h_dEta[iChannel].AddBinContent(1, h_dEta[iChannel].GetBinContent(0))
+        h_dPhi[iChannel].AddBinContent(1, h_dPhi[iChannel].GetBinContent(0))
+        h_nuPt[iChannel].AddBinContent(1, h_nuPt[iChannel].GetBinContent(0))
+        h_nuEta[iChannel].AddBinContent(1, h_nuEta[iChannel].GetBinContent(0))
+        h_nuPhi[iChannel].AddBinContent(1, h_nuPhi[iChannel].GetBinContent(0))
+        h_nuMass[iChannel].AddBinContent(1, h_nuMass[iChannel].GetBinContent(0))
+        h_lbPt[iChannel].AddBinContent(1, h_lbPt[iChannel].GetBinContent(0))
+        h_lbEta[iChannel].AddBinContent(1, h_lbEta[iChannel].GetBinContent(0))
+        h_lbPhi[iChannel].AddBinContent(1, h_lbPhi[iChannel].GetBinContent(0))
+        h_lbMass[iChannel].AddBinContent(1, h_lbMass[iChannel].GetBinContent(0))
+        h_lb1Pt[iChannel].AddBinContent(1, h_lb1Pt[iChannel].GetBinContent(0))
+        h_lb1Eta[iChannel].AddBinContent(1, h_lb1Eta[iChannel].GetBinContent(0))
+        h_lb1Phi[iChannel].AddBinContent(1, h_lb1Phi[iChannel].GetBinContent(0))
+        h_lb1Mass[iChannel].AddBinContent(1, h_lb1Mass[iChannel].GetBinConetnt(0))
+        h_lb2Pt[iChannel].AddBinContent(1, h_lb2Pt[iChannel].GetBinContent(0))
+        h_lb2Eta[iChannel].AddBinContent(1, h_lb2Eta[iChannel].GetBinContent(0))
+        h_lb2Phi[iChannel].AddBinContent(1, h_lb2Phi[iChannel].GetBinContent(0))
+        h_lb2Mass[iChannel].AddBinContent(1, h_lb2Mass[iChannel].GetBinConetnt(0))
+        h_diPt[iChannel].AddBinContent(1, h_diPt[iChannel].GetBinContent(0))
+        h_diEta[iChannel].AddBinContent(1, h_diEta[iChannel].GetBinContent(0))
+        h_diPhi[iChannel].AddBinContent(1, h_diPhi[iChannel].GetBinContent(0))
+        h_diMass[iChannel].AddBinContent(1, h_diMass[iChannel].GetBinContent(0))
+        h_csv1[iChannel].AddBinContent(1, h_csv1[iChannel].GetBinContent(0))
+        h_csv2[iChannel].AddBinContent(1, h_csv2[iChannel].GetBinContent(0))
+        h_pt1[iChannel].AddBinContent(1, h_pt1[iChannel].GetBinContent(0))
+        h_pt2[iChannel].AddBinContent(1, h_pt2[iChannel].GetBinContent(0))
+        h_eta1[iChannel].AddBinContent(1, h_eta1[iChannel].GetBinContent(0))
+        h_eta2[iChannel].AddBinContent(1, h_eta2[iChannel].GetBinContent(0))
+        h_phi1[iChannel].AddBinContent(1, h_phi1[iChannel].GetBinContent(0))
+        h_phi2[iChannel].AddBinContent(1, h_phi2[iChannel].GetBinContent(0))
+        h_e1[iChannel].AddBinContent(1, h_e1[iChannel].GetBinContent(0))
+        h_e2[iChannel].AddBinContent(1, h_e2[iChannel].GetBinContent(0))
 
         for iXaxis in range(1, nbins_reco_addjets_dr+1) :
             tmp = h_respMatrix_deltaR[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_dr)+h_respMatrix_deltaR[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_dr+1)
@@ -802,6 +836,7 @@ def ana(inputDir, process, outputDir,flag1=False) :
         for iYaxis in range(1, nbins_gen_addjets_mass+1) :
             tmp = h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass, iYaxis)+h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1, iYaxis)
             h_respMatrix_invMass[iChannel].SetBinContent(nbins_reco_addjets_mass, iYaxis,tmp)
+
         tmp = h_respMatrix_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr+1,nbins_gen_addjets_dr+1)+h_respMatrix_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr,nbins_gen_addjets_dr)
         h_respMatrix_deltaR[iChannel].SetBinContent(nbins_reco_addjets_dr,nbins_gen_addjets_dr,tmp)
         tmp = h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1,nbins_gen_addjets_mass+1)+h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass,nbins_gen_addjets_mass)
@@ -849,6 +884,14 @@ def ana(inputDir, process, outputDir,flag1=False) :
         h_e1[iChannel].ClearUnderflowAndOverflow()
         h_e2[iChannel].ClearUnderflowAndOverflow()
 
+    if("Herwig" in process):
+        f = TFile("/data/users/seohyun/ntuple/hep2017/v806/"+process+".root")
+    else:
+        f = TFile("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
+
+    h_evt = f.Get("ttbbLepJets/EventInfo")
+    f_out.cd()
+    h_evt.Write()
     f_out.Write()
     f_out.Close()
     f_pred.close()

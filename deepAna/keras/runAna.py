@@ -5,9 +5,9 @@ import subprocess
 
 start_time = time.time()
 
-run = True
-test = False 
-closureTest = False
+run = False
+test = False
+closureTest = True
 inputDir = '/data/users/seohyun/array/'
 outputDir = '/home/seohyun/work/heptool/deepAna/keras/hist/'
 
@@ -24,5 +24,5 @@ if run:
             if process.endswith(".h5"): continue
             print("Start "+str(process))
             ana.ana(inputDir+process, process, outputDir)
-        ana.ana(inputDir+'TT_PowhegHerwig_ttbb','TT_PowhegHerwig_ttbb',outputDir)
+
 print("Total running time :%s " %(time.time() - start_time))
