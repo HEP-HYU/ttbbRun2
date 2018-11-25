@@ -29,7 +29,7 @@ const bool scanbyLcurve = false;
 const double taumax = 0.0, taumin = 0.0;
 const bool fixtau = false;
 const float fixedtau = 0.0;
-const int reg_dR = 3, reg_M = 3;
+const int reg_dR = 4, reg_M = 4;
 
 void ttbbDiffXsec(){
   gErrorIgnoreLevel = kFatal; // kWarning
