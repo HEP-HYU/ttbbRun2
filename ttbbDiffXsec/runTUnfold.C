@@ -16,6 +16,8 @@ void drawLCurve(const char *h_name_, TGraph *grp_Lcurve_, TGraph *grp_BestLcurve
   
   spl_logTauscanX->SetTitle("log(chi^2)log(tau)");
   spl_logTauscanX->Draw();
+  //spl_logTauscanX->GetXaxis()->SetLabelSize(0.1);
+  //spl_logTauscanX->GetYaxis()->SetLabelSize(0.1);
   grp_BestLogTauLogChi2->SetMarkerSize(2.3);
   grp_BestLogTauLogChi2->SetMarkerColor(kBlue);
   grp_BestLogTauLogChi2->SetMarkerStyle(kFullStar);
@@ -28,6 +30,8 @@ void drawLCurve(const char *h_name_, TGraph *grp_Lcurve_, TGraph *grp_BestLcurve
 
   grp_Lcurve->Draw();
   grp_Lcurve->GetXaxis()->SetTitle("log(#tau)");
+  grp_Lcurve->GetXaxis()->SetLabelSize(0.025);
+  grp_Lcurve->GetYaxis()->SetLabelSize(0.03);
   grp_BestLcurve->SetMarkerSize(2.3);
   grp_BestLcurve->SetMarkerColor(kBlue);
   grp_BestLcurve->SetMarkerStyle(kFullStar);

@@ -4,7 +4,7 @@ R__LOAD_LIBRARY(libRooUnfold)
 
 #include <TSystem.h>
 
-TH1 *runSVDUnfold(TH1 *h_in_, TH2 *h_resp_, int reg){
+TH1 *runSVDUnfold(TH1 *h_in_, TH2 *h_resp_, int reg = -1){
   gSystem->Load("/home/seohyun/tools/RooUnfold/build/libRooUnfold.so");
   
   auto h_in = h_in_;
@@ -17,8 +17,14 @@ TH1 *runSVDUnfold(TH1 *h_in_, TH2 *h_resp_, int reg){
   RooUnfold *roo_unfold;
 
   roo_resp = new RooUnfoldResponse(h_reco, h_gen, h_resp);
-  roo_unfold = new RooUnfoldSvd(roo_resp, h_in, reg);
+  
+  if( reg == -1) roo_unfold = new RooUnfoldSvd(roo_resp, h_in);
+  else  roo_unfold = new RooUnfoldSvd(roo_resp, h_in, reg);
   auto h_out = (TH1 *)roo_unfold->Hreco(err);
-
+  //cout << "Regularization Parameter : " << roo_unfold->GetRegParm() << endl;
+  
+  //roo_unfold = new RooUnfoldInvert(roo_resp, h_in);
+  //auto h_out = (TH1 *)roo_unfold->Hreco(err);
+  
   return h_out;
 }

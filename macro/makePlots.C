@@ -140,7 +140,6 @@ void makePlots(){
       string histName = *v_itr + (*v_itr2)->sample;
       //remove duplication
 
-
       auto h_tmp = (TH1D *)(*v_itr2)->file->Get(histName.c_str());
       if( h_tmp == NULL ){
         cout << "FUCKING NULL POINTER" << endl;

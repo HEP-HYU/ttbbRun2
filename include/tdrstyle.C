@@ -89,7 +89,7 @@ void setTDRStyle() {
   tdrStyle->SetPadTopMargin(0.05);
   tdrStyle->SetPadBottomMargin(0.13);
   tdrStyle->SetPadLeftMargin(0.16);
-  tdrStyle->SetPadRightMargin(0.02);
+  tdrStyle->SetPadRightMargin(0.04);
 
 // For the Global title:
 
@@ -172,6 +172,7 @@ TPaveText * tdrCMSlabel(){
 
   return label;
 }
+
 TPaveText * tdrCMSSimlabel(){
   TPaveText *label = new TPaveText();
   label->SetX1NDC(0.68);
@@ -180,6 +181,21 @@ TPaveText * tdrCMSSimlabel(){
   label->SetY2NDC(0.98);
   label->SetTextFont(42);
   label->AddText("CMS Simulation");
+  label->SetFillStyle(0);
+  label->SetBorderSize(0);
+  label->SetTextSize(0.04);
+
+  return label;
+}
+
+TPaveText * tdrWorkProgress(){
+  TPaveText *label = new TPaveText();
+  label->SetX1NDC(0.16);
+  label->SetX2NDC(0.40);
+  label->SetY1NDC(0.94);
+  label->SetY2NDC(0.98);
+  label->SetTextFont(42);
+  label->AddText("Work in Progress");
   label->SetFillStyle(0);
   label->SetBorderSize(0);
   label->SetTextSize(0.04);

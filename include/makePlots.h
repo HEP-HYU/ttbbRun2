@@ -22,10 +22,10 @@ string OUTPUT = "../output/pdf/";
 
 std::string ReplaceAll(std::string &str, const std::string &from, const std::string &to);
  
-//const double SF_ttbb = 0.992;
-//const double SF_ttbj = 0.997;
-//const double SF_ttcc = 0.871;
-//const double SF_ttLF = 0.890;
+const double SF_ttbb = 0.992;
+const double SF_ttbj = 0.997;
+const double SF_ttcc = 0.871;
+const double SF_ttLF = 0.890;
 
 //-----------------------------------------------------------------//
 //  Histogram file reader                                          //
@@ -103,7 +103,7 @@ MonteFile::MonteFile(string input_sample, string input_category, int input_color
   this->scale_Mu = (LUMINOSITY_*xsec)/EventInfo->GetBinContent(2);
   this->scale_El = (LUMINOSITY_*xsec)/EventInfo->GetBinContent(2);
 
-  /*if(this->sample == "ttbb"){
+  if(this->sample == "ttbb"){
     this->scale_Mu *= SF_ttbb;
     this->scale_El *= SF_ttbb;
   }
@@ -118,7 +118,7 @@ MonteFile::MonteFile(string input_sample, string input_category, int input_color
   if(this->sample == "ttLF"){
     this->scale_Mu *= SF_ttLF;
     this->scale_El *= SF_ttLF;
-  }*/
+  }
 }
 
 std::string ReplaceAll(std::string &str, const std::string &from, const std::string &to){
