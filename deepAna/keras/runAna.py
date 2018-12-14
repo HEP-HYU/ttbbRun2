@@ -5,18 +5,18 @@ import subprocess
 
 start_time = time.time()
 
-run = False
+run = True
 test = False
-closureTest = True
-inputDir = '/data/users/seohyun/array/'
+#inputDir = '/data/users/seohyun/array/'
+inputDir = '/home/seohyun/work/heptool/deepAna/keras/array/'
 outputDir = '/home/seohyun/work/heptool/deepAna/keras/hist/'
 
-if closureTest:
-    ana.ana(inputDir+'TTLJ_PowhegPythia_ttbb','TTLJ_PowhegPythia_ttbb',outputDir,True)
+ana.ana('array/TTLJ_PowhegPythia_ttbbFilter_ttbb','TTLJ_PowhegPythia_ttbbFilter_ttbb',outputDir)
 
 if run:
     if test:
-        ana.ana(inputDir+'TTLJ_PowhegPythia_ttbb','TTLJ_PowhegPythia_ttbb',outputDir)
+        ana.ana('/home/seohyun/work/heptool/deepAna/keras/array/TTLJ_PowhegPythia_ttbb','TTLJ_PowhegPythia_ttbb',outputDir)
+        #ana.ana('/home/seohyun/work/heptool/deepAna/keras/array/test','TTLJ_PowhegPythia_ttbb',outputDir)
         #ana.ana(inputDir+'TT_PowhegHerwig_ttbb','TT_PowhegHerwig_ttbb',outputDir)
 
     else :

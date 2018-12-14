@@ -31,7 +31,9 @@ from keras.regularizers import l2
 from keras.optimizers import Adam, SGD
 from keras.callbacks import Callback, ModelCheckpoint
 
-trainInput = "input/array_train_ttbb.h5"
+import utils as ut
+
+trainInput = "array/array_train_ttbb.h5"
 ver = ""
 configDir = ""
 weightDir = ""
@@ -254,16 +256,7 @@ data = pd.read_hdf(trainInput)
 ##########################################
 #col_names = list(data_train)
 labels = data.filter(['signal'], axis=1)
-data = data.filter(['signal',
-    'dR', 'dEta', 'dPhi',
-    'nuPt', 'nuEta', 'nuPhi', 'nuMass',
-    'lbPt', 'lbEta', 'lbPhi', 'lbMass',
-    'lb1Pt', 'lb1Eta', 'lb1Phi', 'lb1Mass',
-    'lb2Pt', 'lb2Eta', 'lb2Phi', 'lb2Mass',
-#    'lb1nuPt', 'lb1nuEta', 'lb1nuPhi', 'lb1nuMass', 
-#    'lb2nuPt', 'lb2nuEta', 'lb2nuPhi', 'lb2nuMass', 
-    'diPt', 'diEta', 'diPhi', 'diMass',
-    'csv1', 'csv2', 'pt1', 'pt2', 'eta1', 'eta2', 'phi1', 'phi2', 'e1', 'e2', ], axis=1)
+data = data.filter(['signal']+ut.getVarlist())
 data.astype('float32')
 #print list(data_train)
 
@@ -311,12 +304,13 @@ X_test = data_test_sc
 #################################
 #Keras model compile and training
 #################################
+nvar = len(ut.getVarlist())
 a = 300
 b = 0.08
 init = 'glorot_uniform'
 
 with tf.device("/cpu:0") :
-    inputs = Input(shape=(33,))
+    inputs = Input(shape=(nvar,))
     x = Dense(a, kernel_regularizer=l2(1E-2))(inputs)
     x = Dropout(b)(x)
     x = BatchNormalization()(x)
@@ -376,7 +370,7 @@ modelfile = 'model_{epoch:02d}_{val_binary_accuracy:.4f}.h5'
 checkpoint = ModelCheckpoint(configDir+weightDir+ver+'/'+modelfile, monitor='val_binary_accuracy', verbose=1, save_best_only=False)#, mode='max')
 
 history = train_model.fit(X_train, Y_train,
-                             epochs=100, batch_size=1024,
+                             epochs=30, batch_size=1024,
                              validation_data=(X_test,Y_test),
                              #class_weight={ 0: 14, 1: 1 }, 
                              callbacks=[roc_callback(training_data=(X_train,Y_train), validation_data=(X_test,Y_test), model=model)]
@@ -423,7 +417,7 @@ for filename in os.listdir(configDir+weightDir+ver):
 
 print("Use "+bestModel)
 model_best = load_model(configDir+weightDir+ver+'/'+bestModel)
-y_pred = model_best.predict(X_test, batch_size=128)
+y_pred = model_best.predict(X_test, batch_size=1024)
 #score = model_best.evaluate(X_test, Y_test)
 #print("Test loss : ", score[0])
 #print("Test accuracy : ", score[1])
