@@ -5,7 +5,7 @@ from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
 def runAna(dir, file, name):
   chain = TChain("ttbbLepJets/tree","events")
   chain.Add(dir+"/"+file)
-  chain.SetProof();
+#  chain.SetProof();
   chain.Process("macro/MyAnalysis.C+",name)
 
   f = TFile(dir+"/"+file,"read")
@@ -17,141 +17,130 @@ def runAna(dir, file, name):
   out.Write()
   out.Close()
 
-p = TProof.Open("", "workers=8")
+#p = TProof.Open("", "workers=8")
 
-### v808 ###
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","DataSingleEG.root","DataSingleEl")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","DataSingleMu.root","DataSingleMu")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","WJets_aMCatNLO.root","wjets")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","ZJets_M10to50_aMCatNLO.root","zjets10to50")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","ZJets_M50_aMCatNLO.root","zjets")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","WW_Pythia.root","ww")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","WZ_Pythia.root","wz")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","ZZ_Pythia.root","zz")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","t_Powheg.root","tchannel")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","tbar_Powheg.root","tbarchannel")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","tW_Powheg.root","tWchannel")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","tbarW_Powheg.root","tbarWchannel")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","ttbar_PowhegPythiaBkg.root","ttbkg")
+inputDir = "/data/users/seohyun/ntuple/hep2017/v808/nosplit/"
 
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","ttHbb_PowhegPythia.root","ttH")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","ttW_Madgraph.root","ttW")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","ttZ_Madgraph.root","ttZ")
+# v808 #
+### Basic plots ###
+runAna(inputDir,"DataSingleEG.root","DataSingleEl")
+runAna(inputDir,"DataSingleMu.root","DataSingleMu")
+runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
 
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttbb.root","ttbb")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttbj.root","ttbj")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttcc.root","ttcc")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttjj.root","ttjj")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttLF.root","ttLF")
-runAna("/data/users/seohyun/ntuple/hep2017/v808/","TTLJ_PowhegPythia_ttother.root","ttother")
+runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
+runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj")
+runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc")
+runAna(inputDir,"TTLJ_PowhegPythia_ttLF.root","ttLF")
+runAna(inputDir,"TTLJ_PowhegPythia_ttother.root","ttother")
 
-"""
-### v806 ###
-runAna("/data/users/jhgoh/hep2016/v806_1/","DataSingleEG.root","DataSingleEl")
-runAna("/data/users/jhgoh/hep2016/v806_1/","DataSingleMu.root","DataSingleMu")
-runAna("/data/users/jhgoh/hep2016/v806_1/","WJets_aMCatNLO.root","wjets")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ZJets_M50_aMCatNLO.root","zjets")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ZJets_M10to50_aMCatNLO.root","zjets10to50")
-runAna("/data/users/jhgoh/hep2016/v806_1/","WW_Pythia.root","ww")
-runAna("/data/users/jhgoh/hep2016/v806_1/","WZ_Pythia.root","wz")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ZZ_Pythia.root","zz")
-runAna("/data/users/jhgoh/hep2016/v806_1/","t_tchannel_Powheg.root","tchannel")
-runAna("/data/users/jhgoh/hep2016/v806_1/","tbar_tchannel_Powheg.root","tbarchannel")
-runAna("/data/users/jhgoh/hep2016/v806_1/","tW_Powheg.root","tWchannel")
-runAna("/data/users/jhgoh/hep2016/v806_1/","tbarW_Powheg.root","tbarWchannel")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttbar_LepJetsPowhegPythiattbb.root","ttbb")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttbar_LepJetsPowhegPythiattbj.root","ttbj")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttbar_LepJetsPowhegPythiattcc.root","ttcc")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttbar_LepJetsPowhegPythiattLF.root","ttLF")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttbar_LepJetsPowhegPythiatt.root","tt")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttbar_PowhegPythiaBkg.root","ttbkg")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttHbb_PowhegPythia.root","ttH")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttZ_Madgraph.root","ttW")
-runAna("/data/users/jhgoh/hep2016/v806_1/","ttW_Madgraph.root","ttZ")
+runAna(inputDir,"WJets_aMCatNLO.root","wjets")
+runAna(inputDir,"ZJets_M10to50_aMCatNLO.root","zjets10to50")
+runAna(inputDir,"ZJets_M50_aMCatNLO.root","zjets")
+runAna(inputDir,"WW_Pythia.root","ww")
+runAna(inputDir,"WZ_Pythia.root","wz")
+runAna(inputDir,"ZZ_Pythia.root","zz")
+runAna(inputDir,"t_Powheg.root","tchannel")
+runAna(inputDir,"tbar_Powheg.root","tbarchannel")
+runAna(inputDir,"tW_Powheg.root","tWchannel")
+runAna(inputDir,"tbarW_Powheg.root","tbarWchannel")
+runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg")
 
-### QCD ###
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_EGEnr_20to30.root","qcdEl20to30")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_EGEnr_30to50.root","qcdEl30to50")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_EGEnr_50to80.root","qcdEl50to80")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_EGEnr_80to120.root","qcdEl80to120")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_EGEnr_120to170.root","qcdEl120to170")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_EGEnr_170to300.root","qcdEl170to300")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_EGEnr_300toInf.root","qcdEl300toInf")
+runAna(inputDir,"ttHbb_PowhegPythia.root","ttH")
+runAna(inputDir,"ttW_Madgraph.root","ttW")
+runAna(inputDir,"ttZ_Madgraph.root","ttZ")
 
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_20to30.root","qcdMu20to30")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_30to50.root","qcdMu30to50")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_50to80.root","qcdMu50to80")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_80to120.root","qcdMu80to120")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_120to170.root","qcdMu120to170")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_170to300.root","qcdMu170to300")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_300to470.root","qcdMu300to470")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_470to600.root","qcdMu470to600")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_600to800.root","qcdMu600to800")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_800to1000.root","qcdMu800to1000")
-runAna("/data/users/jhgoh/hep2016/v806_1/","QCD_MuEnr_1000toInf.root","qcdMu1000toInf")
-"""
-### background ###
-"""
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleElectron_Run2016.root","DataSingleEl")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleMuon_Run2016.root","DataSingleMu")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","WJets.root","wjets")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","DYJets.root","zjets")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","DYJets_10to50.root","zjets10to50")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","WW.root","ww")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","WZ.root","wz")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","ZZ.root","zz")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTop_t.root","tchannel")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTbar_t.root","tbarchannel")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTop_tW.root","tWchannel")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","SingleTbar_tW.root","tbarWchannel")
+### Systematics ###
+##### List #####
+# PileUp
+#   __puup, __pudown
+# Muon
+#   __muidup, __muiddown, __muisoup, __muisodown, __mutrgup, __mutrgdown
+# Electron
+#   __elidup, __eliddown, __elrecoup, __elrecodown, __elzvtxup, __elzvtxdown
+#   __eltrgup, __eltrgdown
+# CSV shape
+#   __lfup, __lfdown, __hfup, __hfdown
+#   __hfstat1up, __hfstat1down, __hfstat2up, __hfstat2down
+#   __lfstat1up, __lfstat1down, __lfstat2up, __lfstat2down
+#   __cferr1up, __cferr1down, __cferr2up, __cferr2down
+# Scale Weight(ME)
+#   __scale0, __scale1, __scale2, __scale3, __scale4, __scale5
+# Parton Shower(PS)
+#   __isrup, __isrdown, __fsrup, __fsrdown
+# ME & PS
+#   __hdampup, __hdampdown
+#####
+sys_list = [
+    "__puup","__pudown",
+    "__muidup","__muiddown","__muisoup","__muisodown","__mutrgup","__mutrgdown",
+    "__elidup","__eliddown","__elrecoup","__elrecodown","__elzvtxup","__elzvtxdown",
+    "__eltrgup","__eltrgdown",
+    "__lfup","__lfdown","__hfup","__hfdown",
+    "__hfstat1up","__hfstat1down","__hfstat2up","__hfstat2down",
+    "__lfstat1up","__lfstat1down","__lfstat2up","__lfstat2down",
+    "__cferr1up","__cferr1down","__cferr2up","__cferr2down",
+    "__scale0","__scale1","__scale2","__scale3","__scale4","__scale5"
+]
 
-### signal ###
-#### Powheg + Pythia ####
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_tt.root","tt")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbb.root","ttbb")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbj.root","ttbj")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttjj.root","ttjj")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttcc.root","ttcc")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttlf.root","ttLF")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttbkg.root","ttbkg")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_ttHbb.root","ttH")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_ttW.root","ttW")
-runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_ttZ.root","ttZ")
-###### ttbkg == ttother ######
-#runAna("/data/users/seohyun/ntuple/hep2017/v806/","TT_powheg_ttother.root","ttother")
-"""
-'''
-#### Powheg + Pythia + EvtGen ####
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythiaEvt.root","tt")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythiaEvt_ttbb.root","ttbb")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythiaEvt_ttbj.root","ttbj")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythiaEvt_ttcc.root","ttcc")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythiaEvt_ttLF.root","ttLF")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythiaEvt_ttjj.root","ttjj")
+for index, value in enumerate(sys_list):
+    runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
+    runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
+    runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)
+    runAna(inputDir,"TTLJ_PowhegPythia_ttLF.root","ttLF"+value)
+    runAna(inputDir,"TTLJ_PowhegPythia_ttother.root","ttother"+value)
 
-#### Powheg + Herwig ####
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegHerwig.root","tt")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegHerwig_ttbb.root","ttbb")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegHerwig_ttbj.root","ttbj")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegHerwig_ttcc.root","ttcc")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegHerwig_ttLF.root","ttLF")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegHerwig_ttjj.root","ttjj")
+    runAna(inputDir,"WJets_aMCatNLO.root","wjets"+value)
+    runAna(inputDir,"ZJets_M10to50_aMCatNLO.root","zjets10to50"+value)
+    runAna(inputDir,"ZJets_M50_aMCatNLO.root","zjets"+value)
+    runAna(inputDir,"WW_Pythia.root","ww"+value)
+    runAna(inputDir,"WZ_Pythia.root","wz"+value)
+    runAna(inputDir,"ZZ_Pythia.root","zz"+value)
+    runAna(inputDir,"t_Powheg.root","tchannel"+value)
+    runAna(inputDir,"tbar_Powheg.root","tbarchannel"+value)
+    runAna(inputDir,"tW_Powheg.root","tWchannel"+value)
+    runAna(inputDir,"tbarW_Powheg.root","tbarWchannel"+value)
+    runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg"+value)
 
-#### aMCatNLO + Pythia ####
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_aMCatNLOPythia.root","tt")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_aMCatNLOPythia_ttbb.root","ttbb")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_aMCatNLOPythia_ttbj.root","ttbj")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_aMCatNLOPythia_ttcc.root","ttcc")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_aMCatNLOPythia_ttLF.root","ttLF")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_aMCatNLOPythia_ttjj.root","ttjj")
+    runAna(inputDir,"ttHbb_PowhegPythia.root","ttH"+value)
+    runAna(inputDir,"ttW_Madgraph.root","ttW"+value)
+    runAna(inputDir,"ttZ_Madgraph.root","ttZ"+value)
 
-#### Powheg + Pythia ( sys central ) ####
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythia_SYS_Central.root","tt")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythia_SYS_Central_ttbb.root","ttbb")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythia_SYS_Central_ttbj.root","ttbj")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythia_SYS_Central_ttcc.root","ttcc")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythia_SYS_Central_ttLF.root","ttLF")
-#runAna("/data/users/seohyun/ntuple/hep2017/Generator/","TT_PowhegPythia_SYS_Central_ttjj.root","ttjj")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttbb","ttbb__isrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttbj","ttbj__isrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttcc","ttcc__isrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttLF","ttLF__isrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttother","ttother__isrup")
+runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_ISRup","ttbkg__isrup")
 
-runAna("/data/users/seohyun/ntuple/hep2017/Generator/","Tree_LepJets_FallSkim_v8-0-6_Spring16-80X_36814pb-1_ttbb_aMCatNLOttbb.root","ttbb")
-'''
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttbb","ttbb__isrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttbj","ttbj__isrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttcc","ttcc__isrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttLF","ttLF__isrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttother","ttother__isrdown")
+runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_ISRdown","ttbkg__isrdown")
+
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttbb","ttbb__fsrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttbj","ttbj__fsrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttcc","ttcc__fsrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttLF","ttLF__fsrup")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttother","ttother__fsrup")
+runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_FSRup","ttbkg__fsrup")
+
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttbb","ttbb__fsrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttbj","ttbj__fsrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttcc","ttcc__fsrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttLF","ttLF__fsrdown")
+runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttother","ttother__fsrdown")
+runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_FSRdown","ttbkg__fsrdown")
+
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttbb", "ttbb__hdampup")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttbj", "ttbj__hdampup")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttcc", "ttcc__hdampup")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttLF", "ttLF__hdampup")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttother", "ttother__hdampup")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttbb", "ttbb__hdampdown")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttbj", "ttbj__hdampdown")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttcc", "ttcc__hdampdown")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttLF", "ttLF__hdampdown")
+runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdamuUp_ttother", "ttother__hdampdown")
+

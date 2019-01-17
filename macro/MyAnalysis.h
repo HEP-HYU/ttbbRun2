@@ -41,6 +41,8 @@ public :
    TTreeReaderValue<Int_t> GoodPV = {fReader, "GoodPV"};
    TTreeReaderValue<Int_t> channel = {fReader, "channel"};
    TTreeReaderArray<float> PUWeight = {fReader, "PUWeight"};
+   TTreeReaderArray<float> pdfweight = {fReader, "pdfweight"};
+   TTreeReaderArray<float> scaleweight = {fReader, "scaleweight"};
    TTreeReaderValue<Float_t> MET = {fReader, "MET"};
    TTreeReaderValue<Float_t> MET_phi = {fReader, "MET_phi"};
    TTreeReaderValue<Float_t> lepton_pT = {fReader, "lepton_pT"};
@@ -48,8 +50,8 @@ public :
    TTreeReaderValue<Float_t> lepton_phi = {fReader, "lepton_phi"};
    TTreeReaderValue<Float_t> lepton_E = {fReader, "lepton_E"};
    TTreeReaderValue<Float_t> lepton_LES = {fReader, "lepton_LES"};
-   //TTreeReaderValue<Float_t> lepton_relIso = {fReader, "lepton_relIso"};
-   //TTreeReaderValue<bool> lepton_isIso = {fReader, "lepton_isIso"};
+   TTreeReaderValue<Float_t> lepton_relIso = {fReader, "lepton_relIso"};
+   TTreeReaderValue<bool> lepton_isIso = {fReader, "lepton_isIso"};
    TTreeReaderArray<float> lepton_SF = {fReader, "lepton_SF"};
    TTreeReaderArray<float> jet_pT = {fReader, "jet_pT"};
    TTreeReaderArray<float> jet_eta = {fReader, "jet_eta"};
@@ -107,6 +109,9 @@ public :
    TString process;
 
    HistoBook *h_control;
+
+   bool dosyst = false;
+   string syst_ext = "";
 };
 
 #endif
