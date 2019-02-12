@@ -1,0 +1,24 @@
+'data.root':
+  type: data
+  legend: 'Data'
+  pretty-name: 'Data'
+
+'MC_sample1.root':
+  type: mc
+  pretty-name: 'MC sample 1'
+  cross-section: 245.8
+  generated-events: 2167
+  fill-color: "#D95B43"
+  legend: "MC 1"
+  order: 1
+  group: mygroup
+
+'MC_sample2.root':
+  type: mc
+  pretty-name: 'MC sample 2'
+  cross-section: 666.3
+  generated-events: 2404
+  fill-color: '#53777A'
+  legend: 'MC 2'
+  order: 0
+  group: mygroup

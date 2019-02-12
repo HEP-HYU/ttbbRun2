@@ -203,8 +203,8 @@ const int nChannel=2; const int nStep=4; const int nJet = 6;
 
 const std::vector<const char *> V_SYS_NAME_ = {
   "__puup", "__pudown",
-  "__muidup", "__muiddown", "__muisoup", "__muisodown", "__mutrgup", "__mutrgdown",
-  "__elidup", "__eliddown", "__elrecoup", "__elrecodown", "__elzvtxup", "__elzvtxdown",
+  "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
+  "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
   "__lfup", "__lfdown", "__hfup", "__hfdown",
   "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
   "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",

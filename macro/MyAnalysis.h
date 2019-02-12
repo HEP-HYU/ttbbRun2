@@ -41,8 +41,8 @@ public :
    TTreeReaderValue<Int_t> GoodPV = {fReader, "GoodPV"};
    TTreeReaderValue<Int_t> channel = {fReader, "channel"};
    TTreeReaderArray<float> PUWeight = {fReader, "PUWeight"};
-   TTreeReaderArray<float> pdfweight = {fReader, "pdfweight"};
-   TTreeReaderArray<float> scaleweight = {fReader, "scaleweight"};
+   TTreeReaderArray<float> pdfweight = {fReader, "channel"};
+   TTreeReaderArray<float> scaleweight = {fReader, "channel"};
    TTreeReaderValue<Float_t> MET = {fReader, "MET"};
    TTreeReaderValue<Float_t> MET_phi = {fReader, "MET_phi"};
    TTreeReaderValue<Float_t> lepton_pT = {fReader, "lepton_pT"};

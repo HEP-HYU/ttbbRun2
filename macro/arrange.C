@@ -149,12 +149,17 @@ void arrange(){
     f_out[i]->Close();
   }
 
+  //f_filter = TFile::Open(Form("%s/hist_TTLJ_PowhegPythia_ttbb.root",input.c_str()));
   TFile *f_matrix = TFile::Open(Form("%s/hist_respMatrix_ttbb.root",output.c_str()),"recreate");
   f_matrix->cd();
 
   for(int i=0; i<2; ++i){
     auto h1 = (TH1 *)f_filter->Get(Form("h_ResponseMatrixDeltaR_Ch%d_S3_TTLJ_PowhegPythia_ttbbFilter_ttbb",i));
+    //auto h1 = (TH1 *)f_filter->Get(Form("h_ResponseMatrixDeltaR_Ch%d_S3_TTLJ_PowhegPythia_ttbb",i));
     auto h2 = (TH1 *)f_filter->Get(Form("h_ResponseMatrixInvMass_Ch%d_S3_TTLJ_PowhegPythia_ttbbFilter_ttbb",i));
+    //auto h2 = (TH1 *)f_filter->Get(Form("h_ResponseMatrixInvMass_Ch%d_S3_TTLJ_PowhegPythia_ttbb",i));
+    //h1->SetName(Form("h_ResponseMatrixDeltaR_Ch%d_S3_TTLJ_PowhegPythia_ttbbFilter_ttbb",i));
+    //h2->SetName(Form("h_ResponseMatrixInvMass_Ch%d_S3_TTLJ_PowhegPythia_ttbbFilter_ttbb",i));
     h1->Write();
     h2->Write();
   }

@@ -41,7 +41,7 @@ void makePlots2(string inputFile, string outputLocation = "../output/pdf/"){
     if(obj->InheritsFrom(TH1D::Class())){
       auto h = (TH1D *)obj;
       auto e = (TH1D *)h->Clone();
-      string histname = h.GetName();
+      string histname = h->GetName();
       h->SetLineWidth(2);
       h->SetLineColor(kBlue);
       e->SetFillStyle(3013);
@@ -50,6 +50,7 @@ void makePlots2(string inputFile, string outputLocation = "../output/pdf/"){
       e->Draw("e2 same");
       h->GetYaxis()->SetTitleOffset(1.5);
       h->GetXaxis()->SetTitleOffset(1.2);
+      ssize_t pos;
       if((pos = histname.find("Data")) != std::string::npos)
 	label_cms->Draw("same");
       else 
@@ -58,8 +59,9 @@ void makePlots2(string inputFile, string outputLocation = "../output/pdf/"){
     }
     else if(obj->InheritsFrom(TH2D::Class())){
       auto h = (TH2D *) obj;
-      string histname = h.GetName();
+      string histname = h->GetName();
       h->Draw("box");
+      ssize_t pos;
       if((pos = histname.find("Data")) != std::string::npos)
 	label_cms->Draw("same");
       else 

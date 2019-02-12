@@ -108,7 +108,7 @@ void makePlots(){
     //pad1->SetGridx();
     //pad1->SetGridy();
     pad1->SetFrameFillColor(0);
-    pad1->SetLogy();
+    //pad1->SetLogy();
     pad1->Draw();
 
     TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.20);
@@ -204,13 +204,13 @@ void makePlots(){
     double max_hs = hs_tmp->GetMaximum();
     double maxfrac = 1000;
     if( max_hs > max_data )
-      //h_data->SetMaximum(3*max_hs); //linear
-      h_data->SetMaximum(max_hs+max_hs*maxfrac); //log
+      h_data->SetMaximum(3*max_hs); //linear
+      //h_data->SetMaximum(max_hs+max_hs*maxfrac); //log
     else
-      //h_data->SetMaximum(3*max_data); //linear
-      h_data->SetMaximum(max_data+max_data*maxfrac); //log
+      h_data->SetMaximum(3*max_data); //linear
+      //h_data->SetMaximum(max_data+max_data*maxfrac); //log
 
-    h_data->SetMinimum(10);
+    h_data->SetMinimum(0);
     h_data->GetYaxis()->SetTitleSize(0.04);
     h_data->GetYaxis()->SetLabelSize(0.04);
     h_data->GetYaxis()->SetTitleOffset(1.2);

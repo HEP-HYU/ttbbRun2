@@ -6,9 +6,6 @@
 
 using namespace TMath;
 using namespace std;
-//ssize_t pos;
-//if((pos = name.find("TTLJ",0,4)) != std::string::npos) ....
-
 
 void MyAnalysis::Begin(TTree * /*tree*/){
   option = GetOption();
@@ -16,8 +13,9 @@ void MyAnalysis::Begin(TTree * /*tree*/){
 
 void MyAnalysis::SlaveBegin(TTree * /*tree*/){
   option = GetOption();
-  const char * sample = (option.substr(0,sample.find_first_of("_"))).c_str();
-  syst_ext = option.substr(option.find_first_of("_")+2,string::npos);
+  string str_opt = option.Data();
+  const char * sample = (str_opt.substr(0,str_opt.find_first_of("_"))).c_str();
+  syst_ext = str_opt.substr(str_opt.find_first_of("_")+2,string::npos);
 
   h_control = new HistoBook(1, option.Data());
 
@@ -38,6 +36,13 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
 	fOutput->Add(h_control->h_reco_addjets_invMass[iChannel][iStep]);
     }//step
   }//channel
+  
+  process = option.Data();
+  if( process.Contains("TT") || process.Contains("ttHbb")
+      || process.Contains("ttW") || process.Contains("ttZ")){
+    pdfweight = {fReader, "pdfweight"};
+    scaleweight = {fReader, "scaleweight"};
+  }
 }
 
 Bool_t MyAnalysis::Process(Long64_t entry){
@@ -45,6 +50,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   option = GetOption();
   process = option.Data();
 
+  cout << scaleweight[0] << endl;
   const int mode = *channel;
   if(mode>2) return kTRUE;
  
@@ -160,79 +166,67 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   for(int iCut=0; iCut <= passcut; ++iCut){
     double EventWeight = 1;
     if( !option.Contains("Data") ){
-      EventWeight *= *genweight;
+      EventWeight *= *genWeight;
       ssize_t pos;
-      if( pos = syst_ext.find("puup",0) != std::string::npos )
+      if     ( (pos = syst_ext.find("puup",0)) != std::string::npos )
 	EventWeight *= PUWeight[1];
-      else if( pos = syst_ext.find("pudown",0) != std::string::npos )
+      else if( (pos = syst_ext.find("pudown",0)) != std::string::npos )
 	EventWeight *= PUWeight[2];
       else
 	EventWeight *= PUWeight[0];
     
       if( passchannel == 0 ){
-	//mu ID : 0, mu ISO : 1, mu Trigger : 2
-	if( pos = syst_ext.find("muidup",0) != std::string::npos)
+	//mu [0]~[2]: ID/Iso, [3]~[5]: Trigger
+	if     ( (pos = syst_ext.find("musfup",0)) != std::string::npos )
 	  EventWeight *= lepton_SF[1];
-	else if( pos = syst_ext.find("muiddown",0) != std::string::npos)
+	else if( (pos = syst_ext.find("musfdown",0)) != std::string::npos )
 	  EventWeight *= lepton_SF[2];
 	else
 	  EventWeight *= lepton_SF[0];
 
-	if( pos = syst_ext.find("muisoup",0) != std::string::npos)
+	if     ( (pos = syst_ext.find("mutrgup",0)) != std::string::npos )
 	  EventWeight *= lepton_SF[4];
-	else if( pos = syst_ext.find("muisodown",0) != std::string::npos)
+	else if( (pos = syst_ext.find("mutrgdown",0)) != std::string::npos ) 
 	  EventWeight *= lepton_SF[5];
 	else
 	  EventWeight *= lepton_SF[3];
-
-	if( pos = syst_ext.find("mutrgup",0) != std::string::npos)
-	  EventWeight *= lepton_SF[7];
-	else if( pos = syst_ext.find("mutrgdown",0) != std::string::npos)
-	  EventWeight *= lepton_SF[8];
-	else
-	  EventWeight *= lepton_SF[6];
       }
       else if( passchannel == 1){
-	//el ID : 0, el Reco : 1, el Trigger : 2
-	if( pos = syst_ext.find("elidup",0) != std::string::npos)
+	//el [0]~[2]: ID/Iso/Reco, [3]~[5]: Trigger
+	if     ( (pos = syst_ext.find("elsfup",0)) != std::string::npos )
 	  EventWeight *= lepton_SF[1];
-	else if( pos = syst_ext.find("eliddown",0) != std::string::npos)
+	else if( (pos = syst_ext.find("elsfdown",0)) != std::string::npos )
 	  EventWeight *= lepton_SF[2];
 	else
 	  EventWeight *= lepton_SF[0];
 
-	if( pos = syst_ext.find("elisoup",0) != std::string::npos)
+	if     ( (pos = syst_ext.find("eltrgup",0)) != std::string::npos )
 	  EventWeight *= lepton_SF[4];
-	else if( pos = syst_ext.find("elisodown",0) != std::string::npos)
+	else if( (pos = syst_ext.find("eltrgdown",0)) != std::string::npos )
 	  EventWeight *= lepton_SF[5];
 	else
 	  EventWeight *= lepton_SF[3];
-
-	if( pos = syst_ext.find("eltrgup",0) != std::string::npos)
-	  EventWeight *= lepton_SF[7];
-	else if( pos = syst_ext.find("eltrgdown",0) != std::string::npos)
-	  EventWeight *= lepton_SF[8];
-	else
-	  EventWeight *= lepton_SF[6];
       }
       
       //Scale Weight(ME)
       //[0] = muF up , [1] = muF down, [2] = muR up, [3] = muR up && muF up
       //[4] = muR down, [5] = muF down && muF down
-      if( pos = syst_ext.find("scale0",0) != std::string::npos)
-	EventWeight *= scaleweight[0];
-      else if( pos = syst_ext.find("scale1",0) != std::string::npos)
-	EventWeight *= scaleweight[1];
-      else if( pos = syst_ext.find("scale2",0) != std::string::npos)
-	EventWeight *= scaleweight[2];
-      else if( pos = syst_ext.find("scale3",0) != std::string::npos)
-	EventWeight *= scaleweight[3];
-      else if( pos = syst_ext.find("scale4",0) != std::string::npos)
-	EventWeight *= scaleweight[4];
-      else if( pos = syst_ext.find("scale5",0) != std::string::npos)
-	EventWeight *= scaleweight[5];
-      else EventWeight *= 1.0;
-
+      if(option.Contains("TT") || option.Contains("ttHbb")
+	  || option.Contains("ttW") || option.Contains("ttZ")){
+	if     ( (pos = syst_ext.find("scale0",0)) != std::string::npos )
+	  EventWeight *= scaleweight[0];
+	else if( (pos = syst_ext.find("scale1",0)) != std::string::npos )
+	  EventWeight *= scaleweight[1];
+	else if( (pos = syst_ext.find("scale2",0)) != std::string::npos )
+	  EventWeight *= scaleweight[2];
+	else if( (pos = syst_ext.find("scale3",0)) != std::string::npos )
+	  EventWeight *= scaleweight[3];
+	else if( (pos = syst_ext.find("scale4",0)) != std::string::npos )
+	  EventWeight *= scaleweight[4];
+	else if( (pos = syst_ext.find("scale5",0)) != std::string::npos )
+	  EventWeight *= scaleweight[5];
+	else EventWeight *= 1.0;
+      }
       //CSV Shape
       // Systematics for bottom flavor jets:
       //   Light flavor contamination: lf
@@ -242,37 +236,37 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       //   Linear and quadratic statistical fluctuations: lfstats1 and lfstats2
       // Systematics for charm flavor jets:
       //   Linear and quadratic uncertainties: cferr1 and cferr2
-      if( pos = syst_ext.find("lfup",0) != std::string::npos)
+      if     ( (pos = syst_ext.find("lfup",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[3];
-      else if( pos = syst_ext.find("lfdown",0) != std::string::npos)
+      else if( (pos = syst_ext.find("lfdown",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[4];
-      else if( pos = syst_ext.find("hfup",0) != std::string::npos)
+      else if( (pos = syst_ext.find("hfup",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[5];
-      else if( pos = syst_ext.find("hfdown",0) != std::string::npos)
+      else if( (pos = syst_ext.find("hfdown",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[6];
-      else if( pos = syst_ext.find("hfstat1up",0) != std::string::npos)
+      else if( (pos = syst_ext.find("hfstat1up",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[7];
-      else if( pos = syst_ext.find("hfstat1down",0) != std::string::npos)
+      else if( (pos = syst_ext.find("hfstat1down",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[8];
-      else if( pos = syst_ext.find("hfstat2up",0) != std::string::npos)
+      else if( (pos = syst_ext.find("hfstat2up",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[9];
-      else if( pos = syst_ext.find("hfstat2down",0) != std::string::npos)
+      else if( (pos = syst_ext.find("hfstat2down",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[10];
-      else if( pos = syst_ext.find("lfstat1up",0) != std::string::npos)
+      else if( (pos = syst_ext.find("lfstat1up",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[11];
-      else if( pos = syst_ext.find("lfstat1down",0) != std::string::npos)
+      else if( (pos = syst_ext.find("lfstat1down",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[12];
-      else if( pos = syst_ext.find("lfstat2up",0) != std::string::npos)
+      else if( (pos = syst_ext.find("lfstat2up",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[13];
-      else if( pos = syst_ext.find("lfstat2down",0) != std::string::npos)
+      else if( (pos = syst_ext.find("lfstat2down",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[14];
-      else if( pos = syst_ext.find("cferr1up",0) != std::string::npos)
+      else if( (pos = syst_ext.find("cferr1up",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[15];
-      else if( pos = syst_ext.find("cferr1down",0) != std::string::npos)
+      else if( (pos = syst_ext.find("cferr1down",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[16];
-      else if( pos = syst_ext.find("cferr2up",0) != std::string::npos)
+      else if( (pos = syst_ext.find("cferr2up",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] + jet_SF_CSV_30[17];
-      else if( pos = syst_ext.find("cferr2down",0) != std::string::npos)
+      else if( (pos = syst_ext.find("cferr2down",0)) != std::string::npos )
 	EventWeight *= jet_SF_CSV_30[0] - jet_SF_CSV_30[18];
       else
 	EventWeight *= jet_SF_CSV_30[0];
@@ -376,19 +370,19 @@ void MyAnalysis::Terminate(){
 
   for(int iChannel=0; iChannel<nChannel; ++iChannel){
     for(int iStep=0; iStep<nStep; ++iStep){
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_PT_,iChannel,iStep,sample))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_ETA_,iChannel,iStep,sample))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_JETS_,iChannel,iStep,sample))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_BJETS_,iChannel,iStep,sample))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_TRANSVERSE_MASS_,iChannel,iStep,sample))->Write();
-      fOutput->FindObject(Form("h_%s_sum_Ch%d_S%d_%s",RECO_JET_PT_,iChannel,iStep,sample))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_PT_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_ETA_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_JETS_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_BJETS_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_TRANSVERSE_MASS_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_sum_Ch%d_S%d_%s",RECO_JET_PT_,iChannel,iStep,option.Data()))->Write();
       for(int iJet=0; iJet<nJet; ++iJet){
-	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_PT_,iJet,iChannel,iStep,sample))->Write();
-	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_ETA_,iJet,iChannel,iStep,sample))->Write();
-	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_B_DISCRIMINATOR_,iJet,iChannel,iStep,sample))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_PT_,iJet,iChannel,iStep,option.Data()))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_ETA_,iJet,iChannel,iStep,option.Data()))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_B_DISCRIMINATOR_,iJet,iChannel,iStep,option.Data()))->Write();
       }//jet
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_DELTAR_,iChannel,iStep,sample))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_INVARIANT_MASS_,iChannel,iStep,sample))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_DELTAR_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_INVARIANT_MASS_,iChannel,iStep,option.Data()))->Write();
     }//step
   }//channel
   out->Write();

@@ -270,13 +270,13 @@ void DrawHist(TH1* h_in_, std::string name, bool drawError){
   }
   if((pos = histname.find("Purity")) != string::npos){
     h_in->GetYaxis()->SetTitle("Purity(%)");
-    h_in->SetMaximum(70);
+    h_in->SetMaximum(80);
     h_in->SetMinimum(30);
   }
   if((pos = histname.find("Stability")) != string::npos){
     h_in->GetYaxis()->SetTitle("Stability(%)");
-    h_in->SetMaximum(70);
-    h_in->SetMinimum(30);
+    h_in->SetMaximum(80);
+    h_in->SetMinimum(0);
   }
   
   h_in->GetYaxis()->SetTitleOffset(1.3);
