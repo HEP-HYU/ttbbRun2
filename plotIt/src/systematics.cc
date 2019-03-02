@@ -139,6 +139,11 @@ namespace plotIt {
 
     ShapeSystematic::ShapeSystematic(const YAML::Node& node) {
 
+        if(node["ext-sum-weight-up"])
+            ext_sum_weight_up = node["ext-sum-weight-up"].as<float>();
+        if(node["ext-sum-weight-down"])
+            ext_sum_weight_down = node["ext-sum-weight-down"].as<float>();
+
     }
 
     SystematicSet ShapeSystematic::newSet(TObject* nominal, File& file, const Plot& plot) {
@@ -180,7 +185,20 @@ namespace plotIt {
                 if (! f)
                     f.reset(TFile::Open(syst_path.native().c_str()));
 
-                object = f->Get(plot.name.c_str());
+                if (ext_sum_weight_up > 1.1 and ext_sum_weight_down > 1.1){
+                    if(variation == UP) {
+                        TH1F* tmp = (TH1F*) f->Get(plot.name.c_str());
+                        tmp->Scale(file.generated_events / ext_sum_weight_up);
+                        object = tmp;
+                    }
+                    else if (variation == DOWN) {
+                        TH1F* tmp = (TH1F*) f->Get(plot.name.c_str());
+                        tmp->Scale(file.generated_events / ext_sum_weight_down);
+                        object = tmp;
+                    }
+                }
+
+                else object = f->Get(plot.name.c_str());
 
                 if (object) {
                     links[variation]->reset(object->Clone());
@@ -190,6 +208,7 @@ namespace plotIt {
 
         return result;
     }
+
 
     std::shared_ptr<Systematic> SystematicFactory::create(const std::string& name, const std::string& type, const YAML::Node& node) {
 

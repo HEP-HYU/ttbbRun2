@@ -14,6 +14,7 @@
 #include <commandlinecfg.h>
 #include <pool.h>
 #include <utilities.h>
+#include <vector>
 
 namespace plotIt {
 
@@ -530,13 +531,13 @@ namespace plotIt {
       const auto& config = m_plotIt.getConfiguration();
       hi_pad->SetTopMargin(config.margin_top / .6666);
       hi_pad->SetLeftMargin(config.margin_left);
-      hi_pad->SetBottomMargin(0.015);
+      hi_pad->SetBottomMargin(0.02);
       hi_pad->SetRightMargin(config.margin_right);
 
       low_pad = std::make_shared<TPad>("pad_lo", "", 0., 0., 1, 0.33333);
       low_pad->Draw();
       low_pad->SetLeftMargin(config.margin_left);
-      low_pad->SetTopMargin(1.);
+      low_pad->SetTopMargin(.05);
       low_pad->SetBottomMargin(config.margin_bottom / .3333);
       low_pad->SetRightMargin(config.margin_right);
       low_pad->SetTickx(1);
@@ -582,7 +583,40 @@ namespace plotIt {
 
     if (! y_axis_range.valid()) {
       maximum *= 1 + safe_margin;
-      setMaximum(toDraw[0].first, maximum);
+      if (!plot.y_axis_auto_range) setMaximum(toDraw[0].first, maximum);
+      else {
+        float maxfrac = 0.4;
+        float max_sig = 0.0;
+        if ( signal_files.size() > 0 ) {
+          std::vector<float> sigMax;
+          for (File& signal: signal_files) {
+            TH1* h_sig_temp = dynamic_cast<TH1*>(signal.object);
+            if (plot.signal_normalize_data) h_sig_temp->Scale(h_data->Integral()/h_sig_temp->Integral());
+            sigMax.push_back(h_sig_temp->GetMaximum());
+          }          
+          max_sig = *std::max_element(sigMax.begin(), sigMax.end());
+        }
+        auto& mc_stack = mc_stacks.begin()->second;
+        float max_mc = mc_stack.stack->GetMaximum();
+        int max_data = h_data->GetMaximum();
+
+        if (max_mc > max_sig) {
+          if (plot.log_y) {
+            maxfrac = 1000;
+            minimum = 0.5;
+          }
+          if (max_mc > max_data) setMaximum(toDraw[0].first, max_mc + max_mc*maxfrac);
+          else setMaximum(toDraw[0].first, max_data + max_data*maxfrac);
+        }
+        else {
+          if (plot.log_y) {
+            maxfrac = 1000;
+            setMaximum(toDraw[0].first, max_sig + max_sig*maxfrac);
+            minimum = 0.5;
+          }
+          else setMaximum(toDraw[0].first, max_sig*1.5);
+        }
+      }
 
       if (minimum <= 0 && plot.log_y) {
         double old_minimum = minimum;
@@ -633,7 +667,12 @@ namespace plotIt {
     // Then signal
     for (File& signal: signal_files) {
       std::string options = m_plotIt.getPlotStyle(signal)->drawing_options + " same";
-      signal.object->Draw(options.c_str());
+      if (plot.signal_normalize_data) {
+        TH1* h_sig_temp = dynamic_cast<TH1*>(signal.object);
+        h_sig_temp->Scale(h_data->Integral()/h_sig_temp->Integral());
+        h_sig_temp->Draw(options.c_str());
+      }
+      else signal.object->Draw(options.c_str());
     }
 
     // And finally data
@@ -836,7 +875,7 @@ namespace plotIt {
 
             std::shared_ptr<TLatex> t(new TLatex(plot.ratio_fit_legend_position.x, plot.ratio_fit_legend_position.y, legend.c_str()));
             t->SetNDC(true);
-            t->SetTextFont(43);
+            t->SetTextFont(62);
             t->SetTextSize(LABEL_FONTSIZE - 4);
             t->Draw();
 
@@ -917,8 +956,8 @@ namespace plotIt {
 
           std::shared_ptr<TLatex> t(new TLatex(plot.fit_legend_position.x, plot.fit_legend_position.y, legend.c_str()));
           t->SetNDC(true);
-          t->SetTextFont(43);
-          t->SetTextSize(LABEL_FONTSIZE - 4);
+          t->SetTextFont(62);
+          t->SetTextSize(LABEL_FONTSIZE - 0);
           t->Draw();
 
           TemporaryPool::get().add(t);

@@ -17,7 +17,7 @@ const int TTOTHER_ = static_cast<int>(Sample_List_::TTOTHER);
 const int TTBKG_ = static_cast<int>(Sample_List_::TTBKG);
 const int WJETS_ = static_cast<int>(Sample_List_::WJETS);
 const int ZJETS_ = static_cast<int>(Sample_List_::ZJETS);
-const int ZJETS10TO50_ = static_cast<int>(Sample_List_::ZJETS);
+const int ZJETS10TO50_ = static_cast<int>(Sample_List_::ZJETS10TO50);
 const int TCHANNEL_ = static_cast<int>(Sample_List_::TCHANNEL);
 const int TBARCHANNEL_ = static_cast<int>(Sample_List_::TBARCHANNEL);
 const int TWCHANNEL_ = static_cast<int>(Sample_List_::TWCHANNEL);
@@ -53,7 +53,7 @@ std::vector<double> XSEC_ = {
   5765.4, //6025.2, //zjets
   18610.0, //zjets10to50
   136.02, //tchannel
-  80.95, //tWchannel
+  80.95, //tbarchannel
   35.85, //tWchannel
   35.85, //tbarWchannel
   118.7, //ww

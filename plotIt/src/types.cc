@@ -11,11 +11,11 @@ namespace plotIt {
       legend = node["legend"].as<std::string>();
 
     if (type == MC)
-      legend_style = "lf";
+      legend_style = "F";
     else if (type == SIGNAL)
-      legend_style = "l";
+      legend_style = "F";
     else if (type == DATA)
-      legend_style = "pe";
+      legend_style = "P";
 
     if (node["legend-style"])
       legend_style = node["legend-style"].as<std::string>();
@@ -45,12 +45,12 @@ namespace plotIt {
     if (type == MC) {
       fill_color = 1;
       fill_type = 1001;
-      line_width = 0;
+      line_width = 0.5;
     } else if (type == SIGNAL) {
       fill_type = 0;
       line_color = 1;
-      line_width = 1;
-      line_type = 2;
+      line_width = 2;
+      line_type = 1;
     } else {
       marker_size = 1;
       marker_color = 1;

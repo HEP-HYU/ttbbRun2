@@ -96,8 +96,8 @@ namespace plotIt {
 
     style->SetLabelColor(1, "XYZ");
     style->SetLabelFont(43, "XYZ");
-    style->SetLabelOffset(0.01, "YZ");
-    style->SetLabelOffset(0.015, "X");
+    style->SetLabelOffset(0.012, "YZ");
+    style->SetLabelOffset(0.007, "X");
     style->SetLabelSize(LABEL_FONTSIZE, "XYZ");
 
     style->SetAxisColor(1, "XYZ");

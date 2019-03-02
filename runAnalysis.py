@@ -15,7 +15,9 @@ def runAna(dir, file, name):
   ## save Event Summary histogram ##
   out = TFile("output/root/hist_"+name+".root","update")
   hevt = f.Get("ttbbLepJets/EventInfo")
+  hsw = f.Get("ttbbLepJets/ScaleWeights")
   hevt.Write()
+  hsw.Write()
   out.Write()
   out.Close()
 
@@ -26,8 +28,20 @@ inputDir = "/data/users/seohyun/ntuple/hep2017/v808/nosplit/"
 if test:
   #runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
   #runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb__scale1")
-  runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbb.root", "ttbb__tuneup")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbj.root", "ttbj__tuneup")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttcc.root", "ttcc__tuneup")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttLF.root", "ttLF__tuneup")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttother.root", "ttother__tuneup")
 
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbb.root", "ttbb__tunedown")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbj.root", "ttbj__tunedown")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttcc.root", "ttcc__tunedown")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttLF.root", "ttLF__tunedown")
+  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttother.root", "ttother__tunedown")
+  #tmp = ["__scale0","__scale1","__scale2","__scale3","__scale4","__scale5"]
+  #for index, value in enumerate(tmp):
+  #  runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg"+value)
 else:
   # v808 #
   ### Basic plots ###
@@ -119,6 +133,7 @@ else:
       runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttLF.root","ttLF"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttother.root","ttother"+value)
+      runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg"+value)
       runAna(inputDir,"ttHbb_PowhegPythia.root","ttH"+value)
       runAna(inputDir,"ttW_Madgraph.root","ttW"+value)
       runAna(inputDir,"ttZ_Madgraph.root","ttZ"+value)
@@ -163,3 +178,14 @@ else:
     runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampDown_ttLF.root", "ttLF__hdampdown")
     runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampDown_ttother.root", "ttother__hdampdown")
 
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbb.root", "ttbb__tuneup")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbj.root", "ttbj__tuneup")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttcc.root", "ttcc__tuneup")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttLF.root", "ttLF__tuneup")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttother.root", "ttother__tuneup")
+
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbb.root", "ttbb__tunedown")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbj.root", "ttbj__tunedown")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttcc.root", "ttcc__tunedown")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttLF.root", "ttLF__tunedown")
+    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttother.root", "ttother__tunedown")

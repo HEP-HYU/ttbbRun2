@@ -281,6 +281,7 @@ namespace plotIt {
     bool no_data = false;
     bool override = false; // flag to plot only those which have it true (if at least one plot has it true)
     bool normalized = false;
+    bool signal_normalize_data = true;
     bool log_y = false;
     bool log_x = false;
 
@@ -291,11 +292,12 @@ namespace plotIt {
     std::string ratio_y_axis_title = "Data / MC";
 
     // Axis range
+    bool y_axis_auto_range = true; //not for log plot
     Range x_axis_range;
     Range log_x_axis_range;
     Range y_axis_range;
     Range log_y_axis_range;
-    Range ratio_y_axis_range = {0.5, 1.5};
+    Range ratio_y_axis_range = {0.4, 1.6};
 
     // Blind range
     Range blinded_range;
@@ -308,7 +310,7 @@ namespace plotIt {
 
     std::vector<std::string> save_extensions = {"pdf"};
 
-    bool show_ratio = false;
+    bool show_ratio = true;
 
     bool fit = false;
     std::string fit_function = "gaus";
@@ -323,7 +325,7 @@ namespace plotIt {
     Range ratio_fit_range;
 
     bool show_errors = true;
-    bool show_overflow = false;
+    bool show_overflow = true;
 
     std::string inherits_from = "TH1";
 
@@ -344,7 +346,7 @@ namespace plotIt {
 
     bool is_rescaled = false;
 
-    bool sort_by_yields = true;
+    bool sort_by_yields = false;
 
     std::vector<Line> lines;
 
@@ -398,10 +400,10 @@ namespace plotIt {
   struct Configuration {
     float width = 800;
     float height = 800;
-    float margin_left = 0.17;
+    float margin_left = 0.14;
     float margin_right = 0.03;
-    float margin_top = 0.05;
-    float margin_bottom = 0.13;
+    float margin_top = 0.06;
+    float margin_bottom = 0.1;
     float luminosity = -1;
     float scale = 1;
     bool no_lumi_rescaling = false;
@@ -440,7 +442,7 @@ namespace plotIt {
 
     std::string root = "./";
 
-    bool show_overflow = false;
+    bool show_overflow = true;
     bool transparent_background = false;
 
     std::string mode = "hist"; // "tree" or "hist"
@@ -457,7 +459,7 @@ namespace plotIt {
     int16_t blinded_range_fill_color = 42;
     int16_t blinded_range_fill_style = 1001;
 
-    std::string uncertainty_label = "Uncertainty";
+    std::string uncertainty_label = "Unc.";
     std::map<Type, std::vector<LegendEntry>> static_legend_entries;
 
     std::string book_keeping_file_name;

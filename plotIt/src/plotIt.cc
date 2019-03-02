@@ -250,7 +250,8 @@ namespace plotIt {
         label.position = labelNode["position"].as<Point>();
 
         if (labelNode["size"])
-          label.size = labelNode["size"].as<uint32_t>();
+//          label.size = labelNode["size"].as<uint32_t>();
+          label.size = labelNode["size"].as<float>();
 
         labels.push_back(label);
       }
@@ -571,6 +572,9 @@ namespace plotIt {
       if (node["normalized"])
         plot.normalized = node["normalized"].as<bool>();
 
+      if (node["signal-normalize-data"])
+        plot.signal_normalize_data = node["signal-normalize-data"].as<bool>();
+
       if (node["no-data"])
         plot.no_data = node["no-data"].as<bool>();
 
@@ -636,6 +640,9 @@ namespace plotIt {
 
       if (node["log-x-axis-range"])
         plot.log_x_axis_range = node["log-x-axis-range"].as<Range>();
+
+      if (node["y-axis-auto-range"])
+        plot.y_axis_auto_range = node["y-axis-auto-range"].as<bool>();
 
       if (node["y-axis-range"])
         plot.y_axis_range = node["y-axis-range"].as<Range>();
@@ -861,7 +868,7 @@ namespace plotIt {
 
           return entries;
       };
-
+/*
       // First, add data, always on first column
       if (!plot.no_data) {
           std::vector<LegendEntry> entries = getEntries(DATA);
@@ -887,6 +894,39 @@ namespace plotIt {
       // Finally, if requested, the uncertainties entry
       if (with_uncertainties)
           legend_entries[0].push_back({m_config.uncertainty_label, "f", m_config.error_fill_style, m_config.error_fill_color, 0});
+*/
+      // First MC, spanning on the columns
+      size_t index = 0;
+      std::vector<LegendEntry> entries = getEntries(MC);
+      for (const LegendEntry& entry: entries) {
+          size_t column_index = index % (plot.legend_columns);
+          legend_entries[column_index].push_back(entry);
+          index++;
+      }
+
+      // Next, signals
+      entries = getEntries(SIGNAL);
+      for (const LegendEntry& entry: entries) {
+          size_t column_index = index % (plot.legend_columns);
+          legend_entries[column_index].push_back(entry);
+          index++;
+      }
+
+      // Next, data
+      if (!plot.no_data) {
+          std::vector<LegendEntry> entries = getEntries(DATA);
+          for (const auto& entry: entries){
+              size_t column_index = index % (plot.legend_columns);
+              legend_entries[column_index].push_back(entry);
+              index++;
+          }
+      }
+
+      // Finally, if requested, the uncertainties entry
+      if (with_uncertainties){
+          size_t column_index = index % (plot.legend_columns);
+          legend_entries[column_index].push_back({m_config.uncertainty_label, "f", m_config.error_fill_style, m_config.error_fill_color, 0});
+      }
 
       // Ensure all columns have the same size
       size_t max_size = 0;
@@ -959,7 +999,7 @@ namespace plotIt {
 
     // Build legend
     TLegend legend(legend_position.x1, legend_position.y1, legend_position.x2, legend_position.y2);
-    legend.SetTextFont(43);
+    legend.SetTextFont(62);
     legend.SetFillStyle(0);
     legend.SetBorderSize(0);
     legend.SetNColumns(plot.legend_columns);
@@ -983,8 +1023,8 @@ namespace plotIt {
       pt->SetFillStyle(0);
       pt->SetBorderSize(0);
       pt->SetMargin(0);
-      pt->SetTextFont(42);
-      pt->SetTextSize(0.6 * topMargin);
+      pt->SetTextFont(62);
+      pt->SetTextSize(0.65 * topMargin);
       pt->SetTextAlign(33);
 
       pt->AddText(m_config.lumi_label.c_str());
@@ -1000,7 +1040,7 @@ namespace plotIt {
       pt->SetBorderSize(0);
       pt->SetMargin(0);
       pt->SetTextFont(62);
-      pt->SetTextSize(0.75 * topMargin);
+      pt->SetTextSize(0.65 * topMargin);
       pt->SetTextAlign(13);
 
       std::string text = m_config.experiment;
@@ -1029,7 +1069,7 @@ namespace plotIt {
 
       std::shared_ptr<TLatex> t(new TLatex(label.position.x, label.position.y, label.text.c_str()));
       t->SetNDC(true);
-      t->SetTextFont(43);
+      t->SetTextFont(64);
       t->SetTextSize(label.size);
       t->Draw();
 
@@ -1077,6 +1117,579 @@ namespace plotIt {
 
     return true;
   }
+
+  bool plotIt::yields(std::vector<Plot>& plots){
+    std::cout << "Producing LaTeX yield table.\n";
+
+    std::map<std::string, double> data_yields;
+
+    std::map< std::string, std::map<std::string, std::pair<double, double> > > mc_yields;
+    std::map< std::string, double > mc_total;
+    std::map< std::string, double > mc_total_sqerrs;
+    std::set<std::string> mc_processes;
+
+    std::map< std::string, std::map<std::string, std::pair<double, double> > > signal_yields;
+    std::set<std::string> signal_processes;
+
+    std::map<
+        std::tuple<Type, std::string, std::string>, // Type, category, systematics name
+        double
+    > process_systematics;
+
+    std::map<
+        std::string,
+        std::map<Type, double>
+    > total_systematics_squared;
+
+    std::vector< std::pair<int, std::string> > categories;
+
+    bool has_data(false);
+
+    for(Plot& plot: plots){
+      if (!plot.use_for_yields)
+        continue;
+
+      if (plot.yields_title.find("$") == std::string::npos)
+          replace_substr(plot.yields_title, "_", "\\_");
+
+      if( std::find_if(categories.begin(), categories.end(), [&](const std::pair<int, std::string> &x){ return x.second == plot.yields_title; }) != categories.end() )
+          continue;
+      categories.push_back( std::make_pair(plot.yields_table_order, plot.yields_title) );
+
+      std::map<std::tuple<Type, std::string>, double> plot_total_systematics;
+
+      // Open all files, and find histogram in each
+      for (File& file: m_files) {
+        if (! loadObject(file, plot)) {
+          std::cout << "Could not retrieve plot from " << file.path << std::endl;
+          return false;
+        }
+
+        if ( file.type == DATA ){
+          TH1* h = dynamic_cast<TH1*>(file.object);
+          data_yields[plot.yields_title] += h->Integral(0, h->GetNbinsX() + 1);
+          has_data = true;
+          continue;
+        }
+
+        std::string process_name = file.yields_group;
+
+        if (process_name.find("$") == std::string::npos)
+            replace_substr(process_name, "_", "\\_");
+
+        if (process_name.find("#") != std::string::npos) {
+            // We assume it's a ROOT LaTeX string. Enclose the string into $$, and replace
+            // '#' by '\'
+
+            replace_substr(process_name, "#", R"(\)");
+            process_name = "$" + process_name + "$";
+        }
+
+        std::pair<double, double> yield_sqerror;
+        TH1* hist( dynamic_cast<TH1*>(file.object) );
+
+        double factor = file.cross_section * file.branching_ratio / file.generated_events;
+
+        if (! m_config.no_lumi_rescaling) {
+          factor *= m_config.luminosity;
+        }
+        if (!CommandLineCfg::get().ignore_scales)
+          factor *= m_config.scale * file.scale;
+
+        if (!plot.is_rescaled)
+          hist->Scale(factor);
+
+        for (auto& syst: *file.systematics) {
+          syst.update();
+          syst.scale(factor);
+        }
+
+        // Retrieve yield and stat. error, taking overflow into account
+        yield_sqerror.first = hist->IntegralAndError(0, hist->GetNbinsX() + 1, yield_sqerror.second);
+        yield_sqerror.second = std::pow(yield_sqerror.second, 2);
+
+        // Add systematics
+        double file_total_systematics = 0;
+        for (auto& syst: *file.systematics) {
+
+          TH1* nominal_shape = static_cast<TH1*>(syst.nominal_shape.get());
+          TH1* up_shape = static_cast<TH1*>(syst.up_shape.get());
+          TH1* down_shape = static_cast<TH1*>(syst.down_shape.get());
+
+          if (! nominal_shape || ! up_shape || ! down_shape)
+              continue;
+
+          double nominal_integral = nominal_shape->Integral(0, nominal_shape->GetNbinsX() + 1);
+          double up_integral = up_shape->Integral(0, up_shape->GetNbinsX() + 1);
+          double down_integral = down_shape->Integral(0, down_shape->GetNbinsX() + 1);
+
+          double total_syst_error = std::max(
+                  std::abs(up_integral - nominal_integral),
+                  std::abs(nominal_integral - down_integral)
+          );
+
+          file_total_systematics += total_syst_error * total_syst_error;
+
+          auto key = std::make_tuple(file.type, syst.name());
+          plot_total_systematics[key] += total_syst_error;
+        }
+
+        // file_total_systematics contains the quadratic sum of all the systematics for this file
+        process_systematics[std::make_tuple(file.type, plot.yields_title, process_name)] += std::sqrt(file_total_systematics);
+
+        if ( file.type == MC ){
+          ADD_PAIRS(mc_yields[plot.yields_title][process_name], yield_sqerror);
+          mc_total[plot.yields_title] += yield_sqerror.first;
+          mc_total_sqerrs[plot.yields_title] += yield_sqerror.second;
+          mc_processes.emplace(process_name);
+        }
+        if ( file.type == SIGNAL ){
+          ADD_PAIRS(signal_yields[plot.yields_title][process_name], yield_sqerror);
+          signal_processes.emplace(process_name);
+        }
+      }
+
+      // Get the total systematics for this category
+      for (auto& syst: plot_total_systematics) {
+        total_systematics_squared[plot.yields_title][std::get<0>(syst.first)] += syst.second * syst.second;
+      }
+    }
+
+    if( ( !(mc_processes.size()+signal_processes.size()) && !has_data ) || !categories.size() ){
+      std::cout << "No processes/data/categories defined\n";
+      return false;
+    }
+
+    // Sort according to user-defined order
+    std::sort(categories.begin(), categories.end(), [](const std::pair<int, std::string>& cat1, const std::pair<int, std::string>& cat2){  return cat1.first < cat2.first; });
+
+    std::ostringstream latexString;
+    latexString << std::setiosflags(std::ios_base::fixed);
+    if (m_config.yields_table_align.find("v") != std::string::npos) {
+
+    // Start with signals
+    if (!signal_processes.empty()) {
+      for (const auto& p: signal_processes) {
+        latexString << p << " & ";
+
+        for (const auto& c: categories) {
+          std::string categ = c.second;
+          latexString << R"($\pm$ )" << std::setprecision(m_config.yields_table_num_prec_yields) << (std::sqrt(std::pow(process_systematics[std::make_tuple(SIGNAL, categ, p)], 2))/signal_yields[categ][p].first)*100 << R"(\% & )";
+        }
+
+        latexString.seekp(latexString.tellp() - 2l);
+        latexString << R"( \\ )" << std::endl;
+      }
+    }
+
+    latexString << R"(\hline)" << std::endl;
+
+    // Then MC samples
+    if (!mc_processes.empty()) {
+      for (const auto& p: mc_processes) {
+          latexString << p << " & ";
+
+          for (const auto& c: categories) {
+            std::string categ = c.second;
+            latexString << R"($\pm$ )" << std::setprecision(m_config.yields_table_num_prec_yields) << (std::sqrt(std::pow(process_systematics[std::make_tuple(MC, categ, p)], 2))/mc_yields[categ][p].first)*100 << R"(\% & )";
+          }
+
+          latexString.seekp(latexString.tellp() - 2l);
+          latexString << R"( \\ )" << std::endl;
+        }
+
+        latexString << R"(\hline)" << std::endl;
+        latexString << R"(Total sys. unc. & )";
+
+        for (const auto& c: categories) {
+          latexString << R"($\pm $ )" << std::setprecision(m_config.yields_table_num_prec_yields) << (std::sqrt(total_systematics_squared[c.second][MC])/mc_total[c.second])*100 << R"(\% & )";
+        }
+        latexString.seekp(latexString.tellp() - 2l);
+        latexString << R"( \\ )" << std::endl;
+      }
+
+    } else {
+      std::cerr << "Error: yields table alignment " << m_config.yields_table_align << " is not recognized (for now, only \"h\" and \"v\" are supported)" << std::endl;
+      return false;
+    }
+
+    if(CommandLineCfg::get().verbose)
+      std::cout << "LaTeX yields table:\n\n" << latexString.str() << std::endl;
+
+    fs::path outputName(m_outputPath);
+    outputName /= "yields.tex";
+
+    std::ofstream out(outputName.string());
+    out << latexString.str();
+    out.close();
+
+    return true;
+  }
+
+  void plotIt::plotAll() {
+
+    m_style.reset(createStyle(m_config));
+
+    // First, explode plots to match all glob patterns
+
+    std::vector<Plot> plots;
+    if (m_config.mode == "tree") {
+      plots = m_plots;
+    } else {
+      if (!expandObjects(m_files[0], plots)) {
+        return;
+      }
+    }
+
+    if (CommandLineCfg::get().verbose)
+        std::cout << "Loading all plots..." << std::endl;
+
+    for (File& file: m_files) {
+      if (! loadAllObjects(file, plots))
+          return;
+
+      file.handle.reset();
+      file.friend_handles.clear();
+    }
+
+    if (CommandLineCfg::get().verbose)
+        std::cout << "done." << std::endl;
+
+    if (!m_config.book_keeping_file_name.empty()) {
+      fs::path outputName = m_outputPath / m_config.book_keeping_file_name;
+      m_config.book_keeping_file.reset(TFile::Open(outputName.native().c_str(), "recreate"));
+    }
+
+    if (CommandLineCfg::get().do_plots) {
+      for (Plot& plot: plots) {
+        plotIt::plot(plot);
+      }
+    }
+
+    if (m_config.book_keeping_file) {
+      m_config.book_keeping_file->Close();
+      m_config.book_keeping_file.reset();
+    }
+
+    if (CommandLineCfg::get().do_yields) {
+      plotIt::yields(plots);
+    }
+  }
+
+  bool plotIt::loadAllObjects(File& file, const std::vector<Plot>& plots) {
+
+    file.object = nullptr;
+    file.objects.clear();
+
+    if (m_config.mode == "tree") {
+
+        if (!file.chain.get()) {
+          file.chain.reset(new TChain(m_config.tree_name.c_str()));
+          file.chain->Add(file.path.c_str());
+        }
+
+        for (const auto& plot: plots) {
+
+          auto x_axis_range = plot.log_x ? plot.log_x_axis_range : plot.x_axis_range;
+
+          std::shared_ptr<TH1> hist(new TH1F((plot.uid + std::to_string(file.id)).c_str(), "", plot.binning_x, x_axis_range.start, x_axis_range.end));
+          hist->SetDirectory(gROOT);
+
+          file.chain->Draw((plot.draw_string + ">>" + plot.uid + std::to_string(file.id)).c_str(), plot.selection_string.c_str());
+
+          hist->SetDirectory(nullptr);
+          
+          file.objects.emplace(plot.uid, hist.get());
+
+          TemporaryPool::get().addRuntime(hist);
+        }
+
+        return true;
+    }
+
+    file.handle.reset(TFile::Open(file.path.c_str()));
+    if (! file.handle.get())
+      return false;
+
+    file.systematics_cache.clear();
+
+    for (const auto& plot: plots) {
+
+      std::string plot_name = plot.name;
+
+      // Rename plot name according to user's transformations
+      plot_name = applyRenaming(file.renaming_ops, plot_name);
+
+      TObject* obj = file.handle->Get(plot_name.c_str());
+
+      if (obj) {
+        std::shared_ptr<TObject> cloned_obj(obj->Clone());
+        TemporaryPool::get().addRuntime(cloned_obj);
+
+        file.objects.emplace(plot.uid, cloned_obj.get());
+
+        if (file.type != DATA) {
+          for (auto& syst: m_systematics) {
+              if (std::regex_search(file.path, syst->on))
+                  file.systematics_cache[plot.uid].push_back(syst->newSet(cloned_obj.get(), file, plot));
+          }
+        }
+
+        continue;
+      }
+
+      std::cout << "Error: object '" << plot_name << "' inheriting from '" << plot.inherits_from << "' not found in file '" << file.path << "'" << std::endl;
+      return false;
+    }
+
+    return true;
+  }
+
+  bool plotIt::loadObject(File& file, const Plot& plot) {
+
+    file.object = nullptr;
+
+    auto it = file.objects.find(plot.uid);
+
+    if (it == file.objects.end()) {
+      auto exception = std::runtime_error("Object not found in cache. It should be here since it was preloaded before. Object name: " + plot.name + " in " + file.path);
+      std::cerr << exception.what() << std::endl;
+      throw exception;
+    }
+
+    file.object = it->second;
+
+    file.systematics = & file.systematics_cache[plot.uid];
+
+    return true;
+  }
+
+  bool plotIt::expandFiles() {
+    std::vector<File> files;
+
+    for (File& file: m_files) {
+      std::vector<std::string> matchedFiles = glob(file.path);
+      if (matchedFiles.empty()) {
+          std::cerr << "Error: no files matching '" << file.path << "' (either the file does not exist, or the expression does not match any file)" << std::endl;
+          return false;
+      }
+      for (std::string& matchedFile: matchedFiles) {
+        File f = file;
+        f.path = matchedFile;
+
+        files.push_back(f);
+      }
+    }
+
+    m_files = files;
+
+    return true;
+  }
+
+  /**
+   * Merge the labels of the global configuration and the current plot.
+   * If some are duplicated, only keep the plot label
+   **/
+  std::vector<Label> plotIt::mergeLabels(const std::vector<Label>& plotLabels) {
+    std::vector<Label> labels = plotLabels;
+
+    // Add labels from global configuration, and check for duplicates
+    for (auto& globalLabel: m_config.labels) {
+
+      bool duplicated = false;
+      for (auto& label: plotLabels) {
+        if (globalLabel.text == label.text) {
+          duplicated = true;
+          break;
+        }
+      }
+
+      if (! duplicated)
+        labels.push_back(globalLabel);
+    }
+
+    return labels;
+  }
+
+  void get_directory_content(TDirectory* root, const std::string& prefix, std::vector<std::string>& content) {
+      TIter it(root->GetListOfKeys());
+      TKey* key = nullptr;
+
+      while ((key = static_cast<TKey*>(it()))) {
+          std::string name = key->GetName();
+          std::string cl = key->GetClassName();
+
+          if (cl.find("TDirectory") != std::string::npos) {
+              std::string new_prefix = prefix;
+              if (!prefix.empty())
+                  new_prefix += "/";
+              new_prefix += name;
+              get_directory_content(static_cast<TDirectory*>(key->ReadObj()), new_prefix, content);
+          } else if (cl.find("TH") != std::string::npos) {
+              if (name.find("__") != std::string::npos) {
+                  // TODO: Maybe we should be a bit less strict and check that the
+                  // systematics specified is included in the configuration file?
+                  continue;
+              }
+
+              std::string new_prefix = prefix;
+              if (!new_prefix.empty())
+                  new_prefix += "/";
+              content.push_back(new_prefix + name);
+          }
+      }
+  }
+
+  /**
+   * Open 'file', and expand all plots
+   */
+  bool plotIt::expandObjects(File& file, std::vector<Plot>& plots) {
+    file.object = nullptr;
+    plots.clear();
+
+    // Optimization. Look if any of the plots have a glob pattern (either *, ? or [)
+    // If not, do not iterate of the file to match pattern, it's useless
+    std::vector<Plot> glob_plots;
+    for (Plot& plot: m_plots) {
+        if ((plot.name.find("*") != std::string::npos) || (plot.name.find("?") != std::string::npos) || (plot.name.find("[") != std::string::npos)) {
+            glob_plots.push_back(plot);
+        } else {
+            plots.push_back(plot.Clone(plot.name));
+        }
+    }
+
+    if (glob_plots.empty()) {
+        return true;
+    }
+
+    std::shared_ptr<TFile> input(TFile::Open(file.path.c_str()));
+    if (! input.get())
+      return false;
+
+    // Create file structure, flattening any directory
+    TIter root_keys(input->GetListOfKeys());
+
+    std::vector<std::string> file_content;
+    get_directory_content(input.get(), "", file_content);
+
+    for (Plot& plot: glob_plots) {
+        bool match = false;
+        std::vector<std::string> matched;
+
+        for (const auto& content: file_content) {
+
+            // Check name
+            if (fnmatch(plot.name.c_str(), content.c_str(), FNM_CASEFOLD) == 0) {
+
+                // Check if this name is excluded
+                if ((plot.exclude.length() > 0) && (fnmatch(plot.exclude.c_str(), content.c_str(), FNM_CASEFOLD) == 0)) {
+                    continue;
+                }
+
+                // The same object can be stored multiple time with a different key
+                // The iterator returns first the object with the highest key, which is the most recent object
+                // Check if we already have a plot with the same exact name
+                if (std::find_if(matched.begin(), matched.end(), [&content](const std::string& p) { return p == content; }) != matched.end()) {
+                    continue;
+                }
+
+                // Got it!
+                match = true;
+                matched.push_back(content);
+                plots.push_back(plot.Clone(content));
+            }
+        }
+
+        if (! match) {
+            std::cout << "Warning: object '" << plot.name << "' inheriting from '" << plot.inherits_from << "' does not match something in file '" << file.path << "'" << std::endl;
+        }
+    }
+
+    if (!plots.size()) {
+      std::cout << "Error: no plots found in file '" << file.path << "'" << std::endl;
+      return false;
+    }
+
+    return true;
+  }
+
+  std::shared_ptr<PlotStyle> plotIt::getPlotStyle(const File& file) {
+    if (file.legend_group.length() && m_legend_groups.count(file.legend_group)) {
+      return m_legend_groups[file.legend_group].plot_style;
+    } else {
+      return file.plot_style;
+    }
+  }
+}
+
+int main(int argc, char** argv) {
+
+  try {
+
+    TCLAP::CmdLine cmd("Plot histograms", ' ', "0.1");
+
+    TCLAP::ValueArg<std::string> histogramsFolderArg("i", "histograms-folder", "histograms base folder (default: current directory)", false, "./", "string", cmd);
+
+    TCLAP::ValueArg<std::string> outputFolderArg("o", "output-folder", "output folder", true, "", "string", cmd);
+
+    TCLAP::SwitchArg ignoreScaleArg("", "ignore-scales", "Ignore any scales present in the configuration file", cmd, false);
+
+    TCLAP::SwitchArg verboseArg("v", "verbose", "Verbose output (print summary)", cmd, false);
+
+    TCLAP::SwitchArg yieldsArg("y", "yields", "Produce LaTeX table of yields", cmd, false);
+
+    TCLAP::SwitchArg plotsArg("p", "plots", "Do not produce the plots - can be useful if only the yields table is needed", cmd, false);
+
+    TCLAP::SwitchArg unblindArg("u", "unblind", "Unblind the plots, ie ignore any blinded-range in the configuration", cmd, false);
+
+    TCLAP::SwitchArg systematicsBreakdownArg("b", "systs-breadown", "Print systematics details for each MC process separately in addition to the total contribution", cmd, false);
+
+    TCLAP::UnlabeledValueArg<std::string> configFileArg("configFile", "configuration file", true, "", "string", cmd);
+
+    cmd.parse(argc, argv);
+
+    //bool isData = dataArg.isSet();
+
+    fs::path histogramsPath(fs::canonical(histogramsFolderArg.getValue()));
+
+    if (! fs::exists(histogramsPath)) {
+      std::cout << "Error: histograms path " << histogramsPath << " does not exist" << std::endl;
+    }
+
+    fs::path outputPath(outputFolderArg.getValue());
+
+    if (! fs::exists(outputPath)) {
+      std::cout << "Error: output path " << outputPath << " does not exist" << std::endl;
+      return 1;
+    }
+
+    if( plotsArg.getValue() && !yieldsArg.getValue() ) {
+      std::cerr << "Error: we have nothing to do" << std::endl;
+      return 1;
+    }
+
+    CommandLineCfg::get().ignore_scales = ignoreScaleArg.getValue();
+    CommandLineCfg::get().verbose = verboseArg.getValue();
+    CommandLineCfg::get().do_plots = !plotsArg.getValue();
+    CommandLineCfg::get().do_yields = yieldsArg.getValue();
+    CommandLineCfg::get().unblind = unblindArg.getValue();
+    CommandLineCfg::get().systematicsBreakdown = systematicsBreakdownArg.getValue();
+
+    plotIt::plotIt p(outputPath);
+    if (!p.parseConfigurationFile(configFileArg.getValue(), histogramsPath))
+        return 1;
+
+    p.plotAll();
+
+  } catch (TCLAP::ArgException &e) {
+    std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
+    return 1;
+  }
+
+  return 0;
+}
+
+/*
 
   bool plotIt::yields(std::vector<Plot>& plots){
     std::cout << "Producing LaTeX yield table.\n";
@@ -1479,366 +2092,4 @@ namespace plotIt {
 
     return true;
   }
-
-  void plotIt::plotAll() {
-
-    m_style.reset(createStyle(m_config));
-
-    // First, explode plots to match all glob patterns
-
-    std::vector<Plot> plots;
-    if (m_config.mode == "tree") {
-      plots = m_plots;
-    } else {
-      if (!expandObjects(m_files[0], plots)) {
-        return;
-      }
-    }
-
-    if (CommandLineCfg::get().verbose)
-        std::cout << "Loading all plots..." << std::endl;
-
-    for (File& file: m_files) {
-      if (! loadAllObjects(file, plots))
-          return;
-
-      file.handle.reset();
-      file.friend_handles.clear();
-    }
-
-    if (CommandLineCfg::get().verbose)
-        std::cout << "done." << std::endl;
-
-    if (!m_config.book_keeping_file_name.empty()) {
-      fs::path outputName = m_outputPath / m_config.book_keeping_file_name;
-      m_config.book_keeping_file.reset(TFile::Open(outputName.native().c_str(), "recreate"));
-    }
-
-    if (CommandLineCfg::get().do_plots) {
-      for (Plot& plot: plots) {
-        plotIt::plot(plot);
-      }
-    }
-
-    if (m_config.book_keeping_file) {
-      m_config.book_keeping_file->Close();
-      m_config.book_keeping_file.reset();
-    }
-
-    if (CommandLineCfg::get().do_yields) {
-      plotIt::yields(plots);
-    }
-  }
-
-  bool plotIt::loadAllObjects(File& file, const std::vector<Plot>& plots) {
-
-    file.object = nullptr;
-    file.objects.clear();
-
-    if (m_config.mode == "tree") {
-
-        if (!file.chain.get()) {
-          file.chain.reset(new TChain(m_config.tree_name.c_str()));
-          file.chain->Add(file.path.c_str());
-        }
-
-        for (const auto& plot: plots) {
-
-          auto x_axis_range = plot.log_x ? plot.log_x_axis_range : plot.x_axis_range;
-
-          std::shared_ptr<TH1> hist(new TH1F((plot.uid + std::to_string(file.id)).c_str(), "", plot.binning_x, x_axis_range.start, x_axis_range.end));
-          hist->SetDirectory(gROOT);
-
-          file.chain->Draw((plot.draw_string + ">>" + plot.uid + std::to_string(file.id)).c_str(), plot.selection_string.c_str());
-
-          hist->SetDirectory(nullptr);
-          
-          file.objects.emplace(plot.uid, hist.get());
-
-          TemporaryPool::get().addRuntime(hist);
-        }
-
-        return true;
-    }
-
-    file.handle.reset(TFile::Open(file.path.c_str()));
-    if (! file.handle.get())
-      return false;
-
-    file.systematics_cache.clear();
-
-    for (const auto& plot: plots) {
-
-      std::string plot_name = plot.name;
-
-      // Rename plot name according to user's transformations
-      plot_name = applyRenaming(file.renaming_ops, plot_name);
-
-      TObject* obj = file.handle->Get(plot_name.c_str());
-
-      if (obj) {
-        std::shared_ptr<TObject> cloned_obj(obj->Clone());
-        TemporaryPool::get().addRuntime(cloned_obj);
-
-        file.objects.emplace(plot.uid, cloned_obj.get());
-
-        if (file.type != DATA) {
-          for (auto& syst: m_systematics) {
-              if (std::regex_search(file.path, syst->on))
-                  file.systematics_cache[plot.uid].push_back(syst->newSet(cloned_obj.get(), file, plot));
-          }
-        }
-
-        continue;
-      }
-
-      std::cout << "Error: object '" << plot_name << "' inheriting from '" << plot.inherits_from << "' not found in file '" << file.path << "'" << std::endl;
-      return false;
-    }
-
-    return true;
-  }
-
-  bool plotIt::loadObject(File& file, const Plot& plot) {
-
-    file.object = nullptr;
-
-    auto it = file.objects.find(plot.uid);
-
-    if (it == file.objects.end()) {
-      auto exception = std::runtime_error("Object not found in cache. It should be here since it was preloaded before. Object name: " + plot.name + " in " + file.path);
-      std::cerr << exception.what() << std::endl;
-      throw exception;
-    }
-
-    file.object = it->second;
-
-    file.systematics = & file.systematics_cache[plot.uid];
-
-    return true;
-  }
-
-  bool plotIt::expandFiles() {
-    std::vector<File> files;
-
-    for (File& file: m_files) {
-      std::vector<std::string> matchedFiles = glob(file.path);
-      if (matchedFiles.empty()) {
-          std::cerr << "Error: no files matching '" << file.path << "' (either the file does not exist, or the expression does not match any file)" << std::endl;
-          return false;
-      }
-      for (std::string& matchedFile: matchedFiles) {
-        File f = file;
-        f.path = matchedFile;
-
-        files.push_back(f);
-      }
-    }
-
-    m_files = files;
-
-    return true;
-  }
-
-  /**
-   * Merge the labels of the global configuration and the current plot.
-   * If some are duplicated, only keep the plot label
-   **/
-  std::vector<Label> plotIt::mergeLabels(const std::vector<Label>& plotLabels) {
-    std::vector<Label> labels = plotLabels;
-
-    // Add labels from global configuration, and check for duplicates
-    for (auto& globalLabel: m_config.labels) {
-
-      bool duplicated = false;
-      for (auto& label: plotLabels) {
-        if (globalLabel.text == label.text) {
-          duplicated = true;
-          break;
-        }
-      }
-
-      if (! duplicated)
-        labels.push_back(globalLabel);
-    }
-
-    return labels;
-  }
-
-  void get_directory_content(TDirectory* root, const std::string& prefix, std::vector<std::string>& content) {
-      TIter it(root->GetListOfKeys());
-      TKey* key = nullptr;
-
-      while ((key = static_cast<TKey*>(it()))) {
-          std::string name = key->GetName();
-          std::string cl = key->GetClassName();
-
-          if (cl.find("TDirectory") != std::string::npos) {
-              std::string new_prefix = prefix;
-              if (!prefix.empty())
-                  new_prefix += "/";
-              new_prefix += name;
-              get_directory_content(static_cast<TDirectory*>(key->ReadObj()), new_prefix, content);
-          } else if (cl.find("TH") != std::string::npos) {
-              if (name.find("__") != std::string::npos) {
-                  // TODO: Maybe we should be a bit less strict and check that the
-                  // systematics specified is included in the configuration file?
-                  continue;
-              }
-
-              std::string new_prefix = prefix;
-              if (!new_prefix.empty())
-                  new_prefix += "/";
-              content.push_back(new_prefix + name);
-          }
-      }
-  }
-
-  /**
-   * Open 'file', and expand all plots
-   */
-  bool plotIt::expandObjects(File& file, std::vector<Plot>& plots) {
-    file.object = nullptr;
-    plots.clear();
-
-    // Optimization. Look if any of the plots have a glob pattern (either *, ? or [)
-    // If not, do not iterate of the file to match pattern, it's useless
-    std::vector<Plot> glob_plots;
-    for (Plot& plot: m_plots) {
-        if ((plot.name.find("*") != std::string::npos) || (plot.name.find("?") != std::string::npos) || (plot.name.find("[") != std::string::npos)) {
-            glob_plots.push_back(plot);
-        } else {
-            plots.push_back(plot.Clone(plot.name));
-        }
-    }
-
-    if (glob_plots.empty()) {
-        return true;
-    }
-
-    std::shared_ptr<TFile> input(TFile::Open(file.path.c_str()));
-    if (! input.get())
-      return false;
-
-    // Create file structure, flattening any directory
-    TIter root_keys(input->GetListOfKeys());
-
-    std::vector<std::string> file_content;
-    get_directory_content(input.get(), "", file_content);
-
-    for (Plot& plot: glob_plots) {
-        bool match = false;
-        std::vector<std::string> matched;
-
-        for (const auto& content: file_content) {
-
-            // Check name
-            if (fnmatch(plot.name.c_str(), content.c_str(), FNM_CASEFOLD) == 0) {
-
-                // Check if this name is excluded
-                if ((plot.exclude.length() > 0) && (fnmatch(plot.exclude.c_str(), content.c_str(), FNM_CASEFOLD) == 0)) {
-                    continue;
-                }
-
-                // The same object can be stored multiple time with a different key
-                // The iterator returns first the object with the highest key, which is the most recent object
-                // Check if we already have a plot with the same exact name
-                if (std::find_if(matched.begin(), matched.end(), [&content](const std::string& p) { return p == content; }) != matched.end()) {
-                    continue;
-                }
-
-                // Got it!
-                match = true;
-                matched.push_back(content);
-                plots.push_back(plot.Clone(content));
-            }
-        }
-
-        if (! match) {
-            std::cout << "Warning: object '" << plot.name << "' inheriting from '" << plot.inherits_from << "' does not match something in file '" << file.path << "'" << std::endl;
-        }
-    }
-
-    if (!plots.size()) {
-      std::cout << "Error: no plots found in file '" << file.path << "'" << std::endl;
-      return false;
-    }
-
-    return true;
-  }
-
-  std::shared_ptr<PlotStyle> plotIt::getPlotStyle(const File& file) {
-    if (file.legend_group.length() && m_legend_groups.count(file.legend_group)) {
-      return m_legend_groups[file.legend_group].plot_style;
-    } else {
-      return file.plot_style;
-    }
-  }
-}
-
-int main(int argc, char** argv) {
-
-  try {
-
-    TCLAP::CmdLine cmd("Plot histograms", ' ', "0.1");
-
-    TCLAP::ValueArg<std::string> histogramsFolderArg("i", "histograms-folder", "histograms base folder (default: current directory)", false, "./", "string", cmd);
-
-    TCLAP::ValueArg<std::string> outputFolderArg("o", "output-folder", "output folder", true, "", "string", cmd);
-
-    TCLAP::SwitchArg ignoreScaleArg("", "ignore-scales", "Ignore any scales present in the configuration file", cmd, false);
-
-    TCLAP::SwitchArg verboseArg("v", "verbose", "Verbose output (print summary)", cmd, false);
-
-    TCLAP::SwitchArg yieldsArg("y", "yields", "Produce LaTeX table of yields", cmd, false);
-
-    TCLAP::SwitchArg plotsArg("p", "plots", "Do not produce the plots - can be useful if only the yields table is needed", cmd, false);
-
-    TCLAP::SwitchArg unblindArg("u", "unblind", "Unblind the plots, ie ignore any blinded-range in the configuration", cmd, false);
-
-    TCLAP::SwitchArg systematicsBreakdownArg("b", "systs-breadown", "Print systematics details for each MC process separately in addition to the total contribution", cmd, false);
-
-    TCLAP::UnlabeledValueArg<std::string> configFileArg("configFile", "configuration file", true, "", "string", cmd);
-
-    cmd.parse(argc, argv);
-
-    //bool isData = dataArg.isSet();
-
-    fs::path histogramsPath(fs::canonical(histogramsFolderArg.getValue()));
-
-    if (! fs::exists(histogramsPath)) {
-      std::cout << "Error: histograms path " << histogramsPath << " does not exist" << std::endl;
-    }
-
-    fs::path outputPath(outputFolderArg.getValue());
-
-    if (! fs::exists(outputPath)) {
-      std::cout << "Error: output path " << outputPath << " does not exist" << std::endl;
-      return 1;
-    }
-
-    if( plotsArg.getValue() && !yieldsArg.getValue() ) {
-      std::cerr << "Error: we have nothing to do" << std::endl;
-      return 1;
-    }
-
-    CommandLineCfg::get().ignore_scales = ignoreScaleArg.getValue();
-    CommandLineCfg::get().verbose = verboseArg.getValue();
-    CommandLineCfg::get().do_plots = !plotsArg.getValue();
-    CommandLineCfg::get().do_yields = yieldsArg.getValue();
-    CommandLineCfg::get().unblind = unblindArg.getValue();
-    CommandLineCfg::get().systematicsBreakdown = systematicsBreakdownArg.getValue();
-
-    plotIt::plotIt p(outputPath);
-    if (!p.parseConfigurationFile(configFileArg.getValue(), histogramsPath))
-        return 1;
-
-    p.plotAll();
-
-  } catch (TCLAP::ArgException &e) {
-    std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
-    return 1;
-  }
-
-  return 0;
-}
+*/
