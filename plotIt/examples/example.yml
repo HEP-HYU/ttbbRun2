@@ -1,0 +1,76 @@
+configuration:
+  width: 800
+  height: 800
+  luminosity-label: '%1$.2f fb^{-1} (8 TeV)'
+  experiment: "CMS"
+  extra-label: "Preliminary"
+  root: 'files'
+  luminosity: 1
+  luminosity-error: 0.046
+  error-fill-style: 3154
+  error-fill-color: "#ee556270"
+  ratio-fit-error-fill-style: 1001
+  ratio-fit-error-fill-color: "#aa556270"
+  ratio-fit-line-color: "#0B486B"
+  blinded-range-fill-color: "#29556270"
+  blinded-range-fill-style: 1001
+  yields-table-align: v
+  book-keeping-file: 'plots.root'
+
+files:
+  include: ['example_files.yml']
+
+systematics:
+  - alpha # Shape systematics
+  - beta: {type: shape}  # Shape systematics
+  - gamma: {type: ln, prior: 1.072, pretty-name: "Gamma"}  # Log-normal systematics, +7.2%, -2.97%, exp(+/- 1 * log(prior))
+  - delta: 1.14  # Constant systematics, +- 14%
+  - epsilon: {type: const, value: 1.08, on: 'sample1'}
+
+plots:
+  'histo1':
+    for-yields: true
+    x-axis: "X axis"
+    y-axis: "Y axis"
+    y-axis-format: "%1% / %2$.0f GeV"
+    y-axis-show-zero: true
+    x-axis-range: [2, 9.5]
+    show-overflow: true
+    show-ratio: true
+    normalized: false
+    fit-ratio: true
+    rebin: 4
+    log-y: 'both'
+    save-extensions: ['pdf']
+    blinded-range: [3, 5.2]
+    book-keeping-folder: 'coucou/toi'
+
+  'histo2':
+    x-axis: "X axis"
+    y-axis: "Y axis"
+    normalized: false
+    rebin: 4
+    show-overflow: true
+    legend-columns: 1
+
+legend:
+  position: [0.25, 0.78, 0.75, 0.9]
+  columns: 2
+  entries:
+    - 
+      label: 'Extra MC legend entry'
+      type: mc
+      order: 15
+    - 
+      label: 'Extra data legend entry'
+      type: data
+      order: 15
+    - 
+      label: 'Extra signal legend entry'
+      type: signal
+      order: 15
+ 
+
+groups:
+  data:
+    legend: 'Data'

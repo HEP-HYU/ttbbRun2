@@ -26,6 +26,10 @@ const double SF_ttbb = 0.992;
 const double SF_ttbj = 0.997;
 const double SF_ttcc = 0.871;
 const double SF_ttLF = 0.890;
+//const double SF_ttbb = 1;
+//const double SF_ttbj = 1;
+//const double SF_ttcc = 1;
+//const double SF_ttLF = 1;
 
 //-----------------------------------------------------------------//
 //  Histogram file reader                                          //
