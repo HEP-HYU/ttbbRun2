@@ -551,6 +551,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
     f_out.Close()
     f_pred.close()
 
+    keras.backend.clear_session()
+
     timer.Stop()
     realtime = timer.RealTime()
     cputime = timer.CpuTime()
