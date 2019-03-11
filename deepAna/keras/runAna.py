@@ -3,6 +3,9 @@ import multiprocessing as mp
 import time
 from tqdm import tqdm
 
+from ROOT import *
+import ROOT
+
 import ntuple2array as tt
 import variableAnalyzer as var
 import ana
