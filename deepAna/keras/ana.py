@@ -28,9 +28,34 @@ from keras.callbacks import Callback, ModelCheckpoint
 
 import utils as ut
 
-def ana(inputDir, process, outputDir, sys='', flag1=False) :
+def ana(inputDir, process, outputDir, sys='', flag1=False):
+    print("Process: "+process+sys+"\n")
     if '__' in process:
         process = process.split('__')[0]
+
+    if   'ttbb'          in process: process = 'ttbb'
+    elif 'ttbj'          in process: process = 'ttbj'
+    elif 'ttcc'          in process: process = 'ttcc'
+    elif 'ttLF'          in process: process = 'ttLF'
+    elif 'ttother'       in process: process = 'ttother'
+    elif 'PythiaBkg'     in process: process = 'ttbkg'
+    elif 'ttHbb'         in process: process = 'ttH'
+    elif 'ttW'           in process: process = 'ttW'
+    elif 'ttZ'           in process: process = 'ttZ'
+    elif 't_Powheg'      in process: process = 'tchannel'
+    elif 'tbar_Powheg'   in process: process = 'tbarchannel'
+    elif 'tW_Powheg'     in process: process = 'tWchannel'
+    elif 'tbarW_Powheg'  in process: process = 'tbarWchannel'
+    elif 'WJets'         in process: process = 'wjets'
+    elif 'ZJets_M10to50' in process: process = 'zjets10to50'
+    elif 'ZJets_M50'     in process: process = 'zjets'
+    elif 'WW'            in process: process = 'ww'
+    elif 'WZ'            in process: process = 'wz'
+    elif 'ZZ'            in process: process = 'zz'
+
+    if 'Filter' in inputDir: process = 'ttbbFilter_'+process
+
+    print('Save:'+process+sys+'\n')
 
     timer = ROOT.TStopwatch()
     timer.Start()
@@ -104,7 +129,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
     #print(selEvent)
     if closureTest : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_closure.root', 'recreate')
     elif sys == '' : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+'.root', 'recreate')
-    else           : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+'__'+sys+'.root', 'recreate')
+    else           : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+sys+'.root', 'recreate')
 
     RECO_NUMBER_OF_JETS_ = "nJets"
     RECO_NUMBER_OF_BJETS_ = "nBjets"
@@ -159,7 +184,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
             histRange = []
             histRange = ut.getHistRange(varlist[i])
             h_hist[iChannel][i] = ROOT.TH1D(
-                    'h_'+ varlist[i] + '_Ch' + str(iChannel) + process,'',
+                    'keras_h_'+ varlist[i] + '_Ch' + str(iChannel) + '_S3' + sys,'',
                     int(histRange[0]), float(histRange[1]), float(histRange[2])
                     )
             h_hist[iChannel][i].GetXaxis().SetTitle(xlabel[varlist[i]])
@@ -167,7 +192,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
             h_hist[iChannel][i].Sumw2()
 
         h_gen_addbjets_deltaR_nosel[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_nosel_" + process,
+                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_nosel" + sys,
                 "", nbins_gen_addjets_dr,
                 #gen_addjets_dr_min, gen_addjets_dr_max
                 array('d', gen_addjets_dr_width)
@@ -177,7 +202,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_gen_addbjets_deltaR_nosel[iChannel].Sumw2()
 
         h_gen_addbjets_invMass_nosel[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_nosel_" + process,
+                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_nosel" + sys,
                 "", nbins_gen_addjets_mass,
                 #gen_addjets_m_min, gen_addjets_m_max
                 array('d', gen_addjets_mass_width)
@@ -187,7 +212,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_gen_addbjets_invMass_nosel[iChannel].Sumw2()
 
         h_njets[iChannel] = ROOT.TH1D(
-                "h_" + RECO_NUMBER_OF_JETS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "keras_h_" + RECO_NUMBER_OF_JETS_ + "_Ch" + str(iChannel) + "_S3" + sys,
                 "",10, 0, 10
                 )
         h_njets[iChannel].GetXaxis().SetTitle("Jet multiplicity")
@@ -195,7 +220,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_njets[iChannel].Sumw2()
 
         h_nbjets[iChannel] = ROOT.TH1D(
-                "h_" + RECO_NUMBER_OF_BJETS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "keras_h_" + RECO_NUMBER_OF_BJETS_ + "_Ch" + str(iChannel) + "_S3" + sys,
                 "",10, 0, 10
                 )
         h_nbjets[iChannel].GetXaxis().SetTitle("bJet multiplicity")
@@ -203,7 +228,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_nbjets[iChannel].Sumw2()
 
         h_reco_addjets_deltaR[iChannel] = ROOT.TH1D(
-                "h_" + RECO_ADDJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "h_" + RECO_ADDJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_dr,
                 reco_addjets_dr_min, reco_addjets_dr_max
                 #array('d', reco_addjets_dr_width)
@@ -213,7 +238,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_reco_addjets_deltaR[iChannel].Sumw2()
 
         h_reco_addjets_invMass[iChannel] = ROOT.TH1D(
-                "h_" + RECO_ADDJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "h_" + RECO_ADDJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_mass,
                 reco_addjets_m_min, reco_addjets_m_max
                 #array('d', reco_addjets_mass_width)
@@ -223,7 +248,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_reco_addjets_invMass[iChannel].Sumw2()
 
         h_gen_addbjets_deltaR[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_gen_addjets_dr,
                 #gen_addjets_dr_min, gen_addjets_dr_max
                 array('d', gen_addjets_dr_width)
@@ -233,7 +258,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_gen_addbjets_deltaR[iChannel].Sumw2()
 
         h_gen_addbjets_invMass[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_gen_addjets_mass,
                 #gen_addjets_m_min, gen_addjets_m_max
                 array('d', gen_addjets_mass_width)
@@ -243,7 +268,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_gen_addbjets_invMass[iChannel].Sumw2()
 
         h_respMatrix_deltaR[iChannel] = ROOT.TH2D(
-                "h_" + RESPONSE_MATRIX_DELTAR_ + "_Ch" + str(iChannel) + "_S3_" + process,"",
+                "h_" + RESPONSE_MATRIX_DELTAR_ + "_Ch" + str(iChannel) + "_S3" + sys,"",
                 nbins_reco_addjets_dr,
                 reco_addjets_dr_min, reco_addjets_dr_max,
                 #array('d', reco_addjets_dr_width),
@@ -256,7 +281,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_respMatrix_deltaR[iChannel].Sumw2()
 
         h_respMatrix_invMass[iChannel] = ROOT.TH2D(
-                "h_" + RESPONSE_MATRIX_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3_" + process,
+                "h_" + RESPONSE_MATRIX_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_mass,
                 reco_addjets_m_min, reco_addjets_m_max,
                 #array('d', reco_addjets_mass_width),
@@ -542,11 +567,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False) :
         h_respMatrix_deltaR[iChannel].ClearUnderflowAndOverflow()
         h_respMatrix_invMass[iChannel].ClearUnderflowAndOverflow()
 
-    f = TFile("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
-
-    h_evt = f.Get("ttbbLepJets/EventInfo")
     f_out.cd()
-    h_evt.Write()
     f_out.Write()
     f_out.Close()
     f_pred.close()
