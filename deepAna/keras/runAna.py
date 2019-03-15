@@ -18,9 +18,9 @@ array_train = False
 array_syst = False
 
 analysis = True
-ana_test = False
-ana_run  = True
-ana_syst = True
+ana_test = True 
+ana_run  = False
+ana_syst = False
 
 start_time = time.time()
 
@@ -71,7 +71,8 @@ if analysis:
     ]
 
     if ana_test:
-        ana.ana('/home/seohyun/work/heptool/deepAna/keras/array/TTLJ_PowhegPythia_ttbbFilter_ttbb','TTLJ_PowhegPythia_ttbbFilter_ttbb',outputDir)
+        #ana.ana('/home/seohyun/work/heptool/deepAna/keras/array/TTLJ_PowhegPythia_ttbbFilter_ttbb','TTLJ_PowhegPythia_ttbbFilter_ttbb', 'test')
+        ana.ana('/home/seohyun/work/heptool/deepAna/keras/array/TTLJ_PowhegPythia_ttbb','TTLJ_PowhegPythia_ttbb','test')
 
     if ana_run:
         for process in os.listdir(inputDir):
@@ -104,6 +105,8 @@ if analysis:
                 else:                      sys = ''
                 ana.ana(inputDir+process, process, outputDir, sys)
 
+    """
+    base_path = "/home/seohyun/work/heptool/deepAna/keras/hist/model_25_0.8001.h5"
     f_mu_list = []
     f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuB.root")))
     f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuC.root")))
@@ -114,7 +117,7 @@ if analysis:
     f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuHv2.root")))
     f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuHv3.root")))
 
-    hist_list = [x.GetName() for x in f_mu_list[0].GetListOfKey()]
+    hist_list = [x.GetName() for x in f_mu_list[0].GetListOfKeys()]
 
     f_out = TFile.Open(os.path.join(base_path, "hist_DataSingleMu.root"), "recreate")
     f_out.cd()
@@ -140,7 +143,7 @@ if analysis:
     f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGHv2.root")))
     f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGHv3.root")))
 
-    hist_list2 = [x.GetName() for x in f_el_list[0].GetListOfKey()]
+    hist_list2 = [x.GetName() for x in f_el_list[0].GetListOfKeys()]
 
     f_out2 = TFile.Open(os.path.join(base_path, "hist_DataSingleEl.root"), "recreate")
     f_out2.cd()
@@ -155,5 +158,5 @@ if analysis:
 
     f_out.Write()
     f_out.Close()
-
+    """
 print("Total running time :%s " %(time.time() - start_time))

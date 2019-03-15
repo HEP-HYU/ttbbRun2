@@ -16,7 +16,7 @@ def transversemass(vec1, met):
 
     return (tmp1+tmp2).M()
 
-def makeCombi(inputDir, inputFile, outputDir, sys='') :
+def makeCombi(inputDir, inputFile, outputDir, sys=''):
     print(str(inputDir+"/"+inputFile)+" start")
     chain = TChain("ttbbLepJets/tree")
     chain.Add(inputDir+"/"+inputFile)
@@ -92,8 +92,7 @@ def makeCombi(inputDir, inputFile, outputDir, sys='') :
             if chain.jet_CSV[iJet] > jet_CSV_tight:
                 nbjets += 1
 
-        if njets < 6 or nbjets < 2:
-            continue
+        if njets < 6 or nbjets < 2: continue
 
         for j in range(len(chain.jet_pT)-1):
             for k in range(j+1, len(chain.jet_pT)):

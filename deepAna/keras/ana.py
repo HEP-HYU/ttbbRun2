@@ -33,6 +33,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     if '__' in process:
         process = process.split('__')[0]
 
+    ntuple = process
     if   'ttbb'          in process: process = 'ttbb'
     elif 'ttbj'          in process: process = 'ttbj'
     elif 'ttcc'          in process: process = 'ttcc'
@@ -82,24 +83,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     ttbb = False
     if 'Data' in process : data = True
     if 'ttbb' in process : ttbb = True
-
-    nMatchable = 4864
-    #ttbbFilter nMatchable: 5557
-    countMatchable = False
-    if countMatchable :
-        df = pd.read_hdf("array/array_train_ttbb.h5")
-        df = df.filter(['signal','event','dR'], axis=1)
-        df = df.query('signal > 0')
-        #tmpId = df.groupby(['event'])['dR'].transform(max) == df['dR']
-        #df = df[tmpId]
-        df.reset_index(drop=True, inplace=True)
-        nMatchable = len(df.index)
-        print(nMatchable)
-        f_tmp = open('matchable.txt','w')
-        f_tmp.write(str(nMatchable))
-        f_tmp.write(str(df))
-        f_tmp.close()
-
     muon_ch = 0
     muon_pt = 30.0
     muon_eta = 2.1
@@ -117,15 +100,38 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
 
     print "\nMerge arrays"
     selEvent = pd.DataFrame([])
+    max_nevt_num = 0
     for item in os.listdir(inputDir):
         #print "Load file : "+str(inputDir)+'/'+str(item)
         df = pd.read_hdf(inputDir+'/'+item)
+        last = int(df.tail(1)['event'])+1
+        df['event'] = df['event'] + max_nevt_num
         str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)+' and njets >= 6 and nbjets >= 3'
         df = df.query(str_query)
         #df.reset_index(drop=True, inplace=True)
         selEvent = pd.concat([selEvent,df], axis=0)
+        max_nevt_num += last
 
     selEvent.reset_index(drop=True, inplace=True)
+
+    nMatchable = 4864
+    #ttbbFilter nMatchable: 5557
+    countMatchable = False
+    if countMatchable :
+        df = pd.read_hdf("array/array_ttbb.h5")
+        df = df.filter(['signal','event','dR'], axis=1)
+        df = df.query('signal > 0')
+        #tmpId = df.groupby(['event'])['dR'].transform(max) == df['dR']
+        #df = df[tmpId]
+        df.reset_index(drop=True, inplace=True)
+        nMatchable = len(df.index)
+        print(nMatchable)
+        f_tmp = open('matchable.txt','w')
+        f_tmp.write(str(nMatchable))
+        f_tmp.write(str(df))
+        f_tmp.close()
+
+
     #print(selEvent)
     if closureTest : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_closure.root', 'recreate')
     elif sys == '' : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+'.root', 'recreate')
@@ -293,12 +299,12 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_respMatrix_invMass[iChannel].GetYaxis().SetTitle("Gen. m_{b#bar{b}}(GeV)")
         h_respMatrix_invMass[iChannel].Sumw2()
 
-    if ttbb == True and sys == '':
+    if ttbb == True:
         genchain = TChain("ttbbLepJets/gentree")
-        genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+process+".root")
+        genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+ntuple+".root")
 
         print "GENTREE RUN"
-        for i in xrange(genchain.GetEntries()):
+        for i in range(100):#xrange(genchain.GetEntries()):
             #if closureTest:
             #    if i%2 == 0 : continue
             ut.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
@@ -335,17 +341,17 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     pred = pd.DataFrame(pred, columns=['background','signal'])
     #print(pred)
     #pred = pd.DataFrame(pred, columns=['signal'])
-    #f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
+    f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
     #f_pred.write('SelEvent\n'+str(selEvent))
     selEvent = pd.concat([selEvent,pred], axis=1)
-    #f_pred.write('SelEvent+Pred\n'+str(selEvent))
+    f_pred.write('SelEvent+Pred\n'+str(selEvent))
     idx = selEvent.groupby(['event'])['signal'].transform(max) == selEvent['signal']
     #f_pred.write('\n'+str(idx)+'\n'+str(selEvent[idx])+'\n')
     selEvent = selEvent[idx]
     selEvent.reset_index(drop=True, inplace=True)
 
     #selEvent.groupby('event').max('signal').reset_index(drop=True, inplace=True)
-    f_pred.write("Groupby\n"+item+"\n"+str(selEvent))
+    f_pred.write("Groupby\n"+process+"\n"+str(selEvent))
     #groups = selEvent.groupby('event')
 
     print "\n Fill Hist"
@@ -532,6 +538,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_reco_addjets_invMass[iChannel].AddBinContent(nbins_reco_addjets_mass, h_reco_addjets_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1))
         h_gen_addbjets_deltaR[iChannel].AddBinContent(nbins_gen_addjets_dr, h_gen_addbjets_deltaR[iChannel].GetBinContent(nbins_gen_addjets_dr+1))
         h_gen_addbjets_invMass[iChannel].AddBinContent(nbins_gen_addjets_mass, h_gen_addbjets_invMass[iChannel].GetBinContent(nbins_gen_addjets_mass+1))
+        h_gen_addbjets_deltaR_nosel[iChannel].AddBinContent(nbins_gen_addjets_dr, h_gen_addbjets_deltaR_nosel[iChannel].GetBinContent(nbins_gen_addjets_dr+1))
+        h_gen_addbjets_invMass_nosel[iChannel].AddBinContent(nbins_gen_addjets_mass, h_gen_addbjets_invMass_nosel[iChannel].GetBinContent(nbins_gen_addjets_mass+1))
 
         for index, value in enumerate(varlist):
             tmp = ut.getHistRange(value)
@@ -564,6 +572,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_reco_addjets_invMass[iChannel].ClearUnderflowAndOverflow()
         h_gen_addbjets_deltaR[iChannel].ClearUnderflowAndOverflow()
         h_gen_addbjets_invMass[iChannel].ClearUnderflowAndOverflow()
+        h_gen_addbjets_deltaR_nosel[iChannel].ClearUnderflowAndOverflow()
+        h_gen_addbjets_invMass_nosel[iChannel].ClearUnderflowAndOverflow()
         h_respMatrix_deltaR[iChannel].ClearUnderflowAndOverflow()
         h_respMatrix_invMass[iChannel].ClearUnderflowAndOverflow()
 
