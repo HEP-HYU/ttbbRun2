@@ -9,13 +9,14 @@ import pandas as pd
 import deepdish.io as io
 
 import utils as ut
+
 def transversemass(vec1, met):
     tmp1 = TLorentzVector(vec1.Px(), vec1.Py(), 0, vec1.E()*math.sin(vec1.Theta()))
     tmp2 = TLorentzVector(met.Px(), met.Py(), 0, met.E());
 
     return (tmp1+tmp2).M()
 
-def makeCombi(inputDir,inputFile,outputDir) :
+def makeCombi(inputDir, inputFile, outputDir, sys=''):
     print(str(inputDir+"/"+inputFile)+" start")
     chain = TChain("ttbbLepJets/tree")
     chain.Add(inputDir+"/"+inputFile)
@@ -41,9 +42,23 @@ def makeCombi(inputDir,inputFile,outputDir) :
 
         lepton_SF = 1.0
         jet_SF_CSV = 1.0
+        pdfweight = []
+        scaleweight = []
+        PUWeight = []
+        lepton_SF = []
+        jet_SF_CSV_30 = []
         if not data:
-            lepton_SF = chain.lepton_SF[0]
-            jet_SF_CSV = chain.jet_SF_CSV[0]
+            for j in xrange((chain.lepton_SF).size()):
+                lepton_SF.append(float(chain.lepton_SF[j]))
+            for j in xrange((chain.jet_SF_CSV_30).size()):
+                jet_SF_CSV_30.append(float(chain.jet_SF_CSV_30[j]))
+            for j in xrange((chain.PUWeight).size()):
+                PUWeight.append(float(chain.PUWeight[j]))
+        if 'TT' in inputDir or 'tt' in inputDir:
+            for j in xrange((chain.scaleweight).size()):
+                scaleweight.append(float(chain.scaleweight[j]))
+            for j in xrange((chain.pdfweight).size()):
+                pdfweight.append(float(chain.pdfweight[j]))
 
         MET_px = chain.MET*math.cos(chain.MET_phi)
         MET_py = chain.MET*math.sin(chain.MET_phi)
@@ -77,8 +92,7 @@ def makeCombi(inputDir,inputFile,outputDir) :
             if chain.jet_CSV[iJet] > jet_CSV_tight:
                 nbjets += 1
 
-        if njets < 6 or nbjets < 2:
-            continue
+        if njets < 6 or nbjets < 2: continue
 
         for j in range(len(chain.jet_pT)-1):
             for k in range(j+1, len(chain.jet_pT)):
@@ -88,16 +102,32 @@ def makeCombi(inputDir,inputFile,outputDir) :
                     b1.SetPtEtaPhiE(chain.jet_pT[j], chain.jet_eta[j], chain.jet_phi[j], chain.jet_E[j])
                     b2.SetPtEtaPhiE(chain.jet_pT[k], chain.jet_eta[k], chain.jet_phi[k], chain.jet_E[k])
                     if not data :
-                        b1 *= chain.jet_JER_Nom[j]
-                        b2 *= chain.jet_JER_Nom[k]
+                        if   'jecup'   in sys:
+                            b1 *= chain.jet_JER_Nom[j] * chain.jet_JES_Up[j]
+                            b2 *= chain.jet_JER_Nom[k] * chain.jet_JES_Up[k]
+                        elif 'jecdown' in sys:
+                            b1 *= chain.jet_JER_Nom[j] * chain.jet_JES_Down[j]
+                            b2 *= chain.jet_JER_Nom[k] * chain.jet_JES_Down[k]
+                        elif 'jerup'   in sys:
+                            b1 *= chain.jet_JER_Up[j]
+                            b2 *= chain.jet_JER_Up[k]
+                        elif 'jerdown' in sys:
+                            b1 *= chain.jet_JER_Down[j]
+                            b2 *= chain.jet_JER_Down[k]
+                        else                 :
+                            b1 *= chain.jet_JER_Nom[j]
+                            b2 *= chain.jet_JER_Nom[k]
 
                     jetCombi.append([
+                        #Tree info
                         i, chain.channel, njets, nbjets,
-                        float(chain.genweight), float(chain.PUWeight[0]), lepton_SF, jet_SF_CSV,
+                        chain.genweight, PUWeight,
+                        lepton_SF, jet_SF_CSV_30, scaleweight, pdfweight,
                         lep.Pt(), lep.Eta(), lep.Phi(), lep.E(),
                         addbjet1.Pt(), addbjet1.Eta(), addbjet1.Phi(), addbjet1.E(),
                         addbjet2.Pt(), addbjet2.Eta(), addbjet2.Phi(), addbjet2.E(),
                         j,k,
+                        #Deep learning variables
                         b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
                         (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
                         (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
@@ -110,7 +140,8 @@ def makeCombi(inputDir,inputFile,outputDir) :
 
     combi = pd.DataFrame(jetCombi, columns=
             ['event','channel','njets','nbjets',
-            'genWeight','PUWeight','lepton_SF','jet_SF_CSV',
+            'genWeight','PUWeight',
+            'lepton_SF','jet_SF_CSV_30', 'scaleweight', 'pdfweight',
             'leptonPt','leptonEta','leptonPhi','leptonE',
             'addbjet1_pt','addbjet1_eta','addbjet1_phi','addbjet1_e',
             'addbjet2_pt','addbjet2_eta','addbjet2_phi','addbjet2_e',
