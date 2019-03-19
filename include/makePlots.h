@@ -17,7 +17,7 @@
 #include "histBook.h"
 #include "tdrstyle.C"
 
-string INPUT = "../output/root/";
+string INPUT = "../output/post/";
 string OUTPUT = "../output/pdf/";
 
 std::string ReplaceAll(std::string &str, const std::string &from, const std::string &to);

@@ -1,57 +1,60 @@
 #include "../include/histBook.h"
 #include "../include/tdrstyle.C"
 
-TFile *MakeRoot(string name);
+HistoBook *MakeHist(TFile *f_in, std::string syst);
 void DrawHist(TH1 *h_in, std::string name, bool drawError);
 
-string input = "../output/root/";
-string output = "../output/root/";
-string output_pdf = "../output/pdf/";
-
 void makeCriteria(){
-  std::vector<std::string> v_name = {
-    "TTLJ_PowhegPythia", "TT_PowhegHerwig", "TT_PowhegPythiaEvtgen", "TT_aMCatNLOPythia",
-    "TT_PowhegPythia_SYS_FSRup", "TT_PowhegPythia_SYS_FSRdown", "TT_PowhegPythia_SYS_ISRup", "TT_PowhegPythia_SYS_ISRdown"
+  string input_dir = "../output/post/";
+  TFile *f_in = TFile::Open(Form("%s/hist_ttbb.root", input_dir.c_str()));
+  TFile *f_out = TFile::Open(Form("%s/hist_criteria.root", input_dir.c_str()),"recreate");
+
+  std::vector<std::string> v_syst_list = {
+    "", "__jerup", "__jerdown", "__jecup", "__jecdown",
+    "__puup", "__pudown",
+    "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
+    "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
+    "__lfup", "__lfdown", "__hfup", "__hfdown",
+    "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
+    "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
+    "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down",
+    "__psup", "__psdown", "__swup", "__swdown",
+    "__hdampup", "__hdampdown", "__tuneup", "__tunedown"
   };
 
-  for(int i=0; i < v_name.size(); ++i){
-    auto f_tmp = MakeRoot(v_name.at(i));
-    TIter next(f_tmp->GetListOfKeys());
-    TKey *key;
-    TObject *obj;
-    while((key = (TKey *)next())){
-      obj = key->ReadObj();
-      string tmp = obj->GetName();
-      ssize_t pos;
-      if((pos = tmp.find("Bin",0,3)) == std::string::npos)
-	  continue;
-      auto h_tmp = (TH1 *)obj;
-      if((pos = tmp.find("Acc",0,3)) != std::string::npos)
-	DrawHist(h_tmp, v_name.at(i), true);
-      else
-        DrawHist(h_tmp, v_name.at(i), false);
+  f_out->cd();
+  for(auto v_itr = v_syst_list.begin(); v_itr != v_syst_list.end(); ++v_itr){
+    auto h_tmp = MakeHist(f_in, *v_itr);
+    
+    for(int ich=0; ich<2; ++ich){
+      h_tmp->h_stability_deltaR[ich]->Write();
+      h_tmp->h_stability_invMass[ich]->Write();
+      h_tmp->h_purity_deltaR[ich]->Write();
+      h_tmp->h_purity_invMass[ich]->Write();
+      h_tmp->h_acceptance_deltaR[ich]->Write();
+      h_tmp->h_acceptance_invMass[ich]->Write();
+
     }
+    h_tmp->~HistoBook();
   }
+  f_out->Write();
+  f_out->Close();
 }
 
-TFile *MakeRoot(string name_){
-  auto name = name_;
-  cout << "SAMPLE: " << name << endl;
-
-  TFile *f_in = TFile::Open(Form("%s/hist_%s_ttbb.root", input.c_str(), name.c_str()));
-  TFile *f_out = TFile::Open(Form("%s/hist_criteria_%s_ttbb.root",output.c_str(),name.c_str()),"recreate");
+HistoBook *MakeHist(TFile *f_in, string syst){
+  cout << "syst: " << syst << endl;
+  double xsec = 0.0;
+  if( syst.find("sw",0,2) != std::string::npos ) xsec = 831.76;
+  else if( syst.find("tune",0,4) != std::string::npos ) xsec = 831.76;
+  else xsec = XSEC_[TTBB_];
 
   //NORMALIZATION
   TH1 *EventInfo = (TH1 *)f_in->Get("EventInfo");
-  double scale;
-  ssize_t pos;
-  if((pos = name.find("TTLJ",0,4)) != std::string::npos)
-    scale = LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
-  else 
-    scale = LUMINOSITY_*831.76/EventInfo->GetBinContent(2);
+  const double SF_ttbb = 0.992;
+  const double scale = SF_ttbb*LUMINOSITY_*xsec/EventInfo->GetBinContent(2);
 
   //HISTOGRAMS
-  HistoBook *h_stb = new HistoBook(3,NAME_[TTBB_].c_str());
+  HistoBook *h_stb = new HistoBook(3,syst.c_str());
 
   TH2D *h_respMatrix_deltaR[nChannel];
   TH2D *h_respMatrix_invMass[nChannel];
@@ -68,24 +71,24 @@ TFile *MakeRoot(string name_){
   TH1D *h_gen_addbjets_afterSel_invMass[nChannel];
 
   for(int iChannel=0; iChannel<nChannel; ++iChannel){    
-    h_gen_addbjets_nosel_deltaR[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_nosel_ttbb",
-	  GEN_ADDBJETS_DELTAR_, iChannel));
+    h_gen_addbjets_nosel_deltaR[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_nosel%s",
+	  GEN_ADDBJETS_DELTAR_, iChannel, syst.c_str()));
     h_gen_addbjets_nosel_deltaR[iChannel]->Scale(scale);
-    h_gen_addbjets_nosel_invMass[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_nosel_ttbb",
-	  GEN_ADDBJETS_INVARIANT_MASS_, iChannel));
+    h_gen_addbjets_nosel_invMass[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_nosel%s",
+	  GEN_ADDBJETS_INVARIANT_MASS_, iChannel, syst.c_str()));
     h_gen_addbjets_nosel_invMass[iChannel]->Scale(scale);
-    h_gen_addbjets_afterSel_deltaR[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_S3_ttbb",
-	  GEN_ADDBJETS_DELTAR_, iChannel));
+    h_gen_addbjets_afterSel_deltaR[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_S3%s",
+	  GEN_ADDBJETS_DELTAR_, iChannel, syst.c_str()));
     h_gen_addbjets_afterSel_deltaR[iChannel]->Scale(scale);
-    h_gen_addbjets_afterSel_invMass[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_S3_ttbb",
-	  GEN_ADDBJETS_INVARIANT_MASS_, iChannel));
+    h_gen_addbjets_afterSel_invMass[iChannel] = (TH1D *)f_in->Get(Form("h_%s_Ch%d_S3%s",
+	  GEN_ADDBJETS_INVARIANT_MASS_, iChannel, syst.c_str()));
     h_gen_addbjets_afterSel_invMass[iChannel]->Scale(scale);
     
-    h_respMatrix_deltaR[iChannel] = (TH2D *)f_in->Get(Form("h_%s_Ch%d_S3_ttbb",
-	  RESPONSE_MATRIX_DELTAR_,iChannel));
+    h_respMatrix_deltaR[iChannel] = (TH2D *)f_in->Get(Form("h_%s_Ch%d_S3%s",
+	  RESPONSE_MATRIX_DELTAR_,iChannel, syst.c_str()));
     h_respMatrix_deltaR[iChannel]->Scale(scale);
-    h_respMatrix_invMass[iChannel] = (TH2D *)f_in->Get(Form("h_%s_Ch%d_S3_ttbb",
-	  RESPONSE_MATRIX_INVARIANT_MASS_,iChannel));
+    h_respMatrix_invMass[iChannel] = (TH2D *)f_in->Get(Form("h_%s_Ch%d_S3%s",
+	  RESPONSE_MATRIX_INVARIANT_MASS_,iChannel, syst.c_str()));
     h_respMatrix_invMass[iChannel]->Scale(scale);
 
     h_gen_addbjets_deltaR[iChannel] = h_respMatrix_deltaR[iChannel]->ProjectionY();
@@ -228,9 +231,8 @@ TFile *MakeRoot(string name_){
 
     }
   }//Channel
-  f_out->Write();
 
-  return f_out;
+  return h_stb;
 }
 
 void DrawHist(TH1* h_in_, std::string name, bool drawError){    
@@ -292,7 +294,7 @@ void DrawHist(TH1* h_in_, std::string name, bool drawError){
 
   label_work->Draw("same");
   label_sim->Draw("same");
-  c->Print(Form("%s/%s_%s.pdf", output_pdf.c_str(), h_in->GetName(), name.c_str()),"pdf");
+  c->Print(Form("../output/pdf/%s_%s.pdf", h_in->GetName(), name.c_str()),"pdf");
 
   c->~TCanvas();
   h_in->~TH1();

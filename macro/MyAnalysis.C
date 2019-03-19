@@ -14,10 +14,12 @@ void MyAnalysis::Begin(TTree * /*tree*/){
 void MyAnalysis::SlaveBegin(TTree * /*tree*/){
   option = GetOption();
   string str_opt = option.Data();
-  const char * sample = (str_opt.substr(0,str_opt.find_first_of("_"))).c_str();
-  syst_ext = str_opt.substr(str_opt.find_first_of("_")+2,string::npos);
+  if( option.Contains("__") )
+    syst_ext = str_opt.substr(str_opt.find_first_of("_"),string::npos);
+  else
+    syst_ext = "";
 
-  h_control = new HistoBook(1, option.Data());
+  h_control = new HistoBook(1, syst_ext.c_str());
 
   for(int iChannel=0; iChannel<nChannel; ++iChannel){
     for(int iStep=0; iStep<nStep; ++iStep){
@@ -364,25 +366,29 @@ void MyAnalysis::SlaveTerminate(){
 
 void MyAnalysis::Terminate(){
   option = GetOption();
-  
-  //TFile *out = TFile::Open(Form("output/root/sys/hist_%s.root", option.Data()), "RECREATE");
+  string str_opt = option.Data();
+  if( option.Contains("__") )
+    syst_ext = str_opt.substr(str_opt.find_first_of("_"),string::npos);
+  else
+    syst_ext = "";
+
   TFile *out = TFile::Open(Form("output/root/hist_%s.root", option.Data()), "RECREATE");
 
   for(int iChannel=0; iChannel<nChannel; ++iChannel){
     for(int iStep=0; iStep<nStep; ++iStep){
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_PT_,iChannel,iStep,option.Data()))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_ETA_,iChannel,iStep,option.Data()))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_JETS_,iChannel,iStep,option.Data()))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_BJETS_,iChannel,iStep,option.Data()))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_TRANSVERSE_MASS_,iChannel,iStep,option.Data()))->Write();
-      fOutput->FindObject(Form("h_%s_sum_Ch%d_S%d_%s",RECO_JET_PT_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",RECO_LEPTON_PT_,iChannel,iStep,syst_ext.c_str()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",RECO_LEPTON_ETA_,iChannel,iStep,syst_ext.c_str()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",RECO_NUMBER_OF_JETS_,iChannel,iStep,syst_ext.c_str()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",RECO_NUMBER_OF_BJETS_,iChannel,iStep,syst_ext.c_str()))->Write();
+      fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",RECO_TRANSVERSE_MASS_,iChannel,iStep,syst_ext.c_str()))->Write();
+      fOutput->FindObject(Form("h_%s_sum_Ch%d_S%d%s",RECO_JET_PT_,iChannel,iStep,syst_ext.c_str()))->Write();
       for(int iJet=0; iJet<nJet; ++iJet){
-	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_PT_,iJet,iChannel,iStep,option.Data()))->Write();
-	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_ETA_,iJet,iChannel,iStep,option.Data()))->Write();
-	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d_%s",RECO_B_DISCRIMINATOR_,iJet,iChannel,iStep,option.Data()))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d%s",RECO_JET_PT_,iJet,iChannel,iStep,syst_ext.c_str()))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d%s",RECO_JET_ETA_,iJet,iChannel,iStep,syst_ext.c_str()))->Write();
+	fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d%s",RECO_B_DISCRIMINATOR_,iJet,iChannel,iStep,syst_ext.c_str()))->Write();
       }//jet
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_DELTAR_,iChannel,iStep,option.Data()))->Write();
-      fOutput->FindObject(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_INVARIANT_MASS_,iChannel,iStep,option.Data()))->Write();
+      fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",RECO_ADDJETS_DELTAR_,iChannel,iStep,syst_ext.c_str()))->Write();
+      fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",RECO_ADDJETS_INVARIANT_MASS_,iChannel,iStep,syst_ext.c_str()))->Write();
     }//step
   }//channel
   out->Write();

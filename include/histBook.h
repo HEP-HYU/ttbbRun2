@@ -297,35 +297,35 @@ HistoBook::HistoBook(const int _mode, const char *_process){
   if(_mode == 1){   
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
-	h_lepton_pt[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_PT_,iChannel,iStep,_process),"",
+	h_lepton_pt[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d%s",RECO_LEPTON_PT_,iChannel,iStep,_process),"",
 	    xNbins_lepton_pt,lepton_pt_min,lepton_pt_max //lepton_pt_width
 	    );
 	h_lepton_pt[iChannel][iStep]->SetXTitle(Form("%s p_{T} (GeV)",v_chName[iChannel].c_str()));
 	h_lepton_pt[iChannel][iStep]->SetYTitle("Entries");
 	h_lepton_pt[iChannel][iStep]->Sumw2();
 
-	h_lepton_eta[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",RECO_LEPTON_ETA_,iChannel,iStep,_process),"",
+	h_lepton_eta[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d%s",RECO_LEPTON_ETA_,iChannel,iStep,_process),"",
 	    xNbins_lepton_eta,lepton_eta_min,lepton_eta_max //lepton_eta_width
 	    );
 	h_lepton_eta[iChannel][iStep]->SetXTitle(Form("%s #eta",v_chName[iChannel].c_str()));
 	h_lepton_eta[iChannel][iStep]->SetYTitle("Entries");
 	h_lepton_eta[iChannel][iStep]->Sumw2();
 
-	h_njets[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_JETS_,iChannel,iStep,_process),"",
+	h_njets[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d%s",RECO_NUMBER_OF_JETS_,iChannel,iStep,_process),"",
 	    xNbins_njets,njets_min,njets_max //njets_width
 	    );
 	h_njets[iChannel][iStep]->SetXTitle("Jet multiplicity");
 	h_njets[iChannel][iStep]->SetYTitle("Entries");
 	h_njets[iChannel][iStep]->Sumw2();
 
-	h_nbjets[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",RECO_NUMBER_OF_BJETS_,iChannel,iStep,_process),"",
+	h_nbjets[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d%s",RECO_NUMBER_OF_BJETS_,iChannel,iStep,_process),"",
 	    xNbins_nbjets,nbjets_min,nbjets_max //nbjets_width
 	    );
 	h_nbjets[iChannel][iStep]->SetXTitle("bJet multiplicity");
 	h_nbjets[iChannel][iStep]->SetYTitle("Entries");
 	h_nbjets[iChannel][iStep]->Sumw2();
 	
-	h_jet_pt_sum[iChannel][iStep] = new TH1D(Form("h_%s_sum_Ch%d_S%d_%s",RECO_JET_PT_,iChannel,iStep,_process),"",
+	h_jet_pt_sum[iChannel][iStep] = new TH1D(Form("h_%s_sum_Ch%d_S%d%s",RECO_JET_PT_,iChannel,iStep,_process),"",
 	    xNbins_jet_pt,jet_pt_min,jet_pt_max
 	    );
 	h_jet_pt_sum[iChannel][iStep]->SetXTitle("Sum of jet p_{T} (GeV)");
@@ -333,21 +333,21 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	h_jet_pt_sum[iChannel][iStep]->Sumw2();
 
 	for(int iJet=0; iJet<nJet; ++iJet){
-	  h_jet_pt[iChannel][iStep][iJet] = new TH1D(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_PT_,iJet,iChannel,iStep,_process),"",
+	  h_jet_pt[iChannel][iStep][iJet] = new TH1D(Form("h_%s_%d_Ch%d_S%d%s",RECO_JET_PT_,iJet,iChannel,iStep,_process),"",
 	      xNbins_jet_pt,jet_pt_min,jet_pt_max
 	      );
 	  h_jet_pt[iChannel][iStep][iJet]->SetXTitle("Jet p_{T} (GeV)");
 	  h_jet_pt[iChannel][iStep][iJet]->SetYTitle("Entries");
 	  h_jet_pt[iChannel][iStep][iJet]->Sumw2();
 
-	  h_jet_eta[iChannel][iStep][iJet] = new TH1D(Form("h_%s_%d_Ch%d_S%d_%s",RECO_JET_ETA_,iJet,iChannel,iStep,_process),"",
+	  h_jet_eta[iChannel][iStep][iJet] = new TH1D(Form("h_%s_%d_Ch%d_S%d%s",RECO_JET_ETA_,iJet,iChannel,iStep,_process),"",
 	      xNbins_jet_eta,jet_eta_min,jet_eta_max
 	      );
 	  h_jet_eta[iChannel][iStep][iJet]->SetXTitle("Jet #eta");
 	  h_jet_eta[iChannel][iStep][iJet]->SetYTitle("Entries");
 	  h_jet_eta[iChannel][iStep][iJet]->Sumw2();
 
-	  h_b_discrimi[iChannel][iStep][iJet] = new TH1D(Form("h_%s_%d_Ch%d_S%d_%s",RECO_B_DISCRIMINATOR_,iJet,iChannel,iStep,_process),"",
+	  h_b_discrimi[iChannel][iStep][iJet] = new TH1D(Form("h_%s_%d_Ch%d_S%d%s",RECO_B_DISCRIMINATOR_,iJet,iChannel,iStep,_process),"",
 	      xNbins_b_discrimi,b_discrimi_min,b_discrimi_max
 	      );
 	  h_b_discrimi[iChannel][iStep][iJet]->SetXTitle("b discriminator");
@@ -355,14 +355,14 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	  h_b_discrimi[iChannel][iStep][iJet]->Sumw2();
 	}
 
-	h_trans_mass[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",RECO_TRANSVERSE_MASS_,iChannel,iStep,_process),"",
+	h_trans_mass[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d%s",RECO_TRANSVERSE_MASS_,iChannel,iStep,_process),"",
 	    xNbins_wmass,wmass_min,wmass_max
 	    );
 	h_trans_mass[iChannel][iStep]->SetXTitle("transverse mass (GeV)");
 	h_trans_mass[iChannel][iStep]->SetYTitle("Entries");
 	h_trans_mass[iChannel][iStep]->Sumw2();
 
-	h_reco_addjets_deltaR[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_DELTAR_,iChannel,iStep,_process),"",
+	h_reco_addjets_deltaR[iChannel][iStep] = new TH1D(Form("h_mindR_%s_Ch%d_S%d%s",RECO_ADDJETS_DELTAR_,iChannel,iStep,_process),"",
 	    xNbins_reco_addjets_dR,
 	    reco_addjets_dR_min,reco_addjets_dR_max
 	    //reco_addjets_dR_width
@@ -371,7 +371,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	h_reco_addjets_deltaR[iChannel][iStep]->SetYTitle("Entries");
 	h_reco_addjets_deltaR[iChannel][iStep]->Sumw2();
 
-	h_reco_addjets_invMass[iChannel][iStep] = new TH1D(Form("h_%s_Ch%d_S%d_%s",RECO_ADDJETS_INVARIANT_MASS_,iChannel,iStep,_process),"",
+	h_reco_addjets_invMass[iChannel][iStep] = new TH1D(Form("h_mindR_%s_Ch%d_S%d%s",RECO_ADDJETS_INVARIANT_MASS_,iChannel,iStep,_process),"",
 	    xNbins_reco_addjets_M,
 	    reco_addjets_M_min,reco_addjets_M_max
 	    //reco_addjets_M_width
@@ -449,7 +449,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
   }//mode
   else if(_mode == 3){
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
-      h_acceptance_deltaR[iChannel] = new TH1D(Form("h_%s_Ch%d_%s",BIN_ACCEPTANCE_DELTAR_,iChannel,_process),"",
+      h_acceptance_deltaR[iChannel] = new TH1D(Form("h_%s_Ch%d%s",BIN_ACCEPTANCE_DELTAR_,iChannel,_process),"",
 	  xNbins_gen_addbjets_dR,
 	  //gen_addbjets_dR_min, gen_addbjets_dR_max
 	  gen_addbjets_dR_width
@@ -458,7 +458,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_acceptance_deltaR[iChannel]->SetYTitle("acceptance");
       h_acceptance_deltaR[iChannel]->Sumw2();
       
-      h_acceptance_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d_%s",BIN_ACCEPTANCE_INVARIANT_MASS_,iChannel,_process),"",
+      h_acceptance_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d%s",BIN_ACCEPTANCE_INVARIANT_MASS_,iChannel,_process),"",
 	  xNbins_gen_addbjets_M,
 	  //gen_addbjets_M_min, gen_addbjets_M_max
 	  gen_addbjets_M_width
@@ -467,7 +467,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_acceptance_invMass[iChannel]->SetYTitle("acceptance");
       h_acceptance_invMass[iChannel]->Sumw2();
 	
-      h_stability_deltaR[iChannel] = new TH1D(Form("h_%s_Ch%d_S3_%s",BIN_STABILITY_DELTAR_,iChannel,_process),"",
+      h_stability_deltaR[iChannel] = new TH1D(Form("h_%s_Ch%d_S3%s",BIN_STABILITY_DELTAR_,iChannel,_process),"",
 	  xNbins_gen_addbjets_dR,
 	  //gen_addbjets_dR_min, gen_addbjets_dR_max
 	  gen_addbjets_dR_width
@@ -485,7 +485,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_purity_deltaR[iChannel]->SetYTitle("purity");
       h_purity_deltaR[iChannel]->Sumw2();
 
-      h_stability_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d_S3_%s",BIN_STABILITY_INVARIANT_MASS_,iChannel,_process),"",
+      h_stability_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d_S3%s",BIN_STABILITY_INVARIANT_MASS_,iChannel,_process),"",
 	  xNbins_gen_addbjets_M,
 	  //gen_addbjets_M_min, gen_addbjets_M_max
 	  gen_addbjets_M_width
@@ -494,7 +494,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_stability_invMass[iChannel]->SetYTitle("stability");
       h_stability_invMass[iChannel]->Sumw2();
 
-      h_purity_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d_S3_%s",BIN_PURITY_INVARIANT_MASS_,iChannel,_process),"",
+      h_purity_invMass[iChannel] = new TH1D(Form("h_%s_Ch%d_S3%s",BIN_PURITY_INVARIANT_MASS_,iChannel,_process),"",
 	  xNbins_gen_addbjets_M,
 	  //gen_addbjets_M_min, gen_addbjets_M_max
 	  gen_addbjets_M_width

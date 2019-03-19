@@ -4,7 +4,61 @@ import os
 import sys
 base_path = "/home/seohyun/work/ttbb/heptool/output/root/"
 
-#make systematics up down histograms
+"""
+if not os.path.exists("../output/root"): os.makedirs('../output/root')
+if not os.path.exists("../output/root2"):
+    os.makedirs('../output/root2')
+else:
+    os.system('rm -rf ../output/root2/*')
+for item in os.listdir(base_path):
+    os.system('hadd ../output/root2/'+item+' '+base_path+item+' ../tmp/'+item)
+os.system('mv ../output/root ../output/root_backup')
+os.system('mv ../output/root2 ../output/root')
+
+def rescale(f_sys, h_eventinfo):
+    hist_list = []
+    hist_list = [x.GetName() for x in f_sys.GetListOfKeys()]
+    h_eventinfo_sys = f_sys.Get("EventInfo")
+
+    bratio = 1.0
+    if"TT" and ("isr" or "fsr" or "tune") in f_in.GetName(): bratio = 356.4/831.76
+
+    h_out =[]
+    for hist in hist_list:
+        if hist == "EventInfo" or hist == "ScaleWeights": continue
+	h_tmp = f_sys.Get(hist)
+	h_tmp.Scale(h_eventinfo.GetBinContent(2)/(h_eventinfo_sys.GetBinContent(2)*bratio))
+        h_out.append(h_tmp)
+
+    return h_out
+
+sys_re = ['isrup', 'isrdown', 'fsrup', 'fsrdown', 'hdampup', 'hdampdown', 'tuneup', 'tunedown']
+proc_re = ['ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother']
+
+for proc in proc_re:
+    print(proc)
+    f_central = TFile.Open(os.path.join(base_path, "hist_"+proc+".root"))
+    print("Open "+f_central.GetName())
+    h_eventinfo = f_central.Get("EventInfo")
+    for sys in sys_re:
+        f_in = TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+sys+".root"))
+	f_out = TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+sys+"_re.root"), "recreate")
+
+	h_out = []
+	h_out = rescale(f_in, h_eventinfo)
+        f_out.cd()
+	evt = f_in.Get("EventInfo")
+	scw = f_in.Get("ScaleWeights")
+	evt.Write()
+	scw.Write()
+        for hist in h_out:
+            if 'EventInfo' in hist.GetName() or 'ScaleWeights' in hist.GetName(): continue
+            hist.Write()
+        f_out.Write()
+        f_out.Close()
+        os.system('rm -rf '+base_path+'hist_'+proc+'__'+sys+'.root')
+	os.system('mv '+base_path+'hist_'+proc+'__'+sys+'_re.root '+base_path+'hist_'+proc+'__'+sys+'.root')
+
 
 def write_envelope(h_central, h_sys_list, h_eventinfo, h_weights):
 
@@ -44,12 +98,14 @@ proc_list = ['ttH','ttW','ttZ','ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg
 ps_list = ['isrup','isrdown','fsrup','fsrdown']
 sw_list = ['scale0','scale1','scale2','scale3','scale4','scale5']
 
+os.system("rm -rf "+base_path+"/*__ps*")
+os.system("rm -rf "+base_path+"/*__sw*")
 for proc in proc_list:
     print(proc)
     f_central = TFile.Open(os.path.join(base_path, "hist_"+proc+".root"))
 
     f_ps_list = []
-    if not (proc == 'ttH' or proc == 'ttW' or proc == 'ttZ'):
+    if not (proc == 'ttH' or proc == 'ttW' or proc == 'ttZ' or proc == 'ttbbFilter_ttbb'):
         for ps in ps_list:
             f_ps_list.append(TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+ps+".root")))
 	f_ps_up = TFile.Open(os.path.join(base_path, "hist_"+proc+"__psup.root"),"RECREATE")
@@ -120,65 +176,37 @@ for proc in proc_list:
     f_sw_down.Close()
     if f_ps_up is not None: f_ps_up.Close()
     if f_ps_down is not None: f_ps_down.Close()
-
+"""
 #Rescaling and merging files
-def rescale(f_sys, h_eventinfo):
-    hist_list = []
-    hist_list = [x.GetName() for x in f_sys.GetListOfKeys()]
-    h_eventinfo_sys = f_sys.Get("EventInfo")
-
-    h_out =[]
-    for hist in hist_list:
-        if hist == "EventInfo" or hist == "ScaleWeights": continue
-	h_tmp = f_sys.Get(hist)
-	h_tmp.Scale(h_eventinfo.GetBinContent(2)/h_eventinfo_sys.GetBinContent(2))
-        h_out.append(h_tmp)
-
-    return h_out
-
-sys_re = ['isrup', 'isrdown', 'fsrup', 'fsrdown', 'hdampup', 'hdampdown', 'tuneup', 'tunedown']
-proc_re = ['ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother']
-
-for proc in proc_re:
-    print(proc)
-    f_central = TFile.Open(os.path.join(base_path, "hist_"+proc+".root"))
-    h_eventinfo = f_central.Get("EventInfo")
-    for sys in sys_re:
-        f_in = TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+sys+".root"))
-	f_out = TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+sys+"_re.root"), "recreate")
-
-	h_out = []
-	h_out = rescale(f_in, h_eventinfo)
-        f_out.cd()
-        for hist in h_out:
-            if 'EventInfo' in hist.GetName() or 'ScaleWeights' in hist.GetName(): continue
-            hist.Write()
-        f_out.Write()
-        f_out.Close()
-        os.system('rm -rf '+base_path+'hist_'+proc+'__'+sys+'.root')
-	os.system('mv '+base_path+'hist_'+proc+'__'+sys+'_re.root '+base_path+'hist_'+proc+'__'+sys+'.root')
-
-proc_list = ['DataSingleEl', 'DataSingleMu', 'ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg',
-             'ttH', 'ttW', 'ttZ', 'wjets', 'zjets10to50', 'zjets',
-             'ww', 'wz', 'zz', 'tchannel', 'tbarchannel', 'tWchannel',
-             'tbarWchannel']
+proc_list = ['DataSingleEl', 'DataSingleMu',
+      'ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg',
+      'ttH', 'ttW', 'ttZ', 'wjets', 'zjets10to50', 'zjets', 'ww', 'wz', 'zz',
+      'tchannel', 'tbarchannel', 'tWchannel', 'tbarWchannel', 'ttbbFilter_ttbb']
 
 for proc in proc_list:
     print(proc)
-    os.system('hadd ../output/post/hist_'+proc+'.root ../output/root/hist_'+proc+'*')
-    f_in = TFile.Open('../output/post/hist_'+proc+'.root')
-    f_out = TFile.Open('../output/post2/hist_'+proc+'.root','recreate')
+    if not os.path.exists("../output/post"): os.makedirs("../output/post")
 
-    f_out.cd()
-    hist_list = []
-    hist_list = [x.GetName() for x in f_in.GetListOfKeys()]
-    for hist in hist_list:
-        h_tmp = f_in.Get(hist)
-        hist2 = hist.replace('_'+proc, '')
-	print(hist)
-        print(hist2)
-        h_tmp.SetName(hist2)
-        h_tmp.Write()
+    if proc == 'ttbb':
+        os.system('hadd ../output/post/hist_ttbb.root ../output/root/hist_ttbb.root ../output/root/hist_ttbb__*')
+    else:
+        os.system('hadd ../output/post/hist_'+proc+'.root '+base_path+'/hist_'+proc+'*')
 
-    f_out.Write()
-    f_out.Close()
+proc_list = ['DataSingleEl', 'DataSingleMu',
+      'ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg',
+      'ttH', 'ttW', 'ttZ', 'wjets', 'zjets10to50', 'zjets', 'ww', 'wz', 'zz',
+      'tchannel', 'tbarchannel', 'tWchannel', 'tbarWchannel', 'ttbbFilter_ttbb']
+
+for proc in proc_list:
+    f_tmp = TFile.Open("../output/post/hist_"+proc+".root", "update")
+    f_tmp.Delete("EventInfo")
+    f_tmp.Delete("ScaleWeights")
+    f_org = TFile.Open("../output/root_backup/hist_"+proc+".root","read")
+    evt = f_org.Get("EventInfo")
+    swt = f_org.Get("ScaleWeights")
+    f_tmp.cd()
+    evt.Write()
+    swt.Write()
+    f_tmp.Write()
+    f_tmp.Close()
+

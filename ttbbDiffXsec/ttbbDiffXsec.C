@@ -19,139 +19,101 @@
 #include "runTUnfold.C"
 #include "runSVDUnfold.C"
 
-//Running mode
-const bool closuretest = false;
-const bool rundata = true;
-//const bool systematic = true;
 //Unfolding options
 const bool useTUnfold = false;
-const bool scanbyLcurve = false;
-const double taumax = 0.0, taumin = 0.0;
-const bool fixtau = false;
-const float fixedtau = 0.0;
-const int reg_dR = 4, reg_M = 4;
+const bool scanLcurve = true;
+const bool fixtau_dR = false;
+const float fixedtau_dR = 0.0001;//log_{10}(#tau)
+const double taumin_dR = 0., taumax_dR = 0.;
+const bool fixtau_M = false;
+const float fixedtau_M = 0.0;
+const double taumin_M = 0.8, taumax_M = 1.3;
+const bool findBestK = false;
+const int reg_dR = 3, reg_M = 3;
 
-void ttbbDiffXsec(){
+const double SF_ttbb = 0.992;
+const double SF_ttbj = 0.997;
+const double SF_ttcc = 0.871;
+const double SF_ttLF = 0.890;
+
+void ttbbDiffXsec(string input_dir, string output_dir, string input, string syst = ""){
   gErrorIgnoreLevel = kFatal; // kWarning
-
-  TFile *f_respMatrix = TFile::Open(Form("%s/hist_respMatrix_ttbb.root", input_dir.c_str()));
-  TFile *f_ttbb = TFile::Open(Form("%s/hist_TTLJ_PowhegPythia_ttbb.root", input_dir.c_str()));
-
-  TFile *f_data[2] = {
-    TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), DATA_[MUON_].c_str())),
-    TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), DATA_[ELECTRON_].c_str()))
-  };
-
-  TFile *f_sample[static_cast<int>(Sample_List_::LAST)];
-  for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
-    f_sample[i] = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), NAME_[i].c_str()));
-  }
-
-  std::vector<std::string> v_generators = {"PowhegHerwig","PowhegPythiaEvtgen"};//,"aMCatNLOPythia"};
-  std::vector<std::string> v_sysname = {"FSR","ISR"};
-  std::vector<std::string> v_sysvar = {"up","down"};
-  const int ngen = v_generators.size();
-  const int nsys = v_sysname.size();
-  const int nvar = v_sysvar.size();
- 
-  TFile *f_generators[ngen], *f_sys[nsys][nvar];
-  for(auto i = 0; i < ngen; ++i)
-    f_generators[i] = TFile::Open(Form("%s/hist_TT_%s_ttbb.root",input_dir.c_str(),v_generators[i].c_str()));
-  for(auto i = 0; i < nsys; ++i){
-    for(auto j = 0; j < nvar; ++j){
-      f_sys[i][j] = TFile::Open(Form("%s/hist_TT_PowhegPythia_SYS_%s%s_ttbb.root",input_dir.c_str(),v_sysname[i].c_str(),v_sysvar[j].c_str()));
-    }
-  }
-
+  TFile *f_respMatrix = TFile::Open(Form("../output/post/hist_ttbbFilter_ttbb.root"));
+  TFile *f_criteria = TFile::Open(Form("../output/post/hist_criteria.root"));
+  TFile *f_input = TFile::Open(Form("%s/%s.root", input_dir.c_str(), input.c_str()));
+  TFile *f_ttbb = TFile::Open(Form("%s/hist_ttbb.root", input_dir.c_str()));
   TH2 *h_resp_dR[nChannel], *h_resp_M[nChannel];
   TH1 *h_data_dR[nChannel], *h_data_M[nChannel];
-  TH1 *h_reco_dR[nChannel], *h_reco_M[nChannel];
   TH1 *h_gen_dR[nChannel], *h_gen_M[nChannel];
   TH1 *h_gen_nosel_dR[nChannel], *h_gen_nosel_M[nChannel];
-  TH1 *h_generators_reco_dR[ngen][nChannel], *h_generators_reco_M[ngen][nChannel];
-  TH1 *h_generators_gen_dR[ngen][nChannel], *h_generators_gen_M[ngen][nChannel];
-  TH1 *h_generators_gen_nosel_dR[ngen][nChannel], *h_generators_gen_nosel_M[ngen][nChannel];
-  TH1 *h_sys_reco_dR[nsys][nvar][nChannel], *h_sys_reco_M[nsys][nvar][nChannel];
-  TH1 *h_sys_gen_dR[nsys][nvar][nChannel], *h_sys_gen_M[nsys][nvar][nChannel];
-  TH1 *h_sys_gen_nosel_dR[nsys][nvar][nChannel], *h_sys_gen_nosel_M[nsys][nvar][nChannel];
 
   for(int ich=0; ich<nChannel; ++ich){
-    h_resp_dR[ich] = (TH2 *)f_respMatrix->Get(Form(
-	  "h_ResponseMatrixDeltaR_Ch%d_S3_TTLJ_PowhegPythia_ttbbFilter_ttbb", ich));
-    h_resp_M[ich] = (TH2 *)f_respMatrix->Get(Form(
-	  "h_ResponseMatrixInvMass_Ch%d_S3_TTLJ_PowhegPythia_ttbbFilter_ttbb", ich));
-    h_data_dR[ich] = (TH1 *)f_data[ich]->Get(Form("h_%s_Ch%d_S3_%s",
-	  RECO_ADDJETS_DELTAR_, ich, DATA_[ich].c_str()));
-    h_data_M[ich] = (TH1 *)f_data[ich]->Get(Form("h_%s_Ch%d_S3_%s",
-	  RECO_ADDJETS_INVARIANT_MASS_, ich, DATA_[ich].c_str()));
-    h_reco_dR[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_S3_%s",
-	  RECO_ADDJETS_DELTAR_, ich, NAME_[TTBB_].c_str()));
-    h_reco_M[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_S3_%s",
-	  RECO_ADDJETS_INVARIANT_MASS_, ich, NAME_[TTBB_].c_str()));
-    h_gen_dR[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_S3_%s",
-	  GEN_ADDBJETS_DELTAR_, ich, NAME_[TTBB_].c_str()));
-    h_gen_M[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_S3_%s",
-	  GEN_ADDBJETS_INVARIANT_MASS_, ich, NAME_[TTBB_].c_str()));
-    h_gen_nosel_dR[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_nosel_%s",
-	  GEN_ADDBJETS_DELTAR_, ich, NAME_[TTBB_].c_str()));
-    h_gen_nosel_M[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_nosel_%s",
-	  GEN_ADDBJETS_INVARIANT_MASS_, ich, NAME_[TTBB_].c_str()));
-
-    for(int igen=0; igen<ngen; ++igen){
-      h_generators_reco_dR[igen][ich] = (TH1 *)f_generators[igen]->Get(Form("h_%s_Ch%d_S3_ttbb",
-        RECO_ADDJETS_DELTAR_, ich));
-      h_generators_reco_M[igen][ich] = (TH1 *)f_generators[igen]->Get(Form("h_%s_Ch%d_S3_ttbb",
-	RECO_ADDJETS_INVARIANT_MASS_, ich));
-      h_generators_gen_dR[igen][ich] = (TH1 *)f_generators[igen]->Get(Form("h_%s_Ch%d_S3_ttbb",
-	GEN_ADDBJETS_DELTAR_, ich));
-      h_generators_gen_M[igen][ich] = (TH1 *)f_generators[igen]->Get(Form("h_%s_Ch%d_S3_ttbb",
-	GEN_ADDBJETS_INVARIANT_MASS_, ich));
-      h_generators_gen_nosel_dR[igen][ich] = (TH1 *)f_generators[igen]->Get(Form(
-	"h_%s_Ch%d_nosel_ttbb",GEN_ADDBJETS_DELTAR_, ich));
-      h_generators_gen_nosel_M[igen][ich] = (TH1 *)f_generators[igen]->Get(Form(
-	"h_%s_Ch%d_nosel_ttbb", GEN_ADDBJETS_INVARIANT_MASS_, ich));
+    h_resp_dR[ich] = (TH2 *)f_respMatrix->Get(Form("h_ResponseMatrixDeltaR_Ch%d_S3%s", ich, syst.c_str()));
+    h_resp_M[ich] = (TH2 *)f_respMatrix->Get(Form("h_ResponseMatrixInvMass_Ch%d_S3%s", ich, syst.c_str()));
+    if(input.find("Data")){
+      h_data_dR[ich] = (TH1 *)f_input->Get(Form("h_%s_Ch%d_S3",RECO_ADDJETS_DELTAR_, ich));
+      h_data_M[ich] = (TH1 *)f_input->Get(Form("h_%s_Ch%d_S3",RECO_ADDJETS_INVARIANT_MASS_, ich));
+    }   
+    else{
+      h_data_dR[ich] = (TH1 *)f_input->Get(Form("h_%s_Ch%d_S3%s",RECO_ADDJETS_DELTAR_, ich, syst.c_str()));
+      h_data_M[ich] = (TH1 *)f_input->Get(Form("h_%s_Ch%d_S3%s",RECO_ADDJETS_INVARIANT_MASS_, ich, syst.c_str()));
     }
-    for(int isys=0; isys<nsys; ++isys){
-      for(int ivar=0; ivar<nvar; ++ivar){
-        h_sys_reco_dR[isys][ivar][ich] = (TH1 *)f_sys[isys][ivar]->Get(Form(
-	  "h_%s_Ch%d_S3_ttbb", RECO_ADDJETS_DELTAR_, ich));
-	h_sys_reco_M[isys][ivar][ich] = (TH1 *)f_sys[isys][ivar]->Get(Form(
-	  "h_%s_Ch%d_S3_ttbb", RECO_ADDJETS_INVARIANT_MASS_, ich));
-        h_sys_gen_dR[isys][ivar][ich] = (TH1 *)f_sys[isys][ivar]->Get(Form(
-	  "h_%s_Ch%d_S3_ttbb", GEN_ADDBJETS_DELTAR_, ich));
-	h_sys_gen_M[isys][ivar][ich] = (TH1 *)f_sys[isys][ivar]->Get(Form(
-	  "h_%s_Ch%d_S3_ttbb", GEN_ADDBJETS_INVARIANT_MASS_, ich));
-        h_sys_gen_nosel_dR[isys][ivar][ich] = (TH1 *)f_sys[isys][ivar]->Get(Form(
-	  "h_%s_Ch%d_nosel_ttbb", GEN_ADDBJETS_DELTAR_, ich));
-	h_sys_gen_nosel_M[isys][ivar][ich] = (TH1 *)f_sys[isys][ivar]->Get(Form(
-	  "h_%s_Ch%d_nosel_ttbb", GEN_ADDBJETS_INVARIANT_MASS_, ich));
-      }
-    }
+    h_gen_dR[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_S3%s",GEN_ADDBJETS_DELTAR_, ich, syst.c_str()));
+    h_gen_M[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_S3%s",GEN_ADDBJETS_INVARIANT_MASS_, ich, syst.c_str()));
+    h_gen_nosel_dR[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_nosel",GEN_ADDBJETS_DELTAR_, ich ));
+    h_gen_nosel_M[ich] = (TH1 *)f_ttbb->Get(Form("h_%s_Ch%d_nosel",GEN_ADDBJETS_INVARIANT_MASS_, ich ));
   }
+
   for(int ich=0; ich<nChannel; ++ich){
-    TH1 *EventInfo = (TH1 *)f_respMatrix->Get("EventInfo");
-    double scale = LUMINOSITY_*31.06/EventInfo->GetBinContent(2);
+//TH1 *EventInfo = (TH1 *)f_respMatrix->Get("EventInfo");
+//    double scale = LUMINOSITY_*31.06/EventInfo->GetBinContent(2);
+    double scale = 1.0;
     h_resp_dR[ich]->Scale(scale); h_resp_M[ich]->Scale(scale);
   }
 
-  for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
-    for(int ich=0; ich<nChannel; ++ich){
-      TH1 *EventInfo = (TH1 *)f_sample[i]->Get("EventInfo");
+  ssize_t pos;
+  bool ps = false;
+  bool sw = false;
+  if((pos = syst.find("ps")) != std::string::npos) ps = true;
+  if((pos = syst.find("sw")) != std::string::npos) sw = true;
+
+  if( (pos = input.find("Data")) != std::string::npos ){
+    for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
+      TFile *f_sample = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), NAME_[i].c_str()));
+      TH1 *EventInfo = (TH1 *)f_sample->Get("EventInfo");
       double scale = LUMINOSITY_*XSEC_[i]/EventInfo->GetBinContent(2);
-      if(i == TTBB_){
-	h_reco_dR[ich]->Scale(scale); h_reco_M[ich]->Scale(scale);
-	h_gen_nosel_dR[ich]->Scale(scale); h_gen_nosel_M[ich]->Scale(scale);
-	h_gen_dR[ich]->Scale(scale); h_gen_M[ich]->Scale(scale);
-      }
-      else{
-	TH1 *h_bkg_dR = (TH1 *)f_sample[i]->Get(Form(
-	  "h_%s_Ch%d_S3_%s",RECO_ADDJETS_DELTAR_,ich,NAME_[i].c_str()));
-	TH1 *h_bkg_M = (TH1 *)f_sample[i]->Get(Form(
-	  "h_%s_Ch%d_S3_%s",RECO_ADDJETS_INVARIANT_MASS_,ich,NAME_[i].c_str()));
+      if     (i == TTBB_) scale *= SF_ttbb;
+      else if(i == TTBJ_) scale *= SF_ttbj;
+      else if(i == TTCC_) scale *= SF_ttcc;
+      else if(i == TTLF_) scale *= SF_ttLF;
+      else                scale *= 1;
+
+      for(int ich=0; ich<nChannel; ++ich){
+	if(i == TTBB_) continue;
+	TH1 *h_bkg_dR, *h_bkg_M;
+	h_bkg_dR = (TH1 *)f_sample->Get(Form("h_%s_Ch%d_S3",RECO_ADDJETS_DELTAR_,ich));
+        h_bkg_M = (TH1 *)f_sample->Get(Form("h_%s_Ch%d_S3",RECO_ADDJETS_INVARIANT_MASS_,ich));
 	h_bkg_dR->Scale(scale); h_bkg_M->Scale(scale);
-	h_data_dR[ich]->Add(h_bkg_dR,-1);h_data_M[ich]->Add(h_bkg_M,-1);
+	h_data_dR[ich]->Add(h_bkg_dR, -1); h_data_M[ich]->Add(h_bkg_M, -1);
       }
     }
+  }
+  else{
+    TH1 *EventInfo = (TH1 *)f_ttbb->Get("EventInfo");
+    double scale = SF_ttbb*LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
+    for(int ich=0; ich < nChannel; ++ich){
+      h_data_dR[ich]->Scale(scale); h_data_M[ich]->Scale(scale);
+    }
+  }
+
+  TH1 *EventInfo = (TH1 *)f_ttbb->Get("EventInfo");
+  double scale = SF_ttbb*LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
+  EventInfo->~TH1();
+  for(int ich=0; ich < nChannel; ++ich){
+    h_gen_dR[ich]->Scale(scale);
+    h_gen_M[ich]->Scale(scale);
+    h_gen_nosel_dR[ich]->Scale(scale);
+    h_gen_nosel_M[ich]->Scale(scale);
   }
 
   TH1 *h_gen_nosel_dR_lep = (TH1 *)h_gen_nosel_dR[0]->Clone();
@@ -161,356 +123,79 @@ void ttbbDiffXsec(){
   h_gen_nosel_M_lep->Add(h_gen_nosel_M[1]);
   h_gen_nosel_M_lep->SetName("h_GenbJetInvMass_lep_nosel_ttbb");
 
-  TH1 *h_generators_gen_nosel_dR_lep[ngen], *h_generators_gen_nosel_M_lep[ngen];
-  for(int igen=0; igen<ngen; ++igen){
-    TH1 *EventInfo = (TH1 *)f_generators[igen]->Get("EventInfo");
-    double scale = LUMINOSITY_*831.76/EventInfo->GetBinContent(2);
-    for(int ich=0; ich<nChannel; ++ich){
-      h_generators_reco_dR[igen][ich]->Scale(scale);
-      h_generators_reco_M[igen][ich]->Scale(scale);
-      h_generators_gen_dR[igen][ich]->Scale(scale);
-      h_generators_gen_M[igen][ich]->Scale(scale);
-      h_generators_gen_nosel_dR[igen][ich]->Scale(scale);
-      h_generators_gen_nosel_M[igen][ich]->Scale(scale);
-    }
-    h_generators_gen_nosel_dR_lep[igen] = (TH1 *)h_generators_gen_nosel_dR[igen][0]->Clone();
-    h_generators_gen_nosel_dR_lep[igen]->Add(h_generators_gen_nosel_dR[igen][1]);
-    h_generators_gen_nosel_dR_lep[igen]->SetName(Form(
-      "h_%s_lep_nosel_%s_ttbb", GEN_ADDBJETS_DELTAR_, v_generators[igen].c_str()));
-    h_generators_gen_nosel_M_lep[igen] = (TH1 *)h_generators_gen_nosel_M[igen][0]->Clone();
-    h_generators_gen_nosel_M_lep[igen]->Add(h_generators_gen_nosel_dR[igen][1]);
-    h_generators_gen_nosel_M_lep[igen]->SetName(Form(
-      "h_%s_lep_nosel_%s_ttbb",GEN_ADDBJETS_INVARIANT_MASS_, v_generators[igen].c_str()));
-  }
-
-  TH1 *h_sys_gen_nosel_dR_lep[nsys][nvar], *h_sys_gen_nosel_M_lep[nsys][nvar];
-  for(int isys = 0; isys < nsys; ++isys){
-    for(int ivar = 0; ivar < nvar; ++ivar){
-      TH1 *EventInfo = (TH1 *)f_sys[isys][ivar]->Get("EventInfo");
-      double scale = LUMINOSITY_*831.76/EventInfo->GetBinContent(2);
-      for(int ich = 0; ich < nChannel; ++ich){ 
-	h_sys_reco_dR[isys][ivar][ich]->Scale(scale);
-	h_sys_reco_M[isys][ivar][ich]->Scale(scale);
-	h_sys_gen_dR[isys][ivar][ich]->Scale(scale);
-	h_sys_gen_M[isys][ivar][ich]->Scale(scale);
-	h_sys_gen_nosel_dR[isys][ivar][ich]->Scale(scale);
-	h_sys_gen_nosel_M[isys][ivar][ich]->Scale(scale);
-      }
-      h_sys_gen_nosel_dR_lep[isys][ivar] = (TH1 *)h_sys_gen_nosel_dR[isys][ivar][0]->Clone();
-      h_sys_gen_nosel_dR_lep[isys][ivar]->Add(h_sys_gen_nosel_dR[isys][ivar][1]);
-      h_sys_gen_nosel_dR_lep[isys][ivar]->SetName(Form(
-        "h_%s_lep_nosel_%s_%s_ttbb", GEN_ADDBJETS_DELTAR_,
-	v_sysname[isys].c_str(), v_sysvar[ivar].c_str()));
-      h_sys_gen_nosel_M_lep[isys][ivar] = (TH1 *)h_sys_gen_nosel_M[isys][ivar][0]->Clone();
-      h_sys_gen_nosel_M_lep[isys][ivar]->Add(h_sys_gen_nosel_M[isys][ivar][1]);
-      h_sys_gen_nosel_M_lep[isys][ivar]->SetName(Form(
-        "h_%s_lep_nosel_%s_%s_ttbb", GEN_ADDBJETS_INVARIANT_MASS_,
-	v_sysname[isys].c_str(), v_sysvar[ivar].c_str()));
-    }
-  }
+  std::string method = "UUU";
+  //if(useTUnfold){
+  //  if(scanLcurve) method = "TUnfold_curve";
+  //  else method = "TUnfold_mgc";
+  //}
+  //else{
+    //method = "SVDUnfold_dR"+std::to_string(reg_dR)+"_M"+std::to_string(reg_M);
+  //}
+  TFile *f_out = TFile::Open(Form("%s/hist_unfolded_%s%s.root", output_dir.c_str(), input.c_str(), syst.c_str()),"recreate");
+  f_out->cd();
   cout << "Start unfolding..." << endl;
-  std::string method;
   for(int ich=0; ich<nChannel; ++ich){
-    DrawHist(Form("MC_compRecoRespX_Ch%d_dR", ich),
-	h_reco_dR[ich], h_resp_dR[ich]->ProjectionX(), kReco, kRespX, true);
-    DrawHist(Form("MC_compRecoRespX_Ch%d_M", ich),
-	h_reco_M[ich], h_resp_M[ich]->ProjectionX(), kReco, kRespX, false);
-    DrawHist(Form("MC_compGenRespY_Ch%d_dR", ich),
-	h_gen_dR[ich], h_resp_dR[ich]->ProjectionY(), kPowhegPythia, kRespY, true);
-    DrawHist(Form("MC_compGenRespY_Ch%d_M", ich),
-	h_gen_M[ich], h_resp_M[ich]->ProjectionY(), kPowhegPythia, kRespY, false);
-    DrawHist(Form("Data_compDataRespX_Ch%d_dR", ich),
-	h_data_dR[ich], h_resp_dR[ich]->ProjectionX(), kSubDataBkg, kRespX, true);
-    DrawHist(Form("Data_compDataRespX_Ch%d_M", ich),
-	h_data_M[ich], h_resp_M[ich]->ProjectionX(), kSubDataBkg, kRespX, false);
-    DrawHist(Form("Data_compDataMC_Ch%d_dR", ich),
-	h_data_dR[ich], h_reco_dR[ich], kSubDataBkg, kReco, true);
-    DrawHist(Form("Data_compDataMC_Ch%d_M", ich),
-	h_data_M[ich], h_reco_M[ich], kSubDataBkg, kReco, false);
-
-    TH1 *h_unfoldedMC_dR, *h_unfoldedMC_M;
-    TH1 *h_unfoldedData_dR, *h_unfoldedData_M;
-    TH1 *h_unfoldedMC_gens_dR[ngen], *h_unfoldedMC_gens_M[ngen];
-    TH1 *h_unfoldedMC_sys_dR[nsys][nvar], *h_unfoldedMC_sys_M[nsys][nvar];
+    TH1 *h_unfolded_dR, *h_unfolded_M;
     if(!useTUnfold){
       //runSVDUnfold(TH1 *h_in, TH2 *h_response_matrix, int reg);
-      method = "SVD";
-      const bool findBestK = true;
       if(findBestK){
 	cout << "Find Best k" << endl;
-	vector<TH1 *> v_unfoldedMC_dR, v_unfoldedMC_M, v_unfoldedData_dR, v_unfoldedData_M;
+	vector<TH1 *> v_unfolded_dR, v_unfolded_M;
 	for(int i=2; i<10; ++i){
-	  TH1 *h_tmpMC_dR = runSVDUnfold(h_reco_dR[ich], h_resp_dR[ich], i);
+	  TH1 *h_tmp_dR = runSVDUnfold(h_data_dR[ich], h_resp_dR[ich], i);
 	  //h_tmpMC_dR = calculateDiffXsec(h_tmpMC_dR, 0, ich, false);
 	  //h_tmpData_dR = calculateDiffXsec(h_tmpData_dR, 0, ich, true);
-	  v_unfoldedMC_dR.push_back(h_tmpMC_dR);
+	  v_unfolded_dR.push_back(h_tmp_dR);
 	}
 	for(int i=2; i<10; ++i){
-	  TH1 *h_tmpMC_M = runSVDUnfold(h_reco_M[ich], h_resp_M[ich], i);
+	  TH1 *h_tmp_M = runSVDUnfold(h_data_M[ich], h_resp_M[ich], i);
 	  //h_tmpMC_M = calculateDiffXsec(h_tmpMC_M, 1, ich, false);
 	  //h_tmpData_M = calculateDiffXsec(h_tmpData_M, 1, ich, true);
-	  v_unfoldedMC_M.push_back(h_tmpMC_M);
+	  v_unfolded_M.push_back(h_tmp_M);
 	}
         TH1 *h_truth_dR = (TH1 *)h_gen_dR[ich]->Clone();//calculateDiffXsec(h_gen_nosel_dR_lep);
         TH1 *h_truth_M = (TH1 *)h_gen_M[ich]->Clone();//calculateDiffXsec(h_gen_nosel_M_lep);
-	findBestk(v_unfoldedMC_dR, 1, 0, ich, h_truth_dR);
-	findBestk(v_unfoldedMC_M, 1, 1, ich, h_truth_M);
+	findBestk(v_unfolded_dR, 1, 0, ich, h_truth_dR);
+	findBestk(v_unfolded_M, 1, 1, ich, h_truth_M);
       }
-    
-      h_unfoldedMC_dR = runSVDUnfold(h_reco_dR[ich], h_resp_dR[ich], reg_dR);
-      h_unfoldedMC_M = runSVDUnfold(h_reco_M[ich], h_resp_M[ich], reg_M);
-      h_unfoldedData_dR = runSVDUnfold(h_data_dR[ich], h_resp_dR[ich], reg_dR);
-      h_unfoldedData_M = runSVDUnfold(h_data_M[ich], h_resp_M[ich], reg_M);
-      /*
-      for(int igen = 0; igen < ngen; ++igen){
-	h_unfoldedMC_gens_dR[igen] = runSVDUnfold(
-	    h_generators_reco_dR[igen][ich], h_resp_dR[ich], reg_dR);
-	h_unfoldedMC_gens_M[igen] = runSVDUnfold(
-	    h_generators_reco_M[igen][ich], h_resp_M[ich], reg_M);
-      }
-      for(int isys = 0; isys < nsys; ++isys){
-        for(int ivar = 0; ivar < nvar; ++ivar){
-	  h_unfoldedMC_sys_dR[isys][ivar] = runSVDUnfold(
-	      h_sys_reco_dR[isys][ivar][ich], h_resp_dR[ich], reg_dR);
-	  h_unfoldedMC_sys_M[isys][ivar] = runSVDUnfold(
-	      h_sys_reco_M[isys][ivar][ich], h_resp_M[ich], reg_M);
-	}
-      }
-      */
+      h_unfolded_dR = runSVDUnfold(h_data_dR[ich], h_resp_dR[ich], reg_dR);
+      h_unfolded_M = runSVDUnfold(h_data_M[ich], h_resp_M[ich], reg_M);
     }
     else{
-      //scanbyRho
-      //   runTUnfold(TH1 *h_in, TH2 *h_response_matrix, bool fixtau = false, double taumin = 0., double taumax = 0., double fixedtau_);
-      //scanbyLcurve
-      //   runTUnfold(TH1 *h_in, TH2 *h_response_matrix, double taumin = 0., double taumax = 0.);
-      if(!scanbyLcurve){
-	method = "TUnfold_scanRho";
-	h_unfoldedMC_dR = runTUnfold(h_reco_dR[ich], h_resp_dR[ich],
-	    fixtau, taumin, taumax, fixedtau);
-	h_unfoldedMC_M = runTUnfold(h_reco_M[ich], h_resp_M[ich],
-	    fixtau, taumin, taumax, fixedtau);
-      }
-      else{
-	method = "TUnfold_scanLcurve";
-	h_unfoldedMC_dR = runTUnfold(h_reco_dR[ich], h_resp_dR[ich], taumin, taumax);
-	h_unfoldedMC_M = runTUnfold(h_reco_M[ich], h_resp_M[ich], taumin, taumax);
-      }
+      h_unfolded_dR = runTUnfold(h_data_dR[ich], h_resp_dR[ich], scanLcurve, taumin_dR, taumax_dR, fixtau_dR, fixedtau_dR);
+      h_unfolded_M = runTUnfold(h_data_M[ich], h_resp_M[ich], scanLcurve, taumin_M, taumax_M, fixtau_M, fixedtau_M);
     }  
-  
-    //Closure Test & Data
-    DrawHist(Form("Test_%s_unfoldedMC_Ch%d_dR", method.c_str(), ich),
-	h_unfoldedMC_dR, h_gen_dR[ich], kReco, kPowhegPythia,
-	true, useTUnfold, false, reg_dR, true);
-    DrawHist(Form("Test_%s_unfoldedMC_Ch%d_M", method.c_str(), ich),
-	h_unfoldedMC_M, h_gen_M[ich], kReco, kPowhegPythia,
-	false, useTUnfold, false, reg_M, true);
-    DrawHist(Form("%s_unfoldedData_Ch%d_dR", method.c_str(), ich),
-	h_unfoldedData_dR, h_gen_dR[ich], kUnfoldedData, kPowhegPythia,
-	true, useTUnfold, false, reg_dR, true);
-    DrawHist(Form("%s_unfoldedData_Ch%d_M", method.c_str(), ich),
-	h_unfoldedData_M, h_gen_M[ich], kUnfoldedData, kPowhegPythia,
-	false, useTUnfold, false, reg_M, true);
-    
-    TH1 *h_MC_diffXsec_dR = calculateDiffXsec(
-	h_unfoldedMC_dR, 0, ich, false, false);
-    TH1 *h_MC_diffXsec_M = calculateDiffXsec(
-	h_unfoldedMC_M, 1, ich, false, false);
-    TH1 *h_data_diffXsec_dR = calculateDiffXsec(h_unfoldedData_dR, 0, ich, true);
-    TH1 *h_data_diffXsec_M = calculateDiffXsec(h_unfoldedData_M, 1, ich, true);
  
-    TH1 *h_MC_diffXsec_nosel_dR = calculateDiffXsec(
-	h_gen_nosel_dR_lep, 0, 2, false, true);
-    TH1 *h_MC_diffXsec_nosel_M = calculateDiffXsec(
-	h_gen_nosel_M_lep, 1, 2, false, true);
-
-    DrawHist(Form("Test_%s_MC_diffXsec_Ch%d_dR", method.c_str(),ich),
-	h_MC_diffXsec_dR, h_MC_diffXsec_nosel_dR, kUnfoldedMC, kPowhegPythia,
-	true, useTUnfold, true, reg_dR, true);
-    DrawHist(Form("Test_%s_MC_diffXsec_Ch%d_M", method.c_str(),ich),
-	h_MC_diffXsec_M, h_MC_diffXsec_nosel_M, kUnfoldedMC, kPowhegPythia,
-	false, useTUnfold, true, reg_M, true);
-    DrawHist(Form("%s_data_diffXsec_Ch%d_dR", method.c_str(), ich),
-	h_data_diffXsec_dR, h_MC_diffXsec_nosel_dR, kUnfoldedData, kPowhegPythia,
-	true, useTUnfold, true, reg_dR, true);
-    DrawHist(Form("%s_data_diffXsec_Ch%d_M", method.c_str(), ich),
-	h_data_diffXsec_M, h_MC_diffXsec_nosel_M, kUnfoldedData, kPowhegPythia,
-	false, useTUnfold, true, reg_M, true);
-   
-    /*
-    //Systematics
-    TH1 *h_MC_diffXsec_gens_dR[ngen], *h_MC_diffXsec_gens_M[ngen];
-    TH1 *h_MC_diffXsec_gens_nosel_dR[ngen], *h_MC_diffXsec_gens_nosel_M[ngen];
-    for(int igen = 0; igen < ngen; ++igen){
-      int tmp;
-      if(igen == 0) tmp = kPowhegHerwig;
-      else if(igen == 1) tmp = kPowhegPythiaEvtgen;
-      else tmp = kaMCatNLOPythia;
-
-      DrawHist(Form("%s_unfoldedMC_Ch%d_dR_%s", method.c_str(), ich, v_generators[igen].c_str()),
-	  h_unfoldedMC_gens_dR[igen], h_generators_gen_dR[igen][ich],
-	  kUnfoldedMC, tmp,
-	  true, useTUnfold, false, reg_dR, true);
-      DrawHist(Form("%s_unfoldedMC_Ch%d_M_%s", method.c_str(), ich, v_generators[igen].c_str()),
-	  h_unfoldedMC_gens_M[igen], h_generators_gen_M[igen][ich],
-	  kUnfoldedMC, tmp,
-	  false, useTUnfold, false, reg_M, true);
-
-      h_MC_diffXsec_gens_dR[igen] = calculateDiffXsec(
-	  h_unfoldedMC_gens_dR[igen], 0, ich, false, false, false, igen);
-      h_MC_diffXsec_gens_M[igen] = calculateDiffXsec(
-	  h_unfoldedMC_gens_M[igen], 1, ich, false, false, false, igen);
-      h_MC_diffXsec_gens_nosel_dR[igen] = calculateDiffXsec(
-	  h_generators_gen_nosel_dR_lep[igen], 0, 2, false, true, false, igen);
-      h_MC_diffXsec_gens_nosel_M[igen] = calculateDiffXsec(
-	  h_generators_gen_nosel_M_lep[igen], 1, 2, false, true, false, igen);
-
-      DrawHist(Form("%s_MC_diffXsec_Ch%d_dR_%s", method.c_str(), ich, v_generators[igen].c_str()),
-	  h_MC_diffXsec_gens_dR[igen], h_MC_diffXsec_gens_nosel_dR[igen],
-	  kUnfoldedMC, tmp,
-	  true, useTUnfold, true, reg_dR, true);
-      DrawHist(Form("%s_MC_diffXsec_Ch%d_M_%s", method.c_str(), ich, v_generators[igen].c_str()),
-	  h_MC_diffXsec_gens_M[igen], h_MC_diffXsec_gens_nosel_M[igen],
-	  kUnfoldedMC, tmp,
-	  false, useTUnfold, true, reg_M, true);
-    }
-
-    TH1 *h_MC_diffXsec_sys_dR[nsys][nvar], *h_MC_diffXsec_sys_M[nsys][nvar];
-    TH1 *h_MC_diffXsec_sys_nosel_dR[nsys][nvar], *h_MC_diffXsec_sys_nosel_M[nsys][nvar];
-    for(int isys = 0; isys < nsys; ++isys){
-      for(int ivar = 0; ivar < nvar; ++ivar){
-	DrawHist(Form("%s_unfoldedMC_Ch%d_dR_%s_%s", method.c_str(), ich,
-	      v_sysname[isys].c_str(), v_sysvar[ivar].c_str()),
-	    h_unfoldedMC_sys_dR[isys][ivar], h_sys_gen_dR[isys][ivar][ich],
-	    kUnfoldedMC, kPowhegPythia,
-	    true, useTUnfold, false, reg_dR, true);
-	DrawHist(Form("%s_unfoldedMC_Ch%d_M_%s_%s", method.c_str(), ich,
-	      v_sysname[isys].c_str(), v_sysvar[ivar].c_str()),
-	    h_unfoldedMC_sys_M[isys][ivar], h_sys_gen_M[isys][ivar][ich],
-	    kUnfoldedMC, kPowhegPythia,
-	    false, useTUnfold, false, reg_M, true);
-
-	h_MC_diffXsec_sys_dR[isys][ivar] = calculateDiffXsec(
-	    h_unfoldedMC_sys_dR[isys][ivar], 0, ich, false, false, false, -1, isys, ivar);
-	h_MC_diffXsec_sys_M[isys][ivar] = calculateDiffXsec(
-	    h_unfoldedMC_sys_M[isys][ivar], 1, ich, false, false, false, -1, isys, ivar);
-	h_MC_diffXsec_sys_nosel_dR[isys][ivar] = calculateDiffXsec(
-	    h_sys_gen_nosel_dR_lep[isys][ivar], 0, 2, false, true, false, -1, isys, ivar);
-	h_MC_diffXsec_sys_nosel_M[isys][ivar] = calculateDiffXsec(
-	    h_sys_gen_nosel_M_lep[isys][ivar], 1, 2, false, true, false, -1, isys, ivar);
-
-	DrawHist(Form("%s_MC_diffXsec_Ch%d_dR_%s_%s", method.c_str(), ich,
-	      v_sysname[isys].c_str(), v_sysvar[ivar].c_str()),
-	    h_MC_diffXsec_sys_dR[isys][ivar], h_MC_diffXsec_sys_nosel_dR[isys][ivar],
-	    kUnfoldedMC, kPowhegPythia,
-	    true, useTUnfold, true, reg_dR, true);
-	DrawHist(Form("%s_MC_diffXsec_Ch%d_M_%s_%s", method.c_str(), ich,
-	      v_sysname[isys].c_str(), v_sysvar[ivar].c_str()),
-	    h_MC_diffXsec_sys_M[isys][ivar], h_MC_diffXsec_sys_nosel_M[isys][ivar],
-	    kUnfoldedMC, kPowhegPythia,
-	    false, useTUnfold, true, reg_M, true);
-      }
-    }
+    TH1 *h_acc_dR = (TH1 *)f_criteria->Get(Form("h_BinAcceptanceDeltaR_Ch%d", ich));
+    TH1 *h_acc_M  = (TH1 *)f_criteria->Get(Form("h_BinAcceptanceInvMass_Ch%d", ich));
     
-    //Calculate Systematic unceretainties
-    std::vector<std::vector<double>> v_differ_generators_dR, v_differ_generators_M;
-    std::vector<std::vector<double>> v_differ_sys_dR, v_differ_sys_M;
-    for(int igen = 0; igen < ngen; ++igen){
-      v_differ_generators_dR.push_back(
-	  calculateDifference(h_MC_diffXsec_gens_dR[igen], h_MC_diffXsec_gens_nosel_dR[igen]));
-      v_differ_generators_M.push_back(
-	  calculateDifference(h_MC_diffXsec_gens_M[igen], h_MC_diffXsec_gens_nosel_M[igen]));
-    }
-    for(int isys = 0; isys < nsys; ++isys){
-      for(int ivar =0; ivar < nvar; ++ivar){
-        v_differ_sys_dR.push_back(
-	    calculateDifference(h_MC_diffXsec_sys_dR[isys][ivar], h_MC_diffXsec_sys_nosel_dR[isys][ivar]));
-	v_differ_sys_M.push_back(
-	    calculateDifference(h_MC_diffXsec_sys_M[isys][ivar], h_MC_diffXsec_sys_nosel_M[isys][ivar]));
-      }
-    }
-    
-    auto grp_error_dR = CalculateUncertainty(
-	v_differ_sys_dR, v_differ_generators_dR, h_data_diffXsec_dR);
-    auto grp_error_M = CalculateUncertainty(
-	v_differ_sys_M, v_differ_generators_M, h_data_diffXsec_M);
+    //Closure Test & Data
+    TH1 *h_diffXsec_dR = calculateDiffXsec(h_unfolded_dR, h_acc_dR, 0, false);
+    TH1 *h_diffXsec_M = calculateDiffXsec(h_unfolded_M, h_acc_M, 1, false);
+    h_unfolded_dR->SetName(Form("h_unfolded_dR_Ch%d_S3%s", ich, syst.c_str()));
+    h_unfolded_M->SetName(Form("h_unfolded_M_Ch%d_S3%s", ich, syst.c_str()));
+    h_diffXsec_dR->SetName(Form("h_diffXsec_dR_Ch%d%s", ich, syst.c_str()));
+    h_diffXsec_M->SetName(Form("h_diffXsec_M_Ch%d%s", ich, syst.c_str()));
+    h_gen_dR[ich]->Write();
+    h_gen_M[ich]->Write();
+    h_data_dR[ich]->Write();
+    h_data_M[ich]->Write();
+    h_unfolded_dR->Write();
+    h_unfolded_M->Write();
+    h_diffXsec_dR->Write();
+    h_diffXsec_M->Write();
 
-    //Draw all systematic sample to the one canvas and draw diffXsec with error
-    auto grp_data_diffXsec_dR = buildGraphFromHist(h_data_diffXsec_dR);
-    TCanvas *c = new TCanvas("","",800,800);
-    TPaveText *label_cms = tdrCMSlabel();
-    TLegend *leg = new TLegend(0.6,0.7,0.88,0.88);
-    if(!useTUnfold) leg->SetHeader(Form("k = %d", reg_dR), "C");
-    leg->AddEntry(grp_data_diffXsec_dR, "Unfolded data", "lp");
-    h_data_diffXsec_dR->Draw("axis");
-    //grp_data_diffXsec_dR->Draw("p same");
-    for(int isys = 0; isys < nsys; ++isys){
-      for(int ivar = 0; ivar < nvar; ++ivar){
-	leg->AddEntry(h_MC_diffXsec_sys_dR[isys][ivar], 
-	    Form("%s_%s",v_sysname[isys].c_str(),v_sysvar[ivar].c_str()),"l");
-	h_MC_diffXsec_sys_dR[isys][ivar]->SetLineColor(kRed+(isys+1)*(ivar+1));
-	h_MC_diffXsec_sys_dR[isys][ivar]->Draw("hist same");
-      }
-    }
-    grp_data_diffXsec_dR->Draw("p same");
-    label_cms->Draw("same");
-    leg->Draw("same");
-    c->Print(Form("result/%s_Ch%d_unfoldedSysMCtotal_dR.pdf",method.c_str(), ich),"pdf");
-    c->Clear();
-    leg->Clear();
-
-    c->cd();
-    auto grp_data_diffXsec_M = buildGraphFromHist(h_data_diffXsec_M);
-    if(!useTUnfold) leg->SetHeader(Form("k = %d", reg_M), "C");
-    leg->AddEntry(grp_data_diffXsec_M, "Unfolded data", "lp");
-    h_data_diffXsec_M->Draw("axis");
-    //grp_data_diffXsec_dR->Draw("p same");
-    for(int isys = 0; isys < nsys; ++isys){
-      for(int ivar = 0; ivar < nvar; ++ivar){
-	leg->AddEntry(h_MC_diffXsec_sys_M[isys][ivar], 
-	    Form("%s_%s",v_sysname[isys].c_str(),v_sysvar[ivar].c_str()),"l");
-	h_MC_diffXsec_sys_M[isys][ivar]->SetLineColor(kRed+(isys+1)*(ivar+1));
-	h_MC_diffXsec_sys_M[isys][ivar]->Draw("hist same");
-      }
-    }
-    grp_data_diffXsec_M->Draw("p same");
-    label_cms->Draw("same");
-    leg->Draw("same");
-    c->Print(Form("result/%s_Ch%d_unfoldedSysMCtotal_M.pdf",method.c_str(), ich),"pdf");
-    c->Clear();
-    leg->Clear();
-
-    gStyle->SetHatchesSpacing(1);
-    gStyle->SetHatchesLineWidth(1);
-    c->cd();
-    leg->AddEntry(grp_data_diffXsec_dR, "Unfolded data", "lp");
-    leg->AddEntry(h_MC_diffXsec_nosel_dR, "Powheg + Pythia", "F");
-    leg->AddEntry(grp_error_dR, "Uncertainties", "F");
-    grp_error_dR->SetFillStyle(3154);
-    grp_data_diffXsec_dR->SetMarkerSize(2);
-    h_data_diffXsec_dR->Draw("axis");
-    h_MC_diffXsec_nosel_dR->Draw("hist same"); 
-    grp_error_dR->Draw("2 same");
-    grp_data_diffXsec_dR->Draw("px same");
-    leg->Draw("same");
-    label_cms->Draw("same");
-    c->Print(Form("result/%s_unfoldedDataWithErr_Ch%d_dR.pdf", method.c_str(), ich),"pdf");
-    c->Clear();
-    leg->Clear();
-
-    c->cd();
-    leg->AddEntry(grp_data_diffXsec_M, "Unfolded data", "lp");
-    leg->AddEntry(h_MC_diffXsec_nosel_M, "Powheg + Pythia", "F");
-    leg->AddEntry(grp_error_M, "Uncertainties", "F");
-    grp_error_M->SetFillStyle(3154);
-    grp_data_diffXsec_M->SetMarkerSize(2);
-    h_data_diffXsec_M->Draw("axis");
-    h_MC_diffXsec_nosel_M->Draw("hist same"); 
-    grp_error_M->Draw("2 same");
-    grp_data_diffXsec_M->Draw("px same");
-    leg->Draw("same");
-    label_cms->Draw("same");
-    c->Print(Form("result/%s_unfoldedDataWithErr_Ch%d_M.pdf", method.c_str(), ich),"pdf");
-    */
   }
-}
 
+  TH1 *h_MC_diffXsec_nosel_dR = calculateDiffXsec(h_gen_nosel_dR_lep, NULL, 0, true);
+  TH1 *h_MC_diffXsec_nosel_M = calculateDiffXsec(h_gen_nosel_M_lep, NULL, 1, true);
+  h_gen_nosel_dR_lep->Write();
+  h_gen_nosel_M_lep->Write();
+  h_MC_diffXsec_nosel_dR->SetName("h_diffXsec_dR_lep");
+  h_MC_diffXsec_nosel_M->SetName("h_diffXsec_M_lep");
+  h_MC_diffXsec_nosel_dR->Write();
+  h_MC_diffXsec_nosel_M->Write();
+
+  f_out->Write();
+  f_out->Close();
+}

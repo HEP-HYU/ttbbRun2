@@ -1,5 +1,5 @@
 #!/usr/bin/python
-test = False 
+test = True
 do_sys = True
 
 from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
@@ -26,22 +26,8 @@ p = TProof.Open("", "workers=8")
 inputDir = "/data/users/seohyun/ntuple/hep2017/v808/nosplit/"
 
 if test:
+  runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
   #runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
-  #runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb__scale1")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbb.root", "ttbb__tuneup")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbj.root", "ttbj__tuneup")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttcc.root", "ttcc__tuneup")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttLF.root", "ttLF__tuneup")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttother.root", "ttother__tuneup")
-
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbb.root", "ttbb__tunedown")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbj.root", "ttbj__tunedown")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttcc.root", "ttcc__tunedown")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttLF.root", "ttLF__tunedown")
-  runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttother.root", "ttother__tunedown")
-  #tmp = ["__scale0","__scale1","__scale2","__scale3","__scale4","__scale5"]
-  #for index, value in enumerate(tmp):
-  #  runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg"+value)
 else:
   # v808 #
   ### Basic plots ###
@@ -93,18 +79,21 @@ else:
   #   __hdampup, __hdampdown
   #####
   sys_list = [
-      "__puup","__pudown",
-      "__musfup","__musfdown","__mutrgup","__mutrgdown",
-      "__elsfup","__elsfdown","__eltrgup","__eltrgdown",
-      "__lfup","__lfdown","__hfup","__hfdown",
-      "__hfstat1up","__hfstat1down","__hfstat2up","__hfstat2down",
-      "__lfstat1up","__lfstat1down","__lfstat2up","__lfstat2down",
-      "__cferr1up","__cferr1down","__cferr2up","__cferr2down"
+      "__jerup", "__jerdown", "__jecup", "__jecdown",
+      "__puup", "__pudown",
+      "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
+      "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
+      "__lfup", "__lfdown", "__hfup", "__hfdown",
+      "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
+      "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
+      "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down"
   ]
-  sys_list2 = ["__scale0","__scale1","__scale2","__scale3","__scale4","__scale5"]
+  sys_list2 = ["__scale0", "__scale1","__scale2","__scale3","__scale4","__scale5"]
 
   if do_sys:
     for index, value in enumerate(sys_list):
+      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
+
       runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)
@@ -128,6 +117,7 @@ else:
       runAna(inputDir,"ttZ_Madgraph.root","ttZ"+value)
 
     for index, value in enumerate(sys_list2):
+      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
       runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)

@@ -12,21 +12,7 @@
 const int _DELTAR = 0;
 const int _INVMASS = 1;
 
-using namespace std;
-string input_dir = "../output/root/";
-string output_dir = "../output/pdf/";
-
-std::vector<double> calculateDifference(TH1 *h_reco, TH1 *h_gen){
-  std::vector<double> v_diff;
-  for(int ibin = 1; ibin < h_reco->GetNbinsX()+1; ++ibin){
-    double bin;
-    if(h_reco->GetBinContent(ibin) < 0.0) bin = 0.0;
-    else bin = h_reco->GetBinContent(ibin);
-    v_diff.push_back((bin - h_gen->GetBinContent(ibin))/h_gen->GetBinContent(ibin));
-  }
-
-  return v_diff;
-}
+string output_dir = "../output/unfold/";
 
 TGraphErrors *buildGraphFromHist(TH1* h){
   TGraphErrors *grp = new TGraphErrors();
@@ -44,57 +30,18 @@ TGraphErrors *buildGraphFromHist(TH1* h){
   return grp;
 }
 
-TH1 *calculateDiffXsec(TH1 *h_in, int variable, int channel = 2, bool data = false,
-     bool gen = false, int generators=-1, int sys1=-1, int sys2=-1){
-
+TH1 *calculateDiffXsec(TH1 *h_in, TH1 *h_acceptance, int variable, bool gen = false){
   const int dR = 0, invMass = 1;
   string var;
   if(variable == 0) var = "deltaR";
   else if(variable == 1) var = "invMass";
- 
-  string gen_cout;
 
-  TFile *f_criteria;
-  TH1 *h_out = (TH1 *)h_in->Clone();
-  if(generators == 0) {
-    f_criteria = TFile::Open(Form("%s/hist_criteria_TT_PowhegHerwig_ttbb.root",input_dir.c_str()));
-    gen_cout = "Powheg + Herwig";
-  }
-  else if(generators == 2){
-    f_criteria = TFile::Open(Form("%s/hist_criteria_TT_aMCatNLOPythia_ttbb.root",input_dir.c_str()));
-    gen_cout = "aMCatNLO + Pythia";
-  }
-  else if(generators == 1){
-    f_criteria = TFile::Open(Form("%s/hist_criteria_TT_PowhegPythiaEvtgen_ttbb.root",input_dir.c_str()));
-    gen_cout = "Powheg + Pythia + Evtgen";
-  }
-  else{
-    if(sys1 == 0 && sys2 == 0)
-      f_criteria = TFile::Open(Form("%s/hist_criteria_TT_PowhegPythia_SYS_FSRup_ttbb.root",input_dir.c_str()));
-    else if(sys1 == 0 && sys2 == 1)
-      f_criteria = TFile::Open(Form("%s/hist_criteria_TT_PowhegPythia_SYS_FSRdown_ttbb.root",input_dir.c_str()));
-    else if(sys1 == 1 && sys2 == 0)
-      f_criteria = TFile::Open(Form("%s/hist_criteria_TT_PowhegPythia_SYS_ISRup_ttbb.root",input_dir.c_str()));
-    else if(sys1 == 1 && sys2 == 1)
-      f_criteria = TFile::Open(Form("%s/hist_criteria_TT_PowhegPythia_SYS_ISRdown_ttbb.root",input_dir.c_str()));
-    else
-      f_criteria = TFile::Open(Form("%s/hist_criteria_TTLJ_PowhegPythia_ttbb.root",input_dir.c_str()));
-
-    gen_cout = "Powheg + Pythia";
-  }
-  
-  TH1 *h_acceptance;
-  if(variable == dR)
-    h_acceptance = (TH1 *)f_criteria->Get(Form("h_%s_Ch%d_ttbb",BIN_ACCEPTANCE_DELTAR_,channel));
-  else if(variable == invMass)
-    h_acceptance = (TH1 *)f_criteria->Get(Form("h_%s_Ch%d_ttbb",BIN_ACCEPTANCE_INVARIANT_MASS_,channel));
-
+  TH1 *h_out = (TH1 *)h_in->Clone(); 
   double incXsec = 0.0; double incXsec_err = 0.0;
   cout << "--------------------------------------------------------"<< endl;
   if(gen){
-    cout << "##### Particle level MC #####" << endl;
-    cout << "Generator : " << gen_cout <<endl;
-    
+    std::cout << h_in->GetName() << std::endl;
+
     for(int ibin=1; ibin<=h_in->GetNbinsX(); ++ibin){
       const double bin_width = h_in->GetXaxis()->GetBinWidth(ibin);
       const double diffXsec = h_in->GetBinContent(ibin)/(bin_width*LUMINOSITY_*BRANCHINGRATIO_);
@@ -111,9 +58,7 @@ TH1 *calculateDiffXsec(TH1 *h_in, int variable, int channel = 2, bool data = fal
     cout << "--------------------------------------------------------"<< endl;
   }
   else{
-    if(data) cout << "##### Unfolded Data #####" << endl;
-    else cout << "##### Unfolded MC #####" << endl;
-    cout << var << " Channel : " << channel << endl;
+    std::cout << h_in->GetName() << endl;
 
     for(int iBin=1; iBin<=h_in->GetNbinsX(); ++iBin){
       // diffXsec = (1/bin width)*(nevt/accp*lumi)
@@ -329,6 +274,7 @@ void DrawHist(string outname, TH1 *h_in1, TH1 *h_in2,
   switch(opt2){
     case kReco:
       leg->AddEntry(h_in2, v_legname[0].c_str(), draw.c_str());
+      break;
     case kRespX:
       leg->AddEntry(h_in2, v_legname[7].c_str(), draw.c_str());
       break;
