@@ -13,6 +13,7 @@ if not os.path.exists("/home/seohyun/work/ttbb/heptool/output/unfold"):
 inputDir = "/home/seohyun/work/ttbb/heptool/output/post/"
 outputDir = "/home/seohyun/work/ttbb/heptool/test/"
 
+"""
 sys_list = [
 #    "__psup",     "__psdown",      "__swup",      "__swdown",
 #    "__jerup",    "__jerdown",     "__jecup",     "__jecdown",
@@ -23,16 +24,16 @@ sys_list = [
     "__lfstat1up","__lfstat1down", "__lfstat2up", "__lfstat2down",
     "__cferr1up", "__cferr1down",  "__cferr2up",  "__cferr2down"
 ]
-
+"""
 runUnfold(inputDir, outputDir, "hist_ttbb"        )
-runUnfold(inputDir, outputDir, "hist_DataSingleEl")
-runUnfold(inputDir, outputDir, "hist_DataSingleMu")
+#runUnfold(inputDir, outputDir, "hist_DataSingleEl")
+#runUnfold(inputDir, outputDir, "hist_DataSingleMu")
 
-for syst in sys_list:
-    runUnfold(inputDir, outputDir, "hist_DataSingleEl", syst)
-    runUnfold(inputDir, outputDir, "hist_DataSingleMu", syst)
+#for syst in sys_list:
+#    runUnfold(inputDir, outputDir, "hist_DataSingleEl", syst)
+#    runUnfold(inputDir, outputDir, "hist_DataSingleMu", syst)
 
-
+"""
 f_gen = TFile.Open(os.path.join(outputDir, "hist_gen.root"), "recreate")
 f_input = TFile.Open(os.path.join(outputDir, "hist_unfolded_hist_ttbb.root"),"read")
 
@@ -62,7 +63,8 @@ tmp.Write()
 f_gen.Write()
 f_gen.Close()
 f_input.Close()
-os.system('mv '+outputDir+'hist_gen.root /home/seohyun/work/ttbb/heptool/output/unfold/')
-os.system('hadd /home/seohyun/work/ttbb/heptool/output/unfold/hist_unfolded_hist_DataSingleMu.root '+outputDir+'hist_unfolded_hist_DataSingleMu*')
-os.system('hadd /home/seohyun/work/ttbb/heptool/output/unfold/hist_unfolded_hist_DataSingleEl.root '+outputDir+'hist_unfolded_hist_DataSingleEl*')
+"""
+#os.system('mv '+outputDir+'hist_gen.root /home/seohyun/work/ttbb/heptool/output/unfold/')
+#os.system('hadd /home/seohyun/work/ttbb/heptool/output/unfold/hist_unfolded_hist_DataSingleMu.root '+outputDir+'hist_unfolded_hist_DataSingleMu*')
+#os.system('hadd /home/seohyun/work/ttbb/heptool/output/unfold/hist_unfolded_hist_DataSingleEl.root '+outputDir+'hist_unfolded_hist_DataSingleEl*')
 

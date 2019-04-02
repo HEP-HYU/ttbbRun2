@@ -26,7 +26,7 @@ void drawRegHist(const char *h_name_,
   grp_BestLcurveX->Draw("p");
   //grp_BestLcurveX->SetEditable(false);
 
-  c->Print(Form("../output/pdf/TUnfold_regular_LcurveX_%s.pdf",h_name),"pdf");
+  c->Print(Form("../test/TUnfold_regular_LcurveX_%s.pdf",h_name),"pdf");
   c->Clear();
   c->cd();
   if(scanLcurve_){
@@ -40,7 +40,7 @@ void drawRegHist(const char *h_name_,
     grp_Lcurve->Draw();
     grp_BestTau->Draw("p");
     //grp_BestTau->SetEditable(false);
-    c->Print(Form("../output/pdf/TUnfold_regular_Lcurve_%s.pdf", h_name), "pdf");
+    c->Print(Form("../test/TUnfold_regular_Lcurve_%s.pdf", h_name), "pdf");
   }
   else{
     spl_Tauscan->SetTitle(/*Tau scan*/"; log_{10}(#tau); avg #rho");
@@ -51,88 +51,225 @@ void drawRegHist(const char *h_name_,
     spl_Tauscan->Draw("lp");
     grp_BestTau->Draw("p");
     //grp_BestTau->SetEditable(false);
-    c->Print(Form("../output/pdf/TUnfold_regular_minRho_%s.pdf", h_name), "pdf");
+    c->Print(Form("../test/TUnfold_regular_minRho_%s.pdf", h_name), "pdf");
   } 
 }
 
-TH1 *runTUnfold(TH1 *h_in_, TH2 *h_resp_, bool scanLcurve_ = false,
-    double tauMin_ = 0., double tauMax_ = 0.,
-    bool fixTau_ = false, double fixedTau_ = 0.){
+//Output vector
+//[0]: TUnfold output
+//[1]: Error matrix propagated before unfolding
+//[2]: Total error matrix
+std::vector<TH1 *> runTUnfold(TH1 *h_in_, TH2 *h_resp_,
+    std::map<const char *, TH1 *> m_bkgs_, std::map<const char *, double> m_scale_,
+    std::map<const char *, TH2 *> m_sys_,
+    bool scanLcurve_ = false, double tauMin_ = 0., double tauMax_ = 0.,
+    bool fixTau_ = false, double fixedTau_ = 0.)
+{
+  
   auto h_in = h_in_;
   auto h_resp = h_resp_;
   auto scanLcurve = scanLcurve_;
   string regMethod;
   if(scanLcurve_){
-//regMode = TUnfold::kRegModeCurvature;
     regMethod = "Scan L-Curve";
   }
   else{
-//    regMode = TUnfold::kRegModeCurvature;
     regMethod = "Find minimum global correlation coefficient";
   }
 
+  //TUnfoldDensity::TUnfoldDensity(const TH2 *Response_Matrix, EHistMap histmap,
+  //  ERegMode regmode, EConstraint constraint, EDensityMode densityMode,
+  //  const TUnfoldBinning *outputBins, const TUnfoldBinning *inputBins,
+  //  const char *regularizationDistribution = 0,
+  //  const char *regularizationAxisSteering = "*[UOB]")
+  //
+  //Parameters
+  //TUnfold::EHistMap
+  //  kHistMapOutputHoriz: truth level on x-axis of the response matrix
+  //  kHistMapOutputVert:  truth level on y-axis of the response matrix
+  //TUnfold::ERegMode
+  //  kRegModeNone:       no regularization
+  //  kRegModeSize:       Regularise the amplitude of the output distribution
+  //  kRegModeDerivative: regularize the 1st derivative of the output distribution
+  //  kRegModeCurvature:  regularize the 2nd derivative of the output distribution
+  //  kRegModeMixed:      mixed reegularization pattern
+  //TUnfold::EConstraint
+  //  kEConstraintNone: use no extra constraint
+  //  kEConstraintArea: enforce preservation of the area
+  //TUnfoldDensity::EDensityMode
+  //Choice of regularization scale factors to cinstruct the matrix
+  //  kDensityModeNone:            no scale factors, matrix is similar to unity matrix
+  //  kDensityModeBinWidth:        scale factors from multidimensional bin width
+  //  kDensityModeUser:            scale factors from user function in TUnfoldBinning
+  //  kDensityModeBinWidthAndUser: scale factors from multidimensional bin width and user function
+  //
+  //Uncorrelated errors on the input matrix, taken as the errors provided with the histogram.
+  //These are typically statistical errors from finite Monte Carlo samples.
+  //
+  //Covariance matrix:TUnfoldSys::GetEmatrixSysUncorr()
+  //
+  //TUnfoldSys::AddSysError(const TH2 *sysError, const char *name,
+  //  EHistMap histmap, ESysErrMode mode)
+  //
+  //Parameter
+  //TUnfoldSys::ESysErrMode
+  //  kSysErrModeMatrix:   matrix is an alternative to the default matrix,
+  //                       the errors are the difference to the original matrix
+  //  kSysErrModeShift:    matrix gives the absolute shifts
+  //  kSysErrModeRelative: matrix gives the relative shifts
+  //
+  //Correlated shifts of the input matrix. These shifts are taken as 1-sigma effects 
+  //when switching on a given error source. Several such error sources may be defined.
+  //
+  //Covariance matrix: TUnfoldSys::GetEmatrixSysSource()
+  //Vector of shifts:  TUnfoldSys::GetDeltaSysSource()
+  //
+  //TUnfoldSys::SetTauError(Double_t delta_tau)
+  //
+  //A systematic error on the regularization parameter tau
+  //
+  //Covariance matrix: TUnfoldSys::GetEmatrixSysTau()
+  //Vector of shifts:  TUnfoldSys::GetDeltaSysTau()
+  //
+  //TUnfoldSys::SubtractBackground(const TH1 *background, const char *name,
+  //  Double_t scale = 1.0, Double_t scale_error = 0.0)
+  //
+  //Uncorrelated errors on background sources, originating from the errors provided
+  //with the background histograms
+  //
+  //Covariance matrix: TUnfoldSys::GetEmatrixSysBackgroundUncorr()
+  //
+  //Scale errors on background sources
+  //
+  //Covariance matrix: TUnfoldSys::GetEmatrixSysBackgroundScale()
+  //Vector of shifts:  TUnfoldSys::GetDeltaSysBackgroundScale()
+  //
+  //TUnfoldSys::SetInput(const TH1 *input, Double_t scaleBias = 0.0,
+  //  Double_t oneOverZeroError = 0.0, const TH2 *hist_vyy =0, const TH2 *hist_vyy_inv=0)
+  //
+  //Statistical uncertainty of the input
+  //
+  //Covariance matix: TUnfoldSys::GetEmatrixInput()
+  //
+  //GetEMatrixSysUncorr(),GetEmatrixSysSource(),GetEmatrixSysTau(): Propagated after unfolding
+  //GetEmatrixSysBackgroundUncorr(),GetEmatrixSysBackgroundScale(): Propagated before unfolding
+  //All Systematics covariance matrix: GetEmatrixTotal()
+  //GetEmatirxSysBackgroundUncorr()+GetEmatrixSysBackgroundSclae()+GetEmatrixInput(): GetEmatrix()
+  //auto RegMode = TUnfold::kRegModeCurvature; 
+  auto RegMode = TUnfold::kRegModeNone;
   TUnfoldDensity *unfold = new TUnfoldDensity(h_resp, TUnfold::kHistMapOutputVert,
-      TUnfold::kRegModeCurvature, TUnfold::kEConstraintArea, TUnfoldDensity::kDensityModeBinWidth,
-      0, 0, 0, "*[UO]");
+    RegMode, TUnfold::kEConstraintArea, TUnfoldDensity::kDensityModeBinWidth,
+    0, 0, 0, "*[UOB]");//"*[UO]");
 
   unfold->SetInput(h_in);
-
-  cout << "----------------------------------------" << endl;
-  cout << "TUnfold version: " << TUnfold::GetTUnfoldVersion() << endl;
-  cout << "Reg. Parameter optimization: " << regMethod << endl;
-  cout << "----------------------------------------" << endl;
-
-
-  double bestTau = fixedTau_;
-  if(!fixTau_){
-    const int nScan = 50;
-    int iBest = 0;
-    double tauMax = tauMax_, tauMin = tauMin_;
-    double bestRho, bestTauX, bestTauY;
-
-    TSpline *spl_Tauscan, *spl_logTauscanX, *spl_logTauscanY;
-    TGraph *grp_Lcurve;
-    TGraph *grp_BestTau, *grp_BestRho;
-
-    if(scanLcurve){
-      //ScanLcurve (Int_t nPoint, Double_t tauMin, Double_t tauMax, TGraph **lCurve, TSpline **logTauX=0, TSpline **logTauY=0, TSpline **logTauCurvature=0)
-      iBest = unfold->ScanLcurve(nScan, tauMin, tauMax, &grp_Lcurve, &spl_logTauscanX, &spl_logTauscanY); 
-      spl_logTauscanX->GetKnot(iBest, bestTau, bestTauX);
-      spl_logTauscanY->GetKnot(iBest, bestTau, bestTauY);
-      grp_BestTau = new TGraph(1, &bestTauX, &bestTauY);
+  if(!m_bkgs_.empty()){
+    std::cout << "# of bkgs: " << m_bkgs_.size() << std::endl;
+    for(auto m_itr = m_bkgs_.begin(); m_itr != m_bkgs_.end(); ++m_itr){
+      unfold->SubtractBackground(m_itr->second, m_itr->first, m_scale_[m_itr->first]);
     }
-    else{
-      //ScanTau (Int_t nPoint, Double_t tauMin, Double_t tauMax,
-      //	TSpline **scanResult, Int_t mode=kEScanTauRhoAvg, const char *distribution=0, const char *projectionMode=0,
-      //	TGraph **lCurvePlot=0, TSpline **logTauXPlot=0, TSpline **logTauYPlot=0)
-      iBest = unfold->ScanTau(nScan, tauMin, tauMax,
-	&spl_Tauscan, TUnfoldDensity::kEScanTauRhoAvg, 0, "*[UO]",
-	&grp_Lcurve, &spl_logTauscanX, &spl_logTauscanY);
-      spl_logTauscanX->GetKnot(iBest, bestTau, bestTauX);
-      spl_logTauscanY->GetKnot(iBest, bestTau, bestTauY);
-      spl_Tauscan->GetKnot(iBest, bestTau, bestRho);
-      grp_BestTau = new TGraph(1, &bestTau, &bestRho);
+  }
+  if(!m_sys_.empty()){
+    std::cout << "# of sys sources: " << m_bkgs_.size() << std::endl;
+    for(auto m_itr = m_sys_.begin(); m_itr != m_sys_.end(); ++m_itr){
+      unfold->AddSysError(m_itr->second, m_itr->first, TUnfold::kHistMapOutputVert, TUnfoldSys::kSysErrModeMatrix);
     }
-    //drawRegHist(const char *h_name_,
-    //TSpline *spl_logTauscanX_, TGraph *grp_BestLcurveX_, TGraph *grp_BestTau_, TGraph *grp_Lcurve_,
-    //bool scanLcurve_=false, TSpline *spl_Tauscan_=NULL
-    TGraph *grp_BestLcurveX = new TGraph(1, &bestTau, &bestTauX);
-    if(scanLcurve)
-      drawRegHist(h_in->GetName(), spl_logTauscanX, grp_BestLcurveX, grp_BestTau, grp_Lcurve);
-    else
-      drawRegHist(h_in->GetName(), spl_logTauscanX, grp_BestLcurveX, grp_BestTau, grp_Lcurve,
-	  false, spl_Tauscan);
   }
-
-  if(fixTau_)
-    cout << "Fixed Tau : " << bestTau << endl;
-  else{
-    cout << "Best log_{10}(#tau) : " << bestTau << endl;
-  }
-  cout << "----------------------------------------" << endl;
   
+  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "TUnfold version: " << TUnfold::GetTUnfoldVersion() << std::endl;
+  std::cout << "Reg. Parameter optimization: " << regMethod << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
+
+  
+  double bestTau = fixedTau_;
+  if( RegMode == TUnfold::kRegModeNone ) bestTau = 0.0;
+  else{
+    if(!fixTau_){
+      const int nScan = 50;
+      int iBest = 0;
+      double tauMax = tauMax_, tauMin = tauMin_;
+      double bestRho, bestTauX, bestTauY;
+
+      TSpline *spl_Tauscan, *spl_logTauscanX, *spl_logTauscanY;
+      TGraph *grp_Lcurve;
+      TGraph *grp_BestTau, *grp_BestRho;
+
+      if(scanLcurve){
+	//ScanLcurve (Int_t nPoint, Double_t tauMin, Double_t tauMax, TGraph **lCurve, TSpline **logTauX=0, TSpline **logTauY=0, TSpline **logTauCurvature=0)
+	iBest = unfold->ScanLcurve(nScan, tauMin, tauMax, &grp_Lcurve, &spl_logTauscanX, &spl_logTauscanY); 
+	spl_logTauscanX->GetKnot(iBest, bestTau, bestTauX);
+	spl_logTauscanY->GetKnot(iBest, bestTau, bestTauY);
+	grp_BestTau = new TGraph(1, &bestTauX, &bestTauY);
+      }
+      else{
+	//ScanTau (Int_t nPoint, Double_t tauMin, Double_t tauMax,
+	//	TSpline **scanResult, Int_t mode=kEScanTauRhoAvg, const char *distribution=0, const char *projectionMode=0,
+	//	TGraph **lCurvePlot=0, TSpline **logTauXPlot=0, TSpline **logTauYPlot=0)
+	iBest = unfold->ScanTau(nScan, tauMin, tauMax,
+	  &spl_Tauscan, TUnfoldDensity::kEScanTauRhoAvg, 0, "*[UO]",
+	  &grp_Lcurve, &spl_logTauscanX, &spl_logTauscanY);
+	spl_logTauscanX->GetKnot(iBest, bestTau, bestTauX);
+	spl_logTauscanY->GetKnot(iBest, bestTau, bestTauY);
+	spl_Tauscan->GetKnot(iBest, bestTau, bestRho);
+	grp_BestTau = new TGraph(1, &bestTau, &bestRho);
+      }
+      //drawRegHist(const char *h_name_,
+      //TSpline *spl_logTauscanX_, TGraph *grp_BestLcurveX_, TGraph *grp_BestTau_, TGraph *grp_Lcurve_,
+      //bool scanLcurve_=false, TSpline *spl_Tauscan_=NULL
+      TGraph *grp_BestLcurveX = new TGraph(1, &bestTau, &bestTauX);
+      if(scanLcurve)
+	drawRegHist(h_in->GetName(), spl_logTauscanX, grp_BestLcurveX, grp_BestTau, grp_Lcurve);
+      else
+	drawRegHist(h_in->GetName(), spl_logTauscanX, grp_BestLcurveX, grp_BestTau, grp_Lcurve,
+	    false, spl_Tauscan);
+    }
+  }
+  if(fixTau_)
+    std::cout << "Fixed Tau : " << bestTau << std::endl;
+  else{
+    std::cout << "Best log_{10}(#tau) : " << bestTau << std::endl;
+  }
+  
+  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "Get Unfolding output distribution" << std::endl;
   const double unfoldResult = unfold->DoUnfold(bestTau, h_in);
   auto h_output = unfold->GetOutput(Form("Unfolded_%s",h_in->GetName()),"",0,"*[UO]",true);
+  std::cout << "Get Unfolding Error matrix" << std::endl;
+  //TH2 *h2_ematrix;
+  //unfold->GetEmatrix(h2_ematrix);
+  //h2_ematrix->SetName(Form("Ematrix_%s",h_in->GetName()));
+  //Output vector
+  //[0]: TUnfold output
+  //[1]: TUnfold input
+  //[2]: Covariance matrix including all contributions
+  //[3]: Covariance contribution from the input uncertainties
+  //[4]: Covariance contribution from uncorrelated (statistical) uncertainties of the response matrix
+  //[5]~[22]: Covariance contribution from the uncorrelated background uncertainties
+  //[23]~[40]: 1-sigma shift corresponding to a background scale uncertainty
+  //[41]~[72]: Correlated systematic 1-sigma shift of the input matrix
+  //[73]: 1-sigma shift corresponding to the uncertainty on tau
+  //[74]~[105]: Correlated shifts of the input matrix. These shifts are taken as 1-sigma effects when switching on a given error source.
+  vector<TH1 *> v_output;
+  v_output.push_back(h_output);
+  v_output.push_back(unfold->GetEmatrixTotal(Form("%s_EmatrixTot", h_in->GetName())));
+  v_output.push_back(unfold->GetEmatrixInput(Form("%s_EmatrixInput",h_in->GetName())));
+  v_output.push_back(unfold->GetEmatrixSysUncorr(Form("%s_EmatrixSysUncorr", h_in->GetName())));
+  for(auto m_itr=m_bkgs_.begin(); m_itr != m_bkgs_.end(); ++m_itr){
+    v_output.push_back(unfold->GetEmatrixSysBackgroundUncorr(m_itr->first,
+      Form("%s_EmatrixSysBkgUncorr_%s", h_in->GetName(), m_itr->first)));
+    v_output.push_back(unfold->GetDeltaSysBackgroundScale(m_itr->first,
+      Form("%s_DeltaBkgScale_%s", h_in->GetName(),  m_itr->first)));
+  }
+  for(auto m_itr=m_sys_.begin(); m_itr != m_sys_.end(); ++m_itr){
+    v_output.push_back(unfold->GetDeltaSysSource(m_itr->first,
+      Form("%s_DeltaSysSource%s", h_in->GetName(), m_itr->first)));
+  }
+  v_output.push_back(unfold->GetDeltaSysTau(Form("%s_DeltaSysTau", h_in->GetName())));
+  //for(auto m_itr=m_sys_.begin(); m_itr != m_sys_.end(); ++m_sys){
+  //  v_output.push_back(unfold->GetEmatrixSysSource(
+  //}
+  //v_output.push_back(h2_ematrix);
 
-  return h_output;
+  std::cout << "Return vector" << endl;
+  return v_output;
 }
