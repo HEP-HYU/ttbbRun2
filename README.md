@@ -1,4 +1,11 @@
-Part1. making response matrix and unfolding input
+1. Searching additional two b jets using DNN
+First, you need to make pandas arrays to train and evaluate. You can do it using runAna.py
+
+In runAna.py, there are several options.
+~~~
+array = True or False # If you turn on this option and run, runAna.py make array
+array_train = 
+~~~
 
 To run deepAna/keras/ana.py, you must convert root file to hd5 file.
 
@@ -8,7 +15,7 @@ makeArray.py has some options:
 1. array: making hdf file for all samples.
 2. train: making DNN training sample.
 
-You can train DNN model file to run deepAna/keras/model.py
+You can make DNN model file to run deepAna/keras/model.py
 
 To start analysis, run deepAna/keras/runAna.py
 
