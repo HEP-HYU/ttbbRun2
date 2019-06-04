@@ -16,7 +16,7 @@ def transversemass(vec1, met):
 
     return (tmp1+tmp2).M()
 
-def makeCombi(inputDir, inputFile, outputDir, sys=''):
+def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
     print(str(inputDir+"/"+inputFile)+" start")
     chain = TChain("ttbbLepJets/tree")
     chain.Add(inputDir+"/"+inputFile)
@@ -81,18 +81,40 @@ def makeCombi(inputDir, inputFile, outputDir, sys=''):
 
         njets = 0
         nbjets = 0
+
         for iJet in range(len(chain.jet_pT)):
             jet = TLorentzVector()
             jet.SetPtEtaPhiE(chain.jet_pT[iJet],chain.jet_eta[iJet],chain.jet_phi[iJet],chain.jet_E[iJet])
 
-            if not data : jet *= chain.jet_JER_Nom[iJet]
+            if not data :
+                if   'jecup'   in sys:
+                    jet *= chain.jet_JER_Nom[iJet] * chain.jet_JES_Up[iJet]
+                elif 'jecdown' in sys:
+                    jet *= chain.jet_JER_Nom[iJet] * chain.jet_JES_Down[iJet]
+                elif 'jerup'   in sys:
+                    jet *= chain.jet_JER_Up[iJet]
+                elif 'jerdown' in sys:
+                    jet *= chain.jet_JER_Down[iJet]
+                else:
+                    jet *= chain.jet_JER_Nom[iJet]
             if jet.Pt() < jet_pt or abs(jet.Eta()) > jet_eta:
                 continue
             njets += 1
             if chain.jet_CSV[iJet] > jet_CSV_tight:
                 nbjets += 1
 
-        if njets < 6 or nbjets < 2: continue
+        if njets < 6 or nbjets < 3: continue
+
+        addbjet1_matched = TLorentzVector()
+        addbjet2_matched = TLorentzVector()
+        if makeTrainingInput:
+            for i in range(len(chain.jet_pT)):
+                tmp = TLorentzVector()
+                tmp.SetPtEtaPhiE(chain.jet_pT[i],chain.jet_eta[i],chain.jet_phi[i],chain.jet_E[i])
+                tmp *= chain.jet_JER_Nom[i]
+                #if tmp.Pt() > jet_pt and abs(tmp.Et()) < jet_eta : 
+                if addbjet1.DeltaR( tmp ) < 0.4 :  addbjet1_matched = tmp;
+                if addbjet2.DeltaR( tmp ) < 0.4 :  addbjet2_matched = tmp;
 
         for j in range(len(chain.jet_pT)-1):
             for k in range(j+1, len(chain.jet_pT)):
@@ -118,27 +140,47 @@ def makeCombi(inputDir, inputFile, outputDir, sys=''):
                             b1 *= chain.jet_JER_Nom[j]
                             b2 *= chain.jet_JER_Nom[k]
 
-                    jetCombi.append([
-                        #Tree info
-                        i, chain.channel, njets, nbjets,
-                        chain.genweight, PUWeight,
-                        lepton_SF, jet_SF_CSV_30, scaleweight, pdfweight,
-                        lep.Pt(), lep.Eta(), lep.Phi(), lep.E(),
-                        addbjet1.Pt(), addbjet1.Eta(), addbjet1.Phi(), addbjet1.E(),
-                        addbjet2.Pt(), addbjet2.Eta(), addbjet2.Phi(), addbjet2.E(),
-                        j,k,
-                        #Deep learning variables
-                        b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
-                        (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
-                        (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
-                        (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
-                        (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
-                        (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M(),
-                        chain.jet_CSV[j],chain.jet_CSV[k],
-                        b1.Pt(),b2.Pt(),b1.Eta(),b2.Eta(),b1.Phi(),b2.Phi(),b1.E(),b2.E()
-                        ])
+                    if makeTrainingInput:
+                        if (addbjet1_matched.DeltaR(b1) == 0 and addbjet2_matched.DeltaR(b2) == 0) or (addbjet2_matched.DeltaR(b1) == 0  and addbjet1_matched.DeltaR(b2) == 0):
+                            signal = 1
+                        else:
+                            signal = 0
 
-    combi = pd.DataFrame(jetCombi, columns=
+                        jetCombi.append([
+                            signal,i,b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
+                            (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
+                            (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
+                            (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
+                            (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
+                            (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M(),
+                            chain.jet_CSV[j],chain.jet_CSV[k],
+                            b1.Pt(),b2.Pt(),b1.Eta(),b2.Eta(),b1.Phi(),b2.Phi(),b1.E(),b2.E()
+                        ])
+                    else:
+                        jetCombi.append([
+                            #Tree info
+                            i, chain.channel, njets, nbjets,
+                            chain.genweight, PUWeight,
+                            lepton_SF, jet_SF_CSV_30, scaleweight, pdfweight,
+                            lep.Pt(), lep.Eta(), lep.Phi(), lep.E(),
+                            addbjet1.Pt(), addbjet1.Eta(), addbjet1.Phi(), addbjet1.E(),
+                            addbjet2.Pt(), addbjet2.Eta(), addbjet2.Phi(), addbjet2.E(),
+                            j,k,
+                            #Deep learning variables
+                            b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
+                            (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
+                            (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
+                            (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
+                            (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
+                            (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M(),
+                            chain.jet_CSV[j],chain.jet_CSV[k],
+                            b1.Pt(),b2.Pt(),b1.Eta(),b2.Eta(),b1.Phi(),b2.Phi(),b1.E(),b2.E()
+                            ])
+
+    if makeTrainingInput:
+        combi = pd.DataFrame(jetCombi, columns=['signal', 'event']+ut.getVarlist())
+    else:
+        combi = pd.DataFrame(jetCombi, columns=
             ['event','channel','njets','nbjets',
             'genWeight','PUWeight',
             'lepton_SF','jet_SF_CSV_30', 'scaleweight', 'pdfweight',
@@ -149,112 +191,12 @@ def makeCombi(inputDir, inputFile, outputDir, sys=''):
             ] + ut.getVarlist())
 
     tmp = inputFile[:-5]
-    io.save(outputDir+"/array_"+tmp+".h5",combi)
+    if makeTrainingInput:
+        io.save(outputDir+"/array_train_ttbb.h5",combi)
+    else:
+        io.save(outputDir+"/array_"+tmp+".h5",combi)
     print(str(inputDir+"/"+inputFile)+" end")
     #combi.style.format('table')
     #combi.to_csv(outputDir+"/array_"+process+".csv")
     #combi.to_hdf(outputDir+"/array_"+process+".h5",combi)
     #combi.to_pickle(outputDir+"/array_"+process+".pickle")
-
-def makeTrainingInput(outputDir) :
-    chain = TChain("ttbbLepJets/tree")
-    chain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/TTLJ_PowhegPythia_ttbbFilter_ttbb.root")
-
-    muon_ch = 0
-    muon_pt = 30.0
-    muon_eta = 2.1
-    electron_ch = 1
-    electron_pt = 35.0
-    electron_eta = 2.1
-    jet_pt = 30.0
-    jet_eta = 2.4
-    jet_CSV_tight = 0.9535
-    jet_CSV_medium = 0.8484
-
-    jetCombi = []
-    for idx in xrange(chain.GetEntries()) :
-        ut.printProgress(idx, chain.GetEntries(), 'Progress:','Complete',1,25)
-        chain.GetEntry(idx)
-
-        MET_px = chain.MET*math.cos(chain.MET_phi)
-        MET_py = chain.MET*math.sin(chain.MET_phi)
-        nu = TLorentzVector(MET_px, MET_py, 0, chain.MET)
-
-        lep = TLorentzVector()
-        lep.SetPtEtaPhiE(chain.lepton_pT, chain.lepton_eta, chain.lepton_phi, chain.lepton_E)
-
-        passmuon = False
-        passelectron = False
-        passmuon = chain.channel == muon_ch and lep.Pt() > muon_pt and abs(lep.Eta()) < muon_eta
-        passelectron = chain.channel == electron_ch and lep.Pt() > electron_pt and abs(lep.Eta()) < electron_eta
-
-        if passmuon == False and passelectron == False : continue
-
-        njets = 0
-        nbjets = 0
-
-        for iJet in range(len(chain.jet_pT)):
-            jet = TLorentzVector()
-            jet.SetPtEtaPhiE(chain.jet_pT[iJet],chain.jet_eta[iJet],chain.jet_phi[iJet],chain.jet_E[iJet])
-            jet *= chain.jet_JER_Nom[iJet]
-            if jet.Pt() < jet_pt or abs(jet.Eta()) > jet_eta : continue
-            njets += 1
-            if chain.jet_CSV[iJet] > jet_CSV_tight : nbjets += 1
-
-        if njets < 6: continue
-        if nbjets < 2: continue
-
-        addbjet1 = TLorentzVector()
-        addbjet2 = TLorentzVector()
-        addbjet1.SetPtEtaPhiE(chain.addbjet1_pt,chain.addbjet1_eta,chain.addbjet1_phi,chain.addbjet1_e)
-        addbjet2.SetPtEtaPhiE(chain.addbjet2_pt,chain.addbjet2_eta,chain.addbjet2_phi,chain.addbjet2_e)
-        addbjet1_matched = TLorentzVector(0,0,0,0)
-        addbjet2_matched = TLorentzVector(0,0,0,0)
-
-        for i in range(len(chain.jet_pT)):
-            tmp = TLorentzVector()
-            tmp.SetPtEtaPhiE(chain.jet_pT[i],chain.jet_eta[i],chain.jet_phi[i],chain.jet_E[i])
-            tmp *= chain.jet_JER_Nom[i]
-            #if tmp.Pt() > jet_pt and abs(tmp.Et()) < jet_eta : 
-            if addbjet1.DeltaR( tmp ) < 0.4 :  addbjet1_matched = tmp;
-            if addbjet2.DeltaR( tmp ) < 0.4 :  addbjet2_matched = tmp;
-
-        for j in range(len(chain.jet_pT)-1):
-            for k in range(j+1, len(chain.jet_pT)):
-                if chain.jet_CSV[j] > jet_CSV_tight and chain.jet_CSV[k] > jet_CSV_tight:
-                    b1 = TLorentzVector()
-                    b2 = TLorentzVector()
-                    b1.SetPtEtaPhiE(chain.jet_pT[j], chain.jet_eta[j], chain.jet_phi[j], chain.jet_E[j])
-                    b2.SetPtEtaPhiE(chain.jet_pT[k], chain.jet_eta[k], chain.jet_phi[k], chain.jet_E[k])
-                    b1 *= chain.jet_JER_Nom[j]
-                    b2 *= chain.jet_JER_Nom[k]
-
-                    if (addbjet1_matched.DeltaR(b1) == 0 and addbjet2_matched.DeltaR(b2) == 0) or (addbjet2_matched.DeltaR(b1) == 0  and addbjet1_matched.DeltaR(b2) == 0) : signal = 1
-                    else : signal = 0
-                    jetCombi.append([
-                        signal,idx,b1.DeltaR(b2),abs(b1.Eta()-b2.Eta()),b1.DeltaPhi(b2),
-                        (b1+b2+nu).Pt(),(b1+b2+nu).Eta(),(b1+b2+nu).Phi(),(b1+b2+nu).M(),
-                        (b1+b2+lep).Pt(),(b1+b2+lep).Eta(),(b1+b2+lep).Phi(),(b1+b2+lep).M(),
-                        (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
-                        (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
-                        (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M(),
-                        chain.jet_CSV[j],chain.jet_CSV[k],
-                        b1.Pt(),b2.Pt(),b1.Eta(),b2.Eta(),b1.Phi(),b2.Phi(),b1.E(),b2.E()
-                    ])
-#                    jetCombi.append([
-#                            signal, idx,
-#                            b1.DeltaR(b2), abs(b1.Eta()-b2.Eta()), b1.DeltaPhi(b2),
-#                            (b1+b2).DeltaR(nu), (b1+b2).DeltaPhi(nu), (b1+b2+nu).Pt(), transversemass((b1+b2), nu),
-#                            (b1+b2).DeltaR(lep), abs((b1+b2).Eta()-lep.Eta()),(b1+b2).DeltaPhi(lep), (b1+b2+lep).Pt(), (b1+b2+lep).M(),
-#                            b1.DeltaR(lep), abs(b1.Eta()-lep.Eta()), b1.DeltaPhi(lep), (b1+lep).Pt(), (b1+lep).M(),
-#                            b2.DeltaR(lep), abs(b2.Eta()-lep.Eta()), b2.DeltaPhi(lep), (b2+lep).Pt(), (b2+lep).M(),
-#                            b1.DeltaR(nu), b1.DeltaPhi(nu), (b1+nu).Pt(), transversemass(b1, nu),
-#                            b2.DeltaR(nu), b2.DeltaPhi(nu), (b2+nu).Pt(), transversemass(b2, nu),
-#                            (b1+b2).Pt(), (b1+b2).Eta(), (b1+b2).M(),
-#                            b1.Pt(), b1.E(), b2.Pt(), b2.E()
-#                            ])
-
-    print "\n"
-
-    combi = pd.DataFrame(jetCombi, columns=['signal', 'event']+ut.getVarlist())
-    io.save(outputDir+"array_train_ttbb.h5",combi)

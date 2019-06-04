@@ -29,10 +29,10 @@ from keras.callbacks import Callback, ModelCheckpoint
 import utils as ut
 
 def ana(inputDir, process, outputDir, sys='', flag1=False):
-    print("Process: "+process+sys+"\n")
     if '__' in process:
         process = process.split('__')[0]
-
+    print("Process: "+process+"\n")
+    print("Systematics: "+sys+"\n")
     ntuple = process
     if   'ttbb'          in process: process = 'ttbb'
     elif 'ttbj'          in process: process = 'ttbj'
@@ -54,7 +54,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     elif 'WZ'            in process: process = 'wz'
     elif 'ZZ'            in process: process = 'zz'
 
-    if 'Filter' in inputDir: process = 'ttbbFilter_'+process
+    if 'Filter' in inputDir: process = 'ttbbFilter'+process
 
     print('Save:'+process+sys+'\n')
 
@@ -104,7 +104,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     for item in os.listdir(inputDir):
         #print "Load file : "+str(inputDir)+'/'+str(item)
         df = pd.read_hdf(inputDir+'/'+item)
-        last = int(df.tail(1)['event'])+1
+        last = 0
+        if df.size != 0: last = int(df.tail(1)['event'])+1
         df['event'] = df['event'] + max_nevt_num
         str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)+' and njets >= 6 and nbjets >= 3'
         df = df.query(str_query)
@@ -136,15 +137,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     if closureTest : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_closure.root', 'recreate')
     elif sys == '' : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+'.root', 'recreate')
     else           : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+sys+'.root', 'recreate')
-
-    RECO_NUMBER_OF_JETS_ = "nJets"
-    RECO_NUMBER_OF_BJETS_ = "nBjets"
-    RECO_ADDJETS_DELTAR_ = "RecoJetDeltaR"
-    RECO_ADDJETS_INVARIANT_MASS_ = "RecoJetInvMass"
-    GEN_ADDBJETS_DELTAR_ = "GenbJetDeltaR"
-    GEN_ADDBJETS_INVARIANT_MASS_ = "GenbJetInvMass"
-    RESPONSE_MATRIX_DELTAR_ = "ResponseMatrixDeltaR"
-    RESPONSE_MATRIX_INVARIANT_MASS_ = "ResponseMatrixInvMass"
 
     nbins_reco_addjets_dr = 12 #4
     reco_addjets_dr_min = 0.4
@@ -198,7 +190,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
             h_hist[iChannel][i].Sumw2()
 
         h_gen_addbjets_deltaR_nosel[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_nosel" + sys,
+                "h_gentop_GenAddbJetDeltaR_Ch" + str(iChannel) + "_nosel" + sys,
                 "", nbins_gen_addjets_dr,
                 #gen_addjets_dr_min, gen_addjets_dr_max
                 array('d', gen_addjets_dr_width)
@@ -208,7 +200,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_gen_addbjets_deltaR_nosel[iChannel].Sumw2()
 
         h_gen_addbjets_invMass_nosel[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_nosel" + sys,
+                "h_gentop_GenAddbJetInvMass_Ch" + str(iChannel) + "_nosel" + sys,
                 "", nbins_gen_addjets_mass,
                 #gen_addjets_m_min, gen_addjets_m_max
                 array('d', gen_addjets_mass_width)
@@ -218,7 +210,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_gen_addbjets_invMass_nosel[iChannel].Sumw2()
 
         h_njets[iChannel] = ROOT.TH1D(
-                "keras_h_" + RECO_NUMBER_OF_JETS_ + "_Ch" + str(iChannel) + "_S3" + sys,
+                "h_keras_nJets_Ch" + str(iChannel) + "_S3" + sys,
                 "",10, 0, 10
                 )
         h_njets[iChannel].GetXaxis().SetTitle("Jet multiplicity")
@@ -226,7 +218,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_njets[iChannel].Sumw2()
 
         h_nbjets[iChannel] = ROOT.TH1D(
-                "keras_h_" + RECO_NUMBER_OF_BJETS_ + "_Ch" + str(iChannel) + "_S3" + sys,
+                "h_keras_nbJets_Ch" + str(iChannel) + "_S3" + sys,
                 "",10, 0, 10
                 )
         h_nbjets[iChannel].GetXaxis().SetTitle("bJet multiplicity")
@@ -234,7 +226,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_nbjets[iChannel].Sumw2()
 
         h_reco_addjets_deltaR[iChannel] = ROOT.TH1D(
-                "h_" + RECO_ADDJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3" + sys,
+                "h_keras_RecoAddbJetDeltaR_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_dr,
                 reco_addjets_dr_min, reco_addjets_dr_max
                 #array('d', reco_addjets_dr_width)
@@ -244,7 +236,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_reco_addjets_deltaR[iChannel].Sumw2()
 
         h_reco_addjets_invMass[iChannel] = ROOT.TH1D(
-                "h_" + RECO_ADDJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3" + sys,
+                "h_keras_RecoAddbJetInvMass_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_mass,
                 reco_addjets_m_min, reco_addjets_m_max
                 #array('d', reco_addjets_mass_width)
@@ -254,7 +246,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_reco_addjets_invMass[iChannel].Sumw2()
 
         h_gen_addbjets_deltaR[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_DELTAR_ + "_Ch" + str(iChannel) + "_S3" + sys,
+                "h_gentop_GenAddbJetDeltaR_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_gen_addjets_dr,
                 #gen_addjets_dr_min, gen_addjets_dr_max
                 array('d', gen_addjets_dr_width)
@@ -264,7 +256,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_gen_addbjets_deltaR[iChannel].Sumw2()
 
         h_gen_addbjets_invMass[iChannel] = ROOT.TH1D(
-                "h_" + GEN_ADDBJETS_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3" + sys,
+                "h_gentop_GenAddbJetInvMass_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_gen_addjets_mass,
                 #gen_addjets_m_min, gen_addjets_m_max
                 array('d', gen_addjets_mass_width)
@@ -274,7 +266,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_gen_addbjets_invMass[iChannel].Sumw2()
 
         h_respMatrix_deltaR[iChannel] = ROOT.TH2D(
-                "h_" + RESPONSE_MATRIX_DELTAR_ + "_Ch" + str(iChannel) + "_S3" + sys,"",
+                "h_keras_ResponseMatrixDeltaR_Ch" + str(iChannel) + "_S3" + sys,"",
                 nbins_reco_addjets_dr,
                 reco_addjets_dr_min, reco_addjets_dr_max,
                 #array('d', reco_addjets_dr_width),
@@ -287,7 +279,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_respMatrix_deltaR[iChannel].Sumw2()
 
         h_respMatrix_invMass[iChannel] = ROOT.TH2D(
-                "h_" + RESPONSE_MATRIX_INVARIANT_MASS_ + "_Ch" + str(iChannel) + "_S3" + sys,
+                "h_keras_ResponseMatrixInvMass_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_mass,
                 reco_addjets_m_min, reco_addjets_m_max,
                 #array('d', reco_addjets_mass_width),
@@ -304,7 +296,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+ntuple+".root")
 
         print "GENTREE RUN"
-        for i in range(100):#xrange(genchain.GetEntries()):
+        for i in xrange(genchain.GetEntries()):
             #if closureTest:
             #    if i%2 == 0 : continue
             ut.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
@@ -325,7 +317,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
                 h_gen_addbjets_invMass_nosel[electron_ch].Fill(genM,genchain.genweight)
             else: print("Error")
 
-    f_pred = open('pred.txt','w')
+    #f_pred = open('pred.txt','w')
     print "\nLoad modelfile : "+str(modelfile)
     model = load_model(configDir+weightDir+ver+'/'+modelfile)
     model.summary()
@@ -341,17 +333,17 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     pred = pd.DataFrame(pred, columns=['background','signal'])
     #print(pred)
     #pred = pd.DataFrame(pred, columns=['signal'])
-    f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
+    #f_pred.write('Pred\n'+str(pred)+'\n'+str(type(pred)))
     #f_pred.write('SelEvent\n'+str(selEvent))
     selEvent = pd.concat([selEvent,pred], axis=1)
-    f_pred.write('SelEvent+Pred\n'+str(selEvent))
+    #f_pred.write('SelEvent+Pred\n'+str(selEvent))
     idx = selEvent.groupby(['event'])['signal'].transform(max) == selEvent['signal']
     #f_pred.write('\n'+str(idx)+'\n'+str(selEvent[idx])+'\n')
     selEvent = selEvent[idx]
     selEvent.reset_index(drop=True, inplace=True)
 
     #selEvent.groupby('event').max('signal').reset_index(drop=True, inplace=True)
-    f_pred.write("Groupby\n"+process+"\n"+str(selEvent))
+    #f_pred.write("Groupby\n"+process+"\n"+str(selEvent))
     #groups = selEvent.groupby('event')
 
     print "\n Fill Hist"
@@ -473,6 +465,10 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
             else                     :
                 eventweight *= event['jet_SF_CSV_30'][0]
 
+            if 'TT' in inputDir or 'tt' in inputDir:
+                if   'pdfup'   in sys: eventweight *= event['pdfweight'][101]
+                elif 'pdfdown' in sys: eventweight *= event['pdfweight'][100]
+
         #f_pred.write('Pred : '+str(maxval)+'\n')
         #f_pred.write('Score\n'+str(event[1])+'\n')
         #f_pred.write('jet 1 : '+str(reco_addbjet1.Pt())+' jet 2 : '+str(reco_addbjet2.Pt())+'\n')
@@ -544,7 +540,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         for index, value in enumerate(varlist):
             tmp = ut.getHistRange(value)
             h_hist[iChannel][index].AddBinContent(tmp[0], h_hist[iChannel][index].GetBinContent(tmp[0]+1))
-            h_hist[iChannel][index].AddBinContent(1, h_hist[iChannel][index].GetBinContent(0))
             h_hist[iChannel][index].ClearUnderflowAndOverflow()
 
         for iXaxis in range(1, nbins_reco_addjets_dr+1) :
@@ -577,10 +572,18 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_respMatrix_deltaR[iChannel].ClearUnderflowAndOverflow()
         h_respMatrix_invMass[iChannel].ClearUnderflowAndOverflow()
 
+
+    ntuple_path = '/data/users/seohyun/ntuple/hep2017/v808/nosplit/'
+    f_ntuple = TFile.Open(os.path.join(ntuple_path, ntuple+'.root'),'read')
+    h_eventinfo = f_ntuple.Get("ttbbLepJets/EventInfo")
+    h_scaleweight = f_ntuple.Get("ttbbLepJets/ScaleWeights")
+
     f_out.cd()
+    h_eventinfo.Write()
+    h_scaleweight.Write()
     f_out.Write()
     f_out.Close()
-    f_pred.close()
+    #f_pred.close()
 
     keras.backend.clear_session()
 

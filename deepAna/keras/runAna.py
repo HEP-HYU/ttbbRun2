@@ -10,52 +10,50 @@ import ntuple2array as tt
 import variableAnalyzer as var
 import ana
 
-#Option
-array = False
-array_test = False
-array_run = False
-array_train = False
+#Options
+array = True
+array_test = True
+array_train = True
 array_syst = False
 
-analysis = True
-ana_test = True 
-ana_run  = False
+analysis = False
+ana_test = False
 ana_syst = False
 
 start_time = time.time()
 
-inputDir = '/home/seohyun/work/heptool/deepAna/keras/array/'
-outputDir = '/home/seohyun/work/heptool/deepAna/keras/hist/'
+ntupleDir = '/data/users/seohyun/ntuple/hep2017/v808/split/'
+arrayDir = '/home/seohyun/work/heptool/deepAna/keras/array/'
+histDir = '/home/seohyun/work/heptool/deepAna/keras/hist/'
 
 if array:
+    if array_train:
+        tt.makeCombi('/data/users/seohyun/ntuple/hep2017/v808/nosplit', 'TTLJ_PowhegPythia_ttbbFilter_ttbb.root', '/home/seohyun/work/heptool/deepAna/keras/array/', True)
+
     if array_test:
-        os.makedirs(outputDir+'test_ttbb')
+        os.makedirs(arrayDir+'test_ttbb')
         tt.makeCombi('/data/users/seohyun/ntuple/hep2017/v808/split/TTLJ_PowhegPythia_ttbb','Tree_ttbbLepJets_002.root' ,'/home/seohyun/work/heptool/deepAna/keras/array/test_ttbb')
 
-    if array_train:
-        tt.makeTrainingInput(outputDir)
-        #var.analyze_variable(outputDir, 'array_train_ttbb.h5')
-
-    if array_run:
-        for process in os.listdir(inputDir):
-            if not os.path.exists(outputDir+process):
-                os.makedirs(outputDir+process)
-            for item in os.listdir(inputDir+process):
-                proc = mp.Process(target=tt.makeCombi, args=(inputDir+process,item,outputDir+process))
+    else:
+        for process in os.listdir(ntupleDir):
+            if not os.path.exists(arrayDir+process):
+                os.makedirs(arrayDir+process)
+            for item in os.listdir(ntupleDir+process):
+                proc = mp.Process(target=tt.makeCombi, args=(ntupleDir+process,item, arrayDir+process))
                 proc.start()
-            for item in os.listdir(inputDir+process):
+            for item in os.listdir(ntupleDir+process):
                 proc.join()
 
         if array_syst:
             syslist = ['jecup','jecdown','jerup','jerdown']
             for sys in syslist:
-                for process in os.listdir(inputDir):
+                for process in os.listdir(ntupleDir):
                     if not ('Data' in process or 'SYS' in process or 'Herwig' in process or 'Evtgen' in process or 'aMC' in process):
-                        os.makedirs(outputDir+process+'__'+sys)
-                        for item in os.listdir(inputDir+process):
-                            proc = mp.Process(target=tt.makeCombi, args=(inputDir+process,item,outputDir+process+'__'+sys,sys))
+                        os.makedirs(arrayDir+process+'__'+sys)
+                        for item in os.listdir(ntupleDir+process):
+                            proc = mp.Process(target=tt.makeCombi, args=(ntupleDir+process,item,arrayDir+process+'__'+sys,sys))
                             proc.start()
-                        for item in os.listdir(inputDir+process):
+                        for item in os.listdir(ntupleDir+process):
                             proc.join()
 
 if analysis:
@@ -67,25 +65,26 @@ if analysis:
         '__hfstat1up', '__hfstat1down', '__hfstat2up', '__hfstat2down',
         '__lfstat1up', '__lfstat1down', '__lfstat2up', '__lfstat2down',
         '__cferr1up', '__cferr1down', '__cferr2up', '__cferr2down',
-        '__scale0', '__scale1', '__scale2', '__scale3', '__scale4', '__scale5'
+        '__scale0', '__scale1', '__scale2', '__scale3', '__scale4', '__scale5',
+        '__pdfup', '__pdfdown'
     ]
 
     if ana_test:
-        #ana.ana('/home/seohyun/work/heptool/deepAna/keras/array/TTLJ_PowhegPythia_ttbbFilter_ttbb','TTLJ_PowhegPythia_ttbbFilter_ttbb', 'test')
         ana.ana('/home/seohyun/work/heptool/deepAna/keras/array/TTLJ_PowhegPythia_ttbb','TTLJ_PowhegPythia_ttbb','test')
 
-    if ana_run:
-        for process in os.listdir(inputDir):
+    else:
+        for process in os.listdir(arrayDir):
+            #if not "ttbbFilter" in process: continue
             if process.endswith(".h5"): continue
 
             if not ('SYS' in process or '__' in process or 'Herwig' in process or 'Evtgen' in process or 'TT_aMCatNLO' in process):
                 print("Start "+str(process))
-                ana.ana(inputDir+process, process, outputDir)
+                ana.ana(arrayDir+process, process, histDir)
 
                 if ana_syst and not 'Data' in process:
                     for sys in syslist:
                         if 'scale' in sys and not 'tt' in process: continue
-                        ana.ana(inputDir+process, process, outputDir, sys)
+                        ana.ana(arrayDir+process, process, histDir, sys)
             else:
                 if   'FSRup'   in process: sys = '__fsrup'
                 elif 'FSRdown' in process: sys = '__fsrdown'
@@ -103,60 +102,6 @@ if analysis:
                 elif 'TT_aMCatNLO'in process: sys = '__amcatnlopythia'
                 elif 'Evtgen'  in process: sys = '__powhegpythiaevtgen'
                 else:                      sys = ''
-                ana.ana(inputDir+process, process, outputDir, sys)
+                ana.ana(arrayDir+process, process, histDir, sys)
 
-    """
-    base_path = "/home/seohyun/work/heptool/deepAna/keras/hist/model_25_0.8001.h5"
-    f_mu_list = []
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuB.root")))
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuC.root")))
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuD.root")))
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuE.root")))
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuF.root")))
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuG.root")))
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuHv2.root")))
-    f_mu_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleMuHv3.root")))
-
-    hist_list = [x.GetName() for x in f_mu_list[0].GetListOfKeys()]
-
-    f_out = TFile.Open(os.path.join(base_path, "hist_DataSingleMu.root"), "recreate")
-    f_out.cd()
-
-    for hist in hist_list:
-        if hist == "EventInfo" or hist == "ScaleWeights": continue
-        hs_tmp = THStack("st","");
-        for f_mu in f_mu_list:
-            hs_tmp.Add(f_mu.Get(hist))
-        h_tmp = hs_tmp.GetStack().Last()
-        h_tmp.Write()
-
-    f_out.Write()
-    f_out.Close()
-
-    f_el_list = []
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGB.root")))
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGC.root")))
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGD.root")))
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGE.root")))
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGF.root")))
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGG.root")))
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGHv2.root")))
-    f_el_list.append(TFile.Open(os.path.join(base_path, "hist_DataSingleEGHv3.root")))
-
-    hist_list2 = [x.GetName() for x in f_el_list[0].GetListOfKeys()]
-
-    f_out2 = TFile.Open(os.path.join(base_path, "hist_DataSingleEl.root"), "recreate")
-    f_out2.cd()
-
-    for hist in hist_list2:
-        if hist == "EventInfo" or hist == "ScaleWeights": continue
-        hs_tmp = THStack("st","");
-        for f_el in f_el_list:
-            hs_tmp.Add(f_mu.Get(hist))
-        h_tmp = hs_tmp.GetStack().Last()
-        h_tmp.Write()
-
-    f_out.Write()
-    f_out.Close()
-    """
 print("Total running time :%s " %(time.time() - start_time))
