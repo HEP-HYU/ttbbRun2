@@ -3,17 +3,8 @@ import ROOT
 import os
 import sys
 base_path = "/home/seohyun/work/ttbb/heptool/output/root/"
-
-"""
-if not os.path.exists("../output/root"): os.makedirs('../output/root')
-if not os.path.exists("../output/root2"):
-    os.makedirs('../output/root2')
-else:
-    os.system('rm -rf ../output/root2/*')
-for item in os.listdir(base_path):
-    os.system('hadd ../output/root2/'+item+' '+base_path+item+' ../tmp/'+item)
-os.system('mv ../output/root ../output/root_backup')
-os.system('mv ../output/root2 ../output/root')
+if os.path.exists("../output/post"): os.system('rm -rf ../output/post')
+os.system('cp -r ../output/root ../output/root_backup')
 
 def rescale(f_sys, h_eventinfo):
     hist_list = []
@@ -33,7 +24,7 @@ def rescale(f_sys, h_eventinfo):
     return h_out
 
 sys_re = ['isrup', 'isrdown', 'fsrup', 'fsrdown', 'hdampup', 'hdampdown', 'tuneup', 'tunedown']
-proc_re = ['ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother']
+proc_re = ['ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg']
 
 for proc in proc_re:
     print(proc)
@@ -41,6 +32,7 @@ for proc in proc_re:
     print("Open "+f_central.GetName())
     h_eventinfo = f_central.Get("EventInfo")
     for sys in sys_re:
+        if proc == 'ttbkg' and 'hdamp' in sys: continue
         f_in = TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+sys+".root"))
 	f_out = TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+sys+"_re.root"), "recreate")
 
@@ -58,7 +50,6 @@ for proc in proc_re:
         f_out.Close()
         os.system('rm -rf '+base_path+'hist_'+proc+'__'+sys+'.root')
 	os.system('mv '+base_path+'hist_'+proc+'__'+sys+'_re.root '+base_path+'hist_'+proc+'__'+sys+'.root')
-
 
 def write_envelope(h_central, h_sys_list, h_eventinfo, h_weights):
 
@@ -94,7 +85,7 @@ def write_envelope(h_central, h_sys_list, h_eventinfo, h_weights):
 
     return [h_up, h_down]
 
-proc_list = ['ttH','ttW','ttZ','ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg']
+proc_list = ['ttH','ttW','ttZ','ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg','ttbbFilterttbb']
 ps_list = ['isrup','isrdown','fsrup','fsrdown']
 sw_list = ['scale0','scale1','scale2','scale3','scale4','scale5']
 
@@ -105,7 +96,7 @@ for proc in proc_list:
     f_central = TFile.Open(os.path.join(base_path, "hist_"+proc+".root"))
 
     f_ps_list = []
-    if not (proc == 'ttH' or proc == 'ttW' or proc == 'ttZ' or proc == 'ttbbFilter_ttbb'):
+    if not (proc == 'ttH' or proc == 'ttW' or proc == 'ttZ' or proc == 'ttbbFilterttbb'):
         for ps in ps_list:
             f_ps_list.append(TFile.Open(os.path.join(base_path, "hist_"+proc+"__"+ps+".root")))
 	f_ps_up = TFile.Open(os.path.join(base_path, "hist_"+proc+"__psup.root"),"RECREATE")
@@ -148,7 +139,7 @@ for proc in proc_list:
 	for index, f_sw in enumerate(f_sw_list):
             h_sw_list.append(f_sw.Get(hist+"__"+sw_list[index]))
         h_ps_list = []
-        if not (proc == 'ttH' or proc == 'ttW' or proc == 'ttZ'):
+        if not (proc == 'ttH' or proc == 'ttW' or proc == 'ttZ' or proc == 'ttbbFilterttbb'):
             for index, f_ps in enumerate(f_ps_list):
                 h_ps_list.append(f_ps.Get(hist+"__"+ps_list[index]))
 
@@ -176,28 +167,23 @@ for proc in proc_list:
     f_sw_down.Close()
     if f_ps_up is not None: f_ps_up.Close()
     if f_ps_down is not None: f_ps_down.Close()
-"""
-#Rescaling and merging files
+
 proc_list = ['DataSingleEl', 'DataSingleMu',
       'ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg',
       'ttH', 'ttW', 'ttZ', 'wjets', 'zjets10to50', 'zjets', 'ww', 'wz', 'zz',
-      'tchannel', 'tbarchannel', 'tWchannel', 'tbarWchannel', 'ttbbFilter_ttbb']
+      'tchannel', 'tbarchannel', 'tWchannel', 'tbarWchannel', 'ttbbFilterttbb']
 
+if not os.path.exists("../output/post"): os.makedirs("../output/post")
 for proc in proc_list:
     print(proc)
-    if not os.path.exists("../output/post"): os.makedirs("../output/post")
 
     if proc == 'ttbb':
         os.system('hadd ../output/post/hist_ttbb.root ../output/root/hist_ttbb.root ../output/root/hist_ttbb__*')
     else:
         os.system('hadd ../output/post/hist_'+proc+'.root '+base_path+'/hist_'+proc+'*')
 
-proc_list = ['DataSingleEl', 'DataSingleMu',
-      'ttbb', 'ttbj', 'ttcc', 'ttLF', 'ttother', 'ttbkg',
-      'ttH', 'ttW', 'ttZ', 'wjets', 'zjets10to50', 'zjets', 'ww', 'wz', 'zz',
-      'tchannel', 'tbarchannel', 'tWchannel', 'tbarWchannel', 'ttbbFilter_ttbb']
-
 for proc in proc_list:
+    if 'Data' in proc: continue
     f_tmp = TFile.Open("../output/post/hist_"+proc+".root", "update")
     f_tmp.Delete("EventInfo")
     f_tmp.Delete("ScaleWeights")
@@ -210,3 +196,4 @@ for proc in proc_list:
     f_tmp.Write()
     f_tmp.Close()
 
+os.system('rm -rf ../output/root_backup')
