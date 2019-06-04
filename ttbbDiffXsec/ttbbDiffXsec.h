@@ -13,7 +13,6 @@ const int _DELTAR = 0;
 const int _INVMASS = 1;
 
 string output_dir = "../output/unfold/";
-
 TGraphErrors *buildGraphFromHist(TH1* h){
   TGraphErrors *grp = new TGraphErrors();
 
@@ -62,11 +61,15 @@ TH1 *calculateDiffXsec(TH1 *h_in, TH1 *h_acceptance, int variable, bool gen = fa
 
     for(int iBin=1; iBin<=h_in->GetNbinsX(); ++iBin){
       // diffXsec = (1/bin width)*(nevt/accp*lumi)
-      const double bin_width = h_in->GetXaxis()->GetBinWidth(iBin);
-      const double diffXsec = h_in->GetBinContent(iBin)/
+      double bin_width = h_in->GetXaxis()->GetBinWidth(iBin);
+      double diffXsec = h_in->GetBinContent(iBin)/
         (h_acceptance->GetBinContent(iBin)*bin_width*LUMINOSITY_*BRANCHINGRATIO_);
-      const double diffXsec_err = h_in->GetBinError(iBin)/
+      double diffXsec_err = h_in->GetBinError(iBin)/
 	(h_acceptance->GetBinContent(iBin)*bin_width*LUMINOSITY_*BRANCHINGRATIO_);
+      if(h_acceptance->GetBinContent(iBin) == 0.0){
+        diffXsec = 0.0;
+	diffXsec_err = 0.0;
+      }
       h_out->SetBinContent(iBin, diffXsec);
       h_out->SetBinError(iBin, diffXsec_err);
       incXsec += diffXsec*bin_width;
