@@ -3,35 +3,24 @@ First, you need to make pandas arrays to train and evaluate. You can do it using
 
 In runAna.py, there are several options.
 ~~~
-array = True or False # If you turn on this option and run, runAna.py make array
-array_train = 
+array # If you turn on this option and run, runAna.py make arrays.
+array_test # For test. If you turn on this, runAna.py make only test set.
+array_train # If you turn on this option with array, runAna.py make training input.
+array_syst # If you turn on this option with array, runAna.py make systematic array sets.
 ~~~
 
-To run deepAna/keras/ana.py, you must convert root file to hd5 file.
+~~~
+$ python runAna.py
+~~~
 
-In directory deepAna/keras, Type this: python makeArray.py
+If you make pandas arrays successfully, then you can make model file using model.py
+~~~
+$ python model.py
+~~
 
-makeArray.py has some options:
-1. array: making hdf file for all samples.
-2. train: making DNN training sample.
-
-You can make DNN model file to run deepAna/keras/model.py
-
-To start analysis, run deepAna/keras/runAna.py
-
-runAna.py has some options:
-1. test: with this option, test the code running well or not using TTLJ_PowhegPythia_ttbb sample.
-2. closureTest: with this, option closure test run.
-
-Part2. making control plots
-
-Part3. unfolding
-To start unfolding, type root -l -b -q ttbbDiffXsec.C in ttbbDiffXsec
-
-ttbbDiffXsec.C has arguments:
-bool useTUnfold_ = false
-bool scanbyLcurve_ = true
-double tauMin_ = 0.
-double tauMax_ = 0.
-bool fixTau_ = false
-float fixedTau_ = 0.
+Then, you can make histogram using runAna.py with analysis option.
+~~~
+analysis # If you turn on this option, runAna.py make histogram root files.
+ana_test # For test.
+ana_syst # For systematics
+~~~
