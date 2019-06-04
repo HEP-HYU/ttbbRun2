@@ -1,6 +1,6 @@
 1. Searching additional two b jets using DNN
 
-First, you need to make pandas arrays to train and evaluate. You can do it using runAna.py in deepAna/keras directory.
+First, you need to make pandas arrays to train and evaluate. You can do it using runAna.py in deepAna directory.
 
 In runAna.py, there are several options.
 ~~~
