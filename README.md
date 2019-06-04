@@ -40,6 +40,7 @@ $ python runAna.py
 Then, final root files are made.
 
 2. Differential cross section measurement.
+
 All the codes for measurement are in ttbbDiffXsec directory.
 
 You need to made acceptance distribution first.
@@ -57,7 +58,9 @@ $ python runUnfold.py
 
 you can control unfolding option in ttbbDiffXsec.C
 
+3. Control plots
 
+If you want to make control plots, you can get this by running runAnalysis.py
 
 
 
