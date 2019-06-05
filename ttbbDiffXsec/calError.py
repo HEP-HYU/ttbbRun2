@@ -6,25 +6,27 @@ import ROOT
 def calError(h_nom, h_sys):
     error = []
     for ibin in range(1,h_nom.GetNbinsX()+1):
-	err = (h_sys.GetBinContent(ibin)/h_nom.GetBinContent(ibin))*100
+        err = 0.0
+        if h_nom.GetBinContent(ibin) > 0.0:
+            err = (h_sys.GetBinContent(ibin)/h_nom.GetBinContent(ibin))*100
 	error.append(err)
 
     return error
 
 
 f_list = []
-f_list.append(TFile.Open("../test/hist_unfolded_hist_DataSingleMu.root"))
-f_list.append(TFile.Open("../test/hist_unfolded_hist_DataSingleEl.root"))
-f_list.append(TFile.Open("../test/hist_unfolded_hist_ttbb.root"))
+f_list.append(TFile.Open("../output/unfold/hist_unfolded_hist_DataSingleMu.root"))
+f_list.append(TFile.Open("../output/unfold/hist_unfolded_hist_DataSingleEl.root"))
+f_list.append(TFile.Open("../output/unfold/hist_unfolded_hist_ttbb.root"))
 
 hist_list1 = [
-    "h_unfolded_dR_Ch0_S3", "h_unfolded_M_Ch0_S3",
-    "h_unfolded_dR_Ch1_S3", "h_unfolded_M_Ch1_S3"
+    "Unfolded_h_mindR_RecoJetDeltaR_Ch0_S3", "Unfolded_h_mindR_RecoJetInvMass_Ch0_S3",
+    "Unfolded_h_mindR_RecoJetDeltaR_Ch1_S3", "Unfolded_h_mindR_RecoJetInvMass_Ch1_S3"
 ]
 
 hist_list2 = [
-    "h_RecoJetDeltaR_Ch0_S3_DeltaSysSource", "h_RecoJetInvMass_Ch0_S3_DeltaSysSource",
-    "h_RecoJetDeltaR_Ch1_S3_DeltaSysSource", "h_RecoJetInvMass_Ch1_S3_DeltaSysSource"
+    "h_mindR_RecoJetDeltaR_Ch0_S3_DeltaSysSource", "h_mindR_RecoJetInvMass_Ch0_S3_DeltaSysSource",
+    "h_mindR_RecoJetDeltaR_Ch1_S3_DeltaSysSource", "h_mindR_RecoJetInvMass_Ch1_S3_DeltaSysSource"
 ]
 
 syst_list = [
@@ -39,7 +41,7 @@ syst_list = [
 ]
 
 
-f_err = open('syst_errors.tex', 'w')
+f_err = open('../output/unfold/syst_errors.tex', 'w')
 for f_in in f_list:
     print(f_in.GetName())
     f_err.write('%'+f_in.GetName()+'\n')

@@ -2,7 +2,7 @@
 
 void runGentree(){
   TFile *f_in = TFile::Open("/data/users/seohyun/ntuple/hep2017/v808/nosplit/TTLJ_PowhegPythia_ttbb.root");
-  TFile *f_out = TFile::Open("../output/hist_gen.root", "recreate");
+  TFile *f_out = TFile::Open("../output/root/hist_gen.root", "recreate");
 
   TTreeReader gentree("ttbbLepJets/gentree", f_in);
   TTreeReaderValue<Int_t>   event          = {gentree, "event"};

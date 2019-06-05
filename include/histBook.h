@@ -518,8 +518,8 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	h_gen_mindR_deltaR[iChannel][iStep] = new TH1D(
 	    Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
 	    nbins_gen_addbjets_dR,
-	    gen_addbjets_dR_min,gen_addbjets_dR_max
-	    //gen_addbjets_dR_width
+	    //gen_addbjets_dR_min,gen_addbjets_dR_max
+	    gen_addbjets_dR_width
 	    );
 	h_gen_mindR_deltaR[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
 	h_gen_mindR_deltaR[iChannel][iStep]->SetYTitle("Entries");
