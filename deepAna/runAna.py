@@ -12,7 +12,7 @@ import ana
 
 #Options
 array = True
-array_test = True
+array_test = False
 array_train = True
 array_syst = False
 
@@ -23,14 +23,14 @@ ana_syst = False
 start_time = time.time()
 
 ntupleDir = '/data/users/seohyun/ntuple/hep2017/v808/split/'
-arrayDir = '/home/seohyun/work/heptool/deepAna/keras/array/'
-histDir = '/home/seohyun/work/heptool/deepAna/keras/hist/'
+arrayDir = '/home/seohyun/work/heptool/deepAna/array/'
+histDir = '/home/seohyun/work/heptool/deepAna/hist/'
 
 if array:
     if array_train:
-        tt.makeCombi('/data/users/seohyun/ntuple/hep2017/v808/nosplit', 'TTLJ_PowhegPythia_ttbbFilter_ttbb.root', '/home/seohyun/work/heptool/deepAna/keras/array/', True)
+        tt.makeCombi('/data/users/seohyun/ntuple/hep2017/v808/nosplit', 'TTLJ_PowhegPythia_ttbbFilter_ttbb.root', arrayDir, True)
 
-    if array_test:
+    elif array_test:
         os.makedirs(arrayDir+'test_ttbb')
         tt.makeCombi('/data/users/seohyun/ntuple/hep2017/v808/split/TTLJ_PowhegPythia_ttbb','Tree_ttbbLepJets_002.root' ,'/home/seohyun/work/heptool/deepAna/keras/array/test_ttbb')
 

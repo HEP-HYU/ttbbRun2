@@ -22,9 +22,10 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
     chain.Add(inputDir+"/"+inputFile)
 
     data = False
-    if 'Data' in inputDir : data = True
+    if 'Data' in inputDir: data = True
     ttbb = False
-    if 'ttbb' in inputDir : ttbb = True
+    if 'ttbb' in inputDir: ttbb = True
+    if makeTrainingInput:  ttbb = True
 
     muon_ch = 0
     muon_pt = 30.0
@@ -78,9 +79,10 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         if ttbb:
             addbjet1.SetPtEtaPhiE(chain.addbjet1_pt,chain.addbjet1_eta,chain.addbjet1_phi,chain.addbjet1_e)
             addbjet2.SetPtEtaPhiE(chain.addbjet2_pt,chain.addbjet2_eta,chain.addbjet2_phi,chain.addbjet2_e)
-
         njets = 0
         nbjets = 0
+        addbjet1_matched = TLorentzVector(0,0,0,0)
+        addbjet2_matched = TLorentzVector(0,0,0,0)
 
         for iJet in range(len(chain.jet_pT)):
             jet = TLorentzVector()
@@ -97,24 +99,17 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
                     jet *= chain.jet_JER_Down[iJet]
                 else:
                     jet *= chain.jet_JER_Nom[iJet]
-            if jet.Pt() < jet_pt or abs(jet.Eta()) > jet_eta:
-                continue
+
+            if jet.Pt() < jet_pt or abs(jet.Eta()) > jet_eta: continue
             njets += 1
-            if chain.jet_CSV[iJet] > jet_CSV_tight:
-                nbjets += 1
+            if chain.jet_CSV[iJet] > jet_CSV_tight: nbjets += 1
+
+            if addbjet1.DeltaR(jet) < 0.4: addbjet1_matched = jet;
+            if addbjet2.DeltaR(jet) < 0.4: addbjet2_matched = jet;
 
         if njets < 6 or nbjets < 3: continue
-
-        addbjet1_matched = TLorentzVector()
-        addbjet2_matched = TLorentzVector()
-        if makeTrainingInput:
-            for i in range(len(chain.jet_pT)):
-                tmp = TLorentzVector()
-                tmp.SetPtEtaPhiE(chain.jet_pT[i],chain.jet_eta[i],chain.jet_phi[i],chain.jet_E[i])
-                tmp *= chain.jet_JER_Nom[i]
-                #if tmp.Pt() > jet_pt and abs(tmp.Et()) < jet_eta : 
-                if addbjet1.DeltaR( tmp ) < 0.4 :  addbjet1_matched = tmp;
-                if addbjet2.DeltaR( tmp ) < 0.4 :  addbjet2_matched = tmp;
+        print("addbjet1: "+str(addbjet1.Pt())+" matched: "+str(addbjet1_matched.Pt()))
+        print("addbjet2: "+str(addbjet2.Pt())+" matched: "+str(addbjet2_matched.Pt()))
 
         for j in range(len(chain.jet_pT)-1):
             for k in range(j+1, len(chain.jet_pT)):
@@ -196,6 +191,7 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
     else:
         io.save(outputDir+"/array_"+tmp+".h5",combi)
     print(str(inputDir+"/"+inputFile)+" end")
+
     #combi.style.format('table')
     #combi.to_csv(outputDir+"/array_"+process+".csv")
     #combi.to_hdf(outputDir+"/array_"+process+".h5",combi)

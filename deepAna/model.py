@@ -33,8 +33,6 @@ from keras.callbacks import Callback, ModelCheckpoint
 
 import utils as ut
 
-tmpdf = pd.read_hdf("array/test_ttbb/array_Tree_ttbbLepJets_002.h5")
-
 trainInput = "array/array_train_ttbb.h5"
 ver = ""
 configDir = ""
