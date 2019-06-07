@@ -50,6 +50,11 @@ with open("var.txt", "r") as f :
         if "weightDir" in tmp : weightDir = tmp[1]
         if "modelfile" in tmp : modelfile = tmp[1]
 
+if ver       == "": ver = "01"
+if configDir == "": configDir = "/home/seohyun/work/heptool/deepAna/"
+if weightDir == "": weightDir = "train"
+if modelfile == "": modelfile = "model_tmp"
+
 if not os.path.exists(configDir+weightDir+ver):
     os.makedirs(configDir+weightDir+ver)
 test = os.listdir(configDir+weightDir+ver)
