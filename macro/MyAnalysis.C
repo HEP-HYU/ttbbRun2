@@ -184,7 +184,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 	  reco_addbjet_deltaR   = tmp_dR;
 	  reco_addbjet_invMass  = (reco_addbjet1 + reco_addbjet2).M();
 	  reco_addbjet_deltaEta = abs(reco_addbjet1.Eta() - reco_addbjet2.Eta());
-	  reco_addbjet_deltaPhi = reco_addbjet1.DeltaPhi(reco_addbjet2);
+	  reco_addbjet_deltaPhi = abs(reco_addbjet1.DeltaPhi(reco_addbjet2));
 	}
       }
     }
@@ -202,19 +202,19 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   double gen_addbjet_deltaR    = gen_addbjet1.DeltaR(gen_addbjet2);
   double gen_addbjet_invMass   = (gen_addbjet1+gen_addbjet2).M(); 
   double gen_addbjet_deltaEta  = abs(gen_addbjet1.Eta() - gen_addbjet2.Eta());
-  double gen_addbjet_deltaPhi  = gen_addbjet1.DeltaPhi(gen_addbjet2);
+  double gen_addbjet_deltaPhi  = abs(gen_addbjet1.DeltaPhi(gen_addbjet2));
   
   double gen_mindR_deltaR   = gen_mindRbjet1.DeltaR(gen_mindRbjet2); 
   double gen_mindR_invMass  = (gen_mindRbjet1+gen_mindRbjet2).M(); 
   double gen_mindR_deltaEta = abs(gen_mindRbjet1.Eta() - gen_mindRbjet2.Eta()); 
-  double gen_mindR_deltaPhi = gen_mindRbjet1.DeltaPhi(gen_mindRbjet2); 
+  double gen_mindR_deltaPhi = abs(gen_mindRbjet1.DeltaPhi(gen_mindRbjet2)); 
   
   int passchannel = -999;
   bool passlepton = false;
   if     ( passmuon and !passelectron) passchannel = MUON_;
   else if(!passmuon and  passelectron) passchannel = ELECTRON_;
 
-  if( passchannel == 0 or passchannel == 1 ) passlepton = true;
+  if( passchannel != -999 ) passlepton = true;
 
   int passcut = 0;
   if(njets >= NUMBER_OF_JETS_){
