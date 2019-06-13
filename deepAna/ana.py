@@ -293,7 +293,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
 
     if ttbb == True:
         genchain = TChain("ttbbLepJets/gentree")
-        genchain.Add("/data/users/seohyun/ntuple/hep2017/v808/nosplit/"+ntuple+".root")
+        genchain.Add("/data/users/seohyun/ntuple/hep2019/nosplit/"+ntuple+".root")
 
         print "GENTREE RUN"
         for i in xrange(genchain.GetEntries()):
@@ -573,7 +573,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_respMatrix_invMass[iChannel].ClearUnderflowAndOverflow()
 
 
-    ntuple_path = '/data/users/seohyun/ntuple/hep2017/v808/nosplit/'
+    ntuple_path = '/data/users/seohyun/ntuple/hep2019/nosplit/'
     f_ntuple = TFile.Open(os.path.join(ntuple_path, ntuple+'.root'),'read')
     h_eventinfo = f_ntuple.Get("ttbbLepJets/EventInfo")
     h_scaleweight = f_ntuple.Get("ttbbLepJets/ScaleWeights")

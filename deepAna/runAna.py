@@ -22,17 +22,17 @@ ana_syst = False
 
 start_time = time.time()
 
-ntupleDir = '/data/users/seohyun/ntuple/hep2017/v808/split/'
-arrayDir = '/home/seohyun/work/heptool/deepAna/array/'
-histDir = '/home/seohyun/work/heptool/deepAna/hist/'
+ntupleDir = '/data/users/seohyun/ntuple/hep2019/split/'
+arrayDir = './array/'
+histDir = './hist/'
 
 if array:
     if array_train:
-        tt.makeCombi('/data/users/seohyun/ntuple/hep2017/v808/nosplit', 'TTLJ_PowhegPythia_ttbbFilter_ttbb.root', arrayDir, True)
+        tt.makeCombi('/data/users/seohyun/ntuple/hep2019/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)
 
     elif array_test:
-        os.makedirs(arrayDir+'test_ttbb')
-        tt.makeCombi('/data/users/seohyun/ntuple/hep2017/v808/split/TTLJ_PowhegPythia_ttbb','Tree_ttbbLepJets_002.root' ,'/home/seohyun/work/heptool/deepAna/keras/array/test_ttbb')
+        os.makedirs('./testOutput')
+        tt.makeCombi(ntupleDir,'Tree_ttbbLepJets_002.root' ,'./testOutput')
 
     else:
         for process in os.listdir(ntupleDir):

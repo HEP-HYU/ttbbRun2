@@ -29,13 +29,13 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
 
     muon_ch = 0
     muon_pt = 30.0
-    muon_eta = 2.1
+    muon_eta = 2.4
     electron_ch = 1
-    electron_pt = 35.0
-    electron_eta = 2.1
+    electron_pt = 30.0
+    electron_eta = 2.4
     jet_pt = 30.0
     jet_eta = 2.4
-    jet_CSV_tight = 0.9535
+    jet_CSV_tight = 0.8001
 
     jetCombi = []
     for i in xrange(chain.GetEntries()) :
@@ -51,8 +51,8 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         if not data:
             for j in xrange((chain.lepton_SF).size()):
                 lepton_SF.append(float(chain.lepton_SF[j]))
-            for j in xrange((chain.jet_SF_CSV_30).size()):
-                jet_SF_CSV_30.append(float(chain.jet_SF_CSV_30[j]))
+            for j in xrange((chain.jet_SF_deepCSV_30).size()):
+                jet_SF_CSV_30.append(float(chain.jet_SF_deepCSV_30[j]))
             for j in xrange((chain.PUWeight).size()):
                 PUWeight.append(float(chain.PUWeight[j]))
         if 'TT' in inputDir or 'tt' in inputDir:
@@ -66,7 +66,7 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         nu = TLorentzVector(MET_px, MET_py, 0, chain.MET)
 
         lep = TLorentzVector()
-        lep.SetPtEtaPhiE(chain.lepton_pT, chain.lepton_eta, chain.lepton_phi, chain.lepton_E)
+        lep.SetPtEtaPhiE(chain.lepton_pt, chain.lepton_eta, chain.lepton_phi, chain.lepton_e)
         passmuon = False
         passelectron = False
         passmuon = chain.channel == muon_ch and lep.Pt() > muon_pt and abs(lep.Eta()) < muon_eta
@@ -84,9 +84,9 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         addbjet1_matched = TLorentzVector(0,0,0,0)
         addbjet2_matched = TLorentzVector(0,0,0,0)
 
-        for iJet in range(len(chain.jet_pT)):
+        for iJet in range(len(chain.jet_pt)):
             jet = TLorentzVector()
-            jet.SetPtEtaPhiE(chain.jet_pT[iJet],chain.jet_eta[iJet],chain.jet_phi[iJet],chain.jet_E[iJet])
+            jet.SetPtEtaPhiE(chain.jet_pt[iJet],chain.jet_eta[iJet],chain.jet_phi[iJet],chain.jet_e[iJet])
 
             if not data :
                 if   'jecup'   in sys:
@@ -102,7 +102,7 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
 
             if jet.Pt() < jet_pt or abs(jet.Eta()) > jet_eta: continue
             njets += 1
-            if chain.jet_CSV[iJet] > jet_CSV_tight: nbjets += 1
+            if chain.jet_deepCSV[iJet] > jet_CSV_tight: nbjets += 1
 
             if addbjet1.DeltaR(jet) < 0.4: addbjet1_matched = jet;
             if addbjet2.DeltaR(jet) < 0.4: addbjet2_matched = jet;
@@ -111,13 +111,13 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         print("addbjet1: "+str(addbjet1.Pt())+" matched: "+str(addbjet1_matched.Pt()))
         print("addbjet2: "+str(addbjet2.Pt())+" matched: "+str(addbjet2_matched.Pt()))
 
-        for j in range(len(chain.jet_pT)-1):
-            for k in range(j+1, len(chain.jet_pT)):
-                if chain.jet_CSV[j] > jet_CSV_tight and chain.jet_CSV[k] > jet_CSV_tight:
+        for j in range(len(chain.jet_pt)-1):
+            for k in range(j+1, len(chain.jet_pt)):
+                if chain.jet_deepCSV[j] > jet_CSV_tight and chain.jet_deepCSV[k] > jet_CSV_tight:
                     b1 = TLorentzVector()
                     b2 = TLorentzVector()
-                    b1.SetPtEtaPhiE(chain.jet_pT[j], chain.jet_eta[j], chain.jet_phi[j], chain.jet_E[j])
-                    b2.SetPtEtaPhiE(chain.jet_pT[k], chain.jet_eta[k], chain.jet_phi[k], chain.jet_E[k])
+                    b1.SetPtEtaPhiE(chain.jet_pt[j], chain.jet_eta[j], chain.jet_phi[j], chain.jet_e[j])
+                    b2.SetPtEtaPhiE(chain.jet_pt[k], chain.jet_eta[k], chain.jet_phi[k], chain.jet_e[k])
                     if not data :
                         if   'jecup'   in sys:
                             b1 *= chain.jet_JER_Nom[j] * chain.jet_JES_Up[j]
@@ -148,7 +148,7 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
                             (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
                             (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
                             (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M(),
-                            chain.jet_CSV[j],chain.jet_CSV[k],
+                            chain.jet_deepCSV[j],chain.jet_deepCSV[k],
                             b1.Pt(),b2.Pt(),b1.Eta(),b2.Eta(),b1.Phi(),b2.Phi(),b1.E(),b2.E()
                         ])
                     else:
@@ -168,7 +168,7 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
                             (b1+lep).Pt(),(b1+lep).Eta(),(b1+lep).Phi(),(b1+lep).M(),
                             (b2+lep).Pt(),(b2+lep).Eta(),(b2+lep).Phi(),(b2+lep).M(),
                             (b1+b2).Pt(),(b1+b2).Eta(),(b1+b2).Phi(),(b1+b2).M(),
-                            chain.jet_CSV[j],chain.jet_CSV[k],
+                            chain.jet_deepCSV[j],chain.jet_deepCSV[k],
                             b1.Pt(),b2.Pt(),b1.Eta(),b2.Eta(),b1.Phi(),b2.Phi(),b1.E(),b2.E()
                             ])
 
