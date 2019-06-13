@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 from ROOT import *
@@ -12,7 +13,6 @@ import os
 import multiprocessing as mp
 import time
 from tqdm import tqdm
-#import ntuple2array as tt
 
 import utils as ut
 
@@ -30,7 +30,7 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
     data = False
     if 'Data' in inputDir: data = True
     ttbb = False
-    if 'ttbb' in inputFile: ttbb = True
+    if 'ttbb' in inputDir: ttbb = True
     if makeTrainingInput:  ttbb = True
 
     muon_ch = 0
@@ -114,8 +114,8 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
             if addbjet2.DeltaR(jet) < 0.4: addbjet2_matched = jet;
 
         if njets < 6 or nbjets < 3: continue
-        print("addbjet1: "+str(addbjet1.Pt())+" matched: "+str(addbjet1_matched.Pt()))
-        print("addbjet2: "+str(addbjet2.Pt())+" matched: "+str(addbjet2_matched.Pt()))
+        #print("addbjet1: "+str(addbjet1.Pt())+" matched: "+str(addbjet1_matched.Pt()))
+        #print("addbjet2: "+str(addbjet2.Pt())+" matched: "+str(addbjet2_matched.Pt()))
 
         for j in range(len(chain.jet_pt)-1):
             for k in range(j+1, len(chain.jet_pt)):
@@ -204,46 +204,72 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
     #combi.to_hdf(outputDir+"/array_"+process+".h5",combi)
     #combi.to_pickle(outputDir+"/array_"+process+".pickle")
 
+if __name__ == '__main__':
+    #Options
+    from optparse import OptionParser
 
-#Options
-array_test = True
-array_train = False 
-array_syst = False
+    parser = OptionParser()
+    parser.usage = """
+    %prog [options] option
+    convert root ntuple to array 
+    """
 
-start_time = time.time()
+    parser.add_option("-t", "--test", dest="test",
+		      action = 'store_true',
+		      default=False,
+		      help='Test single root file')
 
-ntupleDir = '/data/users/seohyun/ntuple/hep2019/split/'
-arrayDir = './array/'
+    parser.add_option("-d", "--deep", dest="deep",
+		      action = 'store_true',
+		      default=False,
+		      help='Run on signal sample for deep learning train')
 
-if array_train:
-    makeCombi('/data/users/seohyun/ntuple/hep2019/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)
+    parser.add_option("-a", "--all", dest="all",
+		      action = 'store_true',
+		      default=False,
+		      help='all root fiels in input directory')
 
-elif array_test:
-    if not os.path.exists("test"):
-      os.makedirs('./test')
-    makeCombi(ntupleDir+'TTLJ_PowhegPythia_ttbb','Tree_ttbbLepJets_002.root' ,'./test')
+    parser.add_option("-s", "--sys", dest="sys",
+		      action = 'store_true',
+		      default=False,
+		      help='all root fiels in input directory')
 
-else:
-    for process in os.listdir(ntupleDir):
-        if not os.path.exists(arrayDir+process):
-            os.makedirs(arrayDir+process)
-        for item in os.listdir(ntupleDir+process):
-            proc = mp.Process(target=makeCombi, args=(ntupleDir+process,item, arrayDir+process))
-            proc.start()
-        for item in os.listdir(ntupleDir+process):
-            proc.join()
+    (options,args) = parser.parse_args()
 
-    if array_syst:
-        syslist = ['jecup','jecdown','jerup','jerdown']
-        for sys in syslist:
-            for process in os.listdir(ntupleDir):
-                if not ('Data' in process or 'SYS' in process or 'Herwig' in process or 'Evtgen' in process or 'aMC' in process):
-                    os.makedirs(arrayDir+process+'__'+sys)
-                    for item in os.listdir(ntupleDir+process):
-                        proc = mp.Process(target=makeCombi, args=(ntupleDir+process,item,arrayDir+process+'__'+sys,sys))
-                        proc.start()
-                    for item in os.listdir(ntupleDir+process):
-                        proc.join()
+    start_time = time.time()
 
-print("Total running time :%s " %(time.time() - start_time))
+    ntupleDir = '/data/users/seohyun/ntuple/hep2019/split/'
+    arrayDir = './array/'
+
+    if options.deep:
+	makeCombi('/data/users/seohyun/ntuple/hep2019/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)
+
+    if options.test:
+	if not os.path.exists("test"):
+	  os.makedirs('./test')
+	makeCombi(ntupleDir+'TTLJ_PowhegPythia_ttbb','Tree_ttbbLepJets_002.root' ,'./test')
+
+    if options.all:
+	for process in os.listdir(ntupleDir):
+	    if not os.path.exists(arrayDir+process):
+		os.makedirs(arrayDir+process)
+	    for item in os.listdir(ntupleDir+process):
+		proc = mp.Process(target=makeCombi, args=(ntupleDir+process,item, arrayDir+process))
+		proc.start()
+	    for item in os.listdir(ntupleDir+process):
+		proc.join()
+
+	if options.sys:
+	    syslist = ['jecup','jecdown','jerup','jerdown']
+	    for sys in syslist:
+		for process in os.listdir(ntupleDir):
+		    if not ('Data' in process or 'SYS' in process or 'Herwig' in process or 'Evtgen' in process or 'aMC' in process):
+			os.makedirs(arrayDir+process+'__'+sys)
+			for item in os.listdir(ntupleDir+process):
+			    proc = mp.Process(target=makeCombi, args=(ntupleDir+process,item,arrayDir+process+'__'+sys,sys))
+			    proc.start()
+			for item in os.listdir(ntupleDir+process):
+			    proc.join()
+
+    print("Total running time :%s " %(time.time() - start_time))
 
