@@ -8,6 +8,12 @@ import glob
 import pandas as pd
 import deepdish.io as io
 
+import os
+import multiprocessing as mp
+import time
+from tqdm import tqdm
+#import ntuple2array as tt
+
 import utils as ut
 
 def transversemass(vec1, met):
@@ -24,7 +30,7 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
     data = False
     if 'Data' in inputDir: data = True
     ttbb = False
-    if 'ttbb' in inputDir: ttbb = True
+    if 'ttbb' in inputFile: ttbb = True
     if makeTrainingInput:  ttbb = True
 
     muon_ch = 0
@@ -190,9 +196,54 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         io.save(outputDir+"/array_train_ttbb.h5",combi)
     else:
         io.save(outputDir+"/array_"+tmp+".h5",combi)
+   
     print(str(inputDir+"/"+inputFile)+" end")
 
     #combi.style.format('table')
     #combi.to_csv(outputDir+"/array_"+process+".csv")
     #combi.to_hdf(outputDir+"/array_"+process+".h5",combi)
     #combi.to_pickle(outputDir+"/array_"+process+".pickle")
+
+
+#Options
+array_test = True
+array_train = False 
+array_syst = False
+
+start_time = time.time()
+
+ntupleDir = '/data/users/seohyun/ntuple/hep2019/split/'
+arrayDir = './array/'
+
+if array_train:
+    makeCombi('/data/users/seohyun/ntuple/hep2019/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)
+
+elif array_test:
+    if not os.path.exists("test"):
+      os.makedirs('./test')
+    makeCombi(ntupleDir+'TTLJ_PowhegPythia_ttbb','Tree_ttbbLepJets_002.root' ,'./test')
+
+else:
+    for process in os.listdir(ntupleDir):
+        if not os.path.exists(arrayDir+process):
+            os.makedirs(arrayDir+process)
+        for item in os.listdir(ntupleDir+process):
+            proc = mp.Process(target=makeCombi, args=(ntupleDir+process,item, arrayDir+process))
+            proc.start()
+        for item in os.listdir(ntupleDir+process):
+            proc.join()
+
+    if array_syst:
+        syslist = ['jecup','jecdown','jerup','jerdown']
+        for sys in syslist:
+            for process in os.listdir(ntupleDir):
+                if not ('Data' in process or 'SYS' in process or 'Herwig' in process or 'Evtgen' in process or 'aMC' in process):
+                    os.makedirs(arrayDir+process+'__'+sys)
+                    for item in os.listdir(ntupleDir+process):
+                        proc = mp.Process(target=makeCombi, args=(ntupleDir+process,item,arrayDir+process+'__'+sys,sys))
+                        proc.start()
+                    for item in os.listdir(ntupleDir+process):
+                        proc.join()
+
+print("Total running time :%s " %(time.time() - start_time))
+
