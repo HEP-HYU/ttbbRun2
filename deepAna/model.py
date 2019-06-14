@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 from __future__ import print_function
 import sys, os
 import google.protobuf
@@ -39,22 +40,25 @@ configDir = ""
 weightDir = ""
 modelfile = ""
 
-with open("var.txt", "r") as f :
-    while True :
-        line = f.readline()
-        if not line : break
-        tmp = line.split()
-        if "trainInput" in tmp : trainInput = "input/"+tmp[1]
-        if "ver" in tmp : ver = tmp[1]
-        if "configDir" in tmp : configDir = tmp[1]
-        if "weightDir" in tmp : weightDir = tmp[1]
-        if "modelfile" in tmp : modelfile = tmp[1]
+if os.path.exists('./var.txt'):
+    with open("var.txt", "r") as f :
+        while True :
+            line = f.readline()
+            if not line : break
+            tmp = line.split()
+            if "trainInput" in tmp : trainInput = "input/"+tmp[1]
+            if "ver" in tmp : ver = tmp[1]
+            if "configDir" in tmp : configDir = tmp[1]
+            if "weightDir" in tmp : weightDir = tmp[1]
+            if "modelfile" in tmp : modelfile = tmp[1]
 
 if ver       == "": ver = "01"
-if configDir == "": configDir = "/home/seohyun/work/heptool/deepAna/"
+if configDir == "": configDir = os.getcwd()+"/"
 if weightDir == "": weightDir = "train"
 if modelfile == "": modelfile = "model_tmp"
 
+tmpDir = configDir+weightDir+ver
+print (tmpDir)
 if not os.path.exists(configDir+weightDir+ver):
     os.makedirs(configDir+weightDir+ver)
 test = os.listdir(configDir+weightDir+ver)
