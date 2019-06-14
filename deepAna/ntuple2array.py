@@ -236,10 +236,17 @@ if __name__ == '__main__':
 
     (options,args) = parser.parse_args()
 
-    start_time = time.time()
-
     ntupleDir = '/data/users/seohyun/ntuple/hep2019/split/'
     arrayDir = './array/'
+
+    processes = []
+    if len(args) is 1:
+      f = open(args[0], "r") 
+      processes = f.read().splitlines()
+    else:
+      processes = os.listdir(ntupleDir) 
+
+    start_time = time.time()
 
     if options.deep:
 	makeCombi('/data/users/seohyun/ntuple/hep2019/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)
@@ -250,7 +257,7 @@ if __name__ == '__main__':
 	makeCombi(ntupleDir+'TTLJ_PowhegPythia_ttbb','Tree_ttbbLepJets_002.root' ,'./test')
 
     if options.all:
-	for process in os.listdir(ntupleDir):
+	for process in processes:
 	    if not os.path.exists(arrayDir+process):
 		os.makedirs(arrayDir+process)
 	    for item in os.listdir(ntupleDir+process):
@@ -262,7 +269,7 @@ if __name__ == '__main__':
 	if options.sys:
 	    syslist = ['jecup','jecdown','jerup','jerdown']
 	    for sys in syslist:
-		for process in os.listdir(ntupleDir):
+		for process in processes:
 		    if not ('Data' in process or 'SYS' in process or 'Herwig' in process or 'Evtgen' in process or 'aMC' in process):
 			os.makedirs(arrayDir+process+'__'+sys)
 			for item in os.listdir(ntupleDir+process):
