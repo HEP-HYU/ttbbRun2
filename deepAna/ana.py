@@ -395,9 +395,9 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
                 elif 'musfdown' in sys: eventweight *= event['lepton_SF'][2]
                 else                  : eventweight *= event['lepton_SF'][0]
 
-                if   'mutrgup'   in sys: eventweight *= event['lepton_SF'][4]
-                elif 'mutrgdown' in sys: eventweight *= event['lepton_SF'][5]
-                else                   : eventweight *= event['lepton_SF'][3]
+                #if   'mutrgup'   in sys: eventweight *= event['lepton_SF'][4]
+                #elif 'mutrgdown' in sys: eventweight *= event['lepton_SF'][5]
+                #else                   : eventweight *= event['lepton_SF'][3]
 
             elif passelectron:
                 #[0]~[2]: ID/Iso/Reco, [3]~[5]: Trigger
@@ -405,9 +405,9 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
                 elif 'elsfdown' in sys: eventweight *= event['lepton_SF'][2]
                 else                  : eventweight *= event['lepton_SF'][0]
 
-                if   'eltrgup'   in sys: eventweight *= event['lepton_SF'][4]
-                elif 'eltrgdown' in sys: eventweight *= event['lepton_SF'][5]
-                else                   : eventweight *= event['lepton_SF'][3]
+                #if   'eltrgup'   in sys: eventweight *= event['lepton_SF'][4]
+                #elif 'eltrgdown' in sys: eventweight *= event['lepton_SF'][5]
+                #else                   : eventweight *= event['lepton_SF'][3]
 
             #Scale Weight(ME)
             # [0] = muF up, [1] = muF down, [2] = muR up, [3] = muR up && muF up
