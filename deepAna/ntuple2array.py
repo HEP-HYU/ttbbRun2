@@ -16,6 +16,30 @@ from tqdm import tqdm
 
 import utils as ut
 
+def merge(arrayDir):
+  for process in os.listdir(arrayDir):
+        print process
+        inputDir = arrayDir + "/" + process
+        print "merge " + inputDir
+        if os.path.isdir(inputDir):
+            selEvent = pd.DataFrame([])
+            max_nevt_num = 0
+            for item in os.listdir(inputDir):
+                #print "Load file : "+str(inputDir)+'/'+str(item)
+                df = pd.read_hdf(inputDir+'/'+item)
+                last = 0
+                if df.size != 0: last = int(df.tail(1)['event'])+1
+                df['event'] = df['event'] + max_nevt_num
+                #str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)+' and njets >= 6 and nbjets >= 3'
+                #df = df.query(str_query)
+                #df.reset_index(drop=True, inplace=True)
+                selEvent = pd.concat([selEvent,df], axis=0)
+                max_nevt_num += last
+
+            selEvent.reset_index(drop=True, inplace=True)
+            io.save(arrayDir+"/"+process+".h5",selEvent)
+
+
 def transversemass(vec1, met):
     tmp1 = TLorentzVector(vec1.Px(), vec1.Py(), 0, vec1.E()*math.sin(vec1.Theta()))
     tmp2 = TLorentzVector(met.Px(), met.Py(), 0, met.E());
@@ -214,6 +238,11 @@ if __name__ == '__main__':
     convert root ntuple to array 
     """
 
+    parser.add_option("-m", "--merge", dest="merge",
+                      action = 'store_true',
+                      default=False,
+                      help='Merge array files for each process')
+
     parser.add_option("-t", "--test", dest="test",
 		      action = 'store_true',
 		      default=False,
@@ -236,7 +265,7 @@ if __name__ == '__main__':
 
     (options,args) = parser.parse_args()
 
-    ntupleDir = '/data/users/seohyun/ntuple/hep2019/split/'
+    ntupleDir = '/data/users/seohyun/ntuple/Run2017/V9_5/split/'
     arrayDir = './array/'
 
     processes = []
@@ -247,6 +276,9 @@ if __name__ == '__main__':
       processes = os.listdir(ntupleDir) 
 
     start_time = time.time()
+
+    if options.merge:
+      merge(arrayDir)
 
     if options.deep:
 	makeCombi('/data/users/seohyun/ntuple/hep2019/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)

@@ -29,6 +29,11 @@ from keras.callbacks import Callback, ModelCheckpoint
 import utils as ut
 
 def ana(inputDir, process, outputDir, sys='', flag1=False):
+
+    ##for now,it is different from inputDir
+    ##needed for gentree and event info.
+    ntuple_path = '/data/users/seohyun/ntuple/Run2017/V9_5/nosplit/'
+
     if '__' in process:
         process = process.split('__')[0]
     print("Process: "+process+"\n")
@@ -98,22 +103,24 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     nChannel = 2
     nStep = 4
 
-    print "\nMerge arrays"
-    selEvent = pd.DataFrame([])
-    max_nevt_num = 0
-    for item in os.listdir(inputDir):
-        #print "Load file : "+str(inputDir)+'/'+str(item)
-        df = pd.read_hdf(inputDir+'/'+item)
-        last = 0
-        if df.size != 0: last = int(df.tail(1)['event'])+1
-        df['event'] = df['event'] + max_nevt_num
-        str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)+' and njets >= 6 and nbjets >= 3'
-        df = df.query(str_query)
-        #df.reset_index(drop=True, inplace=True)
-        selEvent = pd.concat([selEvent,df], axis=0)
-        max_nevt_num += last
+    selEvent = pd.read_hdf(inputDir+".h5") 
 
-    selEvent.reset_index(drop=True, inplace=True)
+    #print "\nMerge arrays"
+    #selEvent = pd.DataFrame([])
+    #max_nevt_num = 0
+    #for item in os.listdir(inputDir):
+    #    #print "Load file : "+str(inputDir)+'/'+str(item)
+    #    df = pd.read_hdf(inputDir+'/'+item)
+    #    last = 0
+    #    if df.size != 0: last = int(df.tail(1)['event'])+1
+    #    df['event'] = df['event'] + max_nevt_num
+    #    str_query = 'csv1 > '+str(jet_CSV)+' and csv2 > '+str(jet_CSV)+' and njets >= 6 and nbjets >= 3'
+    #    df = df.query(str_query)
+    #    #df.reset_index(drop=True, inplace=True)
+    #    selEvent = pd.concat([selEvent,df], axis=0)
+    #    max_nevt_num += last
+
+    #selEvent.reset_index(drop=True, inplace=True)
 
     nMatchable = 4864
     #ttbbFilter nMatchable: 5557
@@ -293,7 +300,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
 
     if ttbb == True:
         genchain = TChain("ttbbLepJets/gentree")
-        genchain.Add("/data/users/seohyun/ntuple/hep2019/nosplit/"+ntuple+".root")
+        genchain.Add(ntuple_path+"/"+ntuple+".root")
 
         print "GENTREE RUN"
         for i in xrange(genchain.GetEntries()):
@@ -573,7 +580,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_respMatrix_invMass[iChannel].ClearUnderflowAndOverflow()
 
 
-    ntuple_path = '/data/users/seohyun/ntuple/hep2019/nosplit/'
     f_ntuple = TFile.Open(os.path.join(ntuple_path, ntuple+'.root'),'read')
     h_eventinfo = f_ntuple.Get("ttbbLepJets/EventInfo")
     h_scaleweight = f_ntuple.Get("ttbbLepJets/ScaleWeights")
