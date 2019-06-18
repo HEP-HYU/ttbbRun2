@@ -70,7 +70,7 @@
   marker-size: 0.6
   group: GData
 
-'hist_ttbb.root':
+'hist_TTLJ_PowhegPythia_ttbb.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttbb'
   cross-section: 365.34
@@ -82,7 +82,7 @@
   order: 0
 #  scale: 0.992
 
-'hist_ttbj.root':
+'hist_TTLJ_PowhegPythia_ttbj.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttbj'
   cross-section: 365.34
@@ -93,7 +93,7 @@
   order: 1
 #  scale: 0.997
 
-'hist_ttcc.root':
+'hist_PowhegPythia_ttcc.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttcc'
   cross-section: 365.34
@@ -104,7 +104,7 @@
   order: 2
 #  scale: 0.871
 
-'hist_ttLF.root':
+'hist_PowhegPythia_ttLF.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttLF'
   cross-section: 365.34
@@ -115,7 +115,7 @@
   order: 3
   scale: 0.890
 
-'hist_ttother.root':
+'hist_PowhegPythia_ttother.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttother'
   cross-section: 365.34
@@ -126,10 +126,10 @@
   yields-group: '4\ttbar Bkg'
   order: 4
 
-'hist_ttbkg.root':
+'hist_TTJJ_PowhegPythiaBkg.root':
   type: mc
-  pretty-name: 'ttbar_PowhegPythiaBkg'
-  cross-section: 831.76 
+  pretty-name: 'TTJJ_PowhegPythiaBkg'
+  cross-section: 377.96 
   generated-events: 129211204 #? 
   fill-color: '#ff6666'
   legend: 'ttBkg'
@@ -148,9 +148,9 @@
 #yields-group: '5Other'
 #  order: 7
 
-'hist_ttW.root':
+'hist_ttWToLNu_aMCatNLOMadspinPythia.root':
   type: mc
-  pretty-name: 'ttW_Madgraph'
+  pretty-name: 'ttWToLNu_aMCatNLOMadspinPythia'
   cross-section: 0.2043 
   generated-events: 2686141 #?
   fill-color: '#ff66ff'
@@ -158,6 +158,17 @@
   group: GttV
   yields-group: '5Other'
   order: 9
+
+'hist_ttWToQQ_aMCatNLOMadspinPythia.root':
+  type: mc
+  pretty-name: 'ttWToQQ_aMCatNLOMadspinPythia'
+  cross-section: 0.4062
+  generated-events: 441560 #?
+  fill-color: '#ff66ff'
+  legend: 'ttV'
+  group: GttV
+  yields-group: '5Other'
+  order: 10
 
 #'hist_ttZ.root':
 #  type: mc

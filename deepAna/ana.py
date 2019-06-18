@@ -39,25 +39,25 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     print("Process: "+process+"\n")
     print("Systematics: "+sys+"\n")
     ntuple = process
-    if   'ttbb'          in process: process = 'ttbb'
-    elif 'ttbj'          in process: process = 'ttbj'
-    elif 'ttcc'          in process: process = 'ttcc'
-    elif 'ttLF'          in process: process = 'ttLF'
-    elif 'ttother'       in process: process = 'ttother'
-    elif 'PythiaBkg'     in process: process = 'ttbkg'
-    elif 'ttHbb'         in process: process = 'ttH'
-    elif 'ttW'           in process: process = 'ttW'
-    elif 'ttZ'           in process: process = 'ttZ'
-    elif 't_Powheg'      in process: process = 'tchannel'
-    elif 'tbar_Powheg'   in process: process = 'tbarchannel'
-    elif 'tW_Powheg'     in process: process = 'tWchannel'
-    elif 'tbarW_Powheg'  in process: process = 'tbarWchannel'
-    elif 'WJets'         in process: process = 'wjets'
-    elif 'ZJets_M10to50' in process: process = 'zjets10to50'
-    elif 'ZJets_M50'     in process: process = 'zjets'
-    elif 'WW'            in process: process = 'ww'
-    elif 'WZ'            in process: process = 'wz'
-    elif 'ZZ'            in process: process = 'zz'
+#    if   'ttbb'          in process: process = 'ttbb'
+#    elif 'ttbj'          in process: process = 'ttbj'
+#    elif 'ttcc'          in process: process = 'ttcc'
+#    elif 'ttLF'          in process: process = 'ttLF'
+#    elif 'ttother'       in process: process = 'ttother'
+#    elif 'PythiaBkg'     in process: process = 'ttbkg'
+#    elif 'ttHbb'         in process: process = 'ttH'
+#    elif 'ttW'           in process: process = 'ttW'
+#    elif 'ttZ'           in process: process = 'ttZ'
+#    elif 't_Powheg'      in process: process = 'tchannel'
+#    elif 'tbar_Powheg'   in process: process = 'tbarchannel'
+#    elif 'tW_Powheg'     in process: process = 'tWchannel'
+#    elif 'tbarW_Powheg'  in process: process = 'tbarWchannel'
+#    elif 'WJets'         in process: process = 'wjets'
+#    elif 'ZJets_M10to50' in process: process = 'zjets10to50'
+#    elif 'ZJets_M50'     in process: process = 'zjets'
+#    elif 'WW'            in process: process = 'ww'
+#    elif 'WZ'            in process: process = 'wz'
+#    elif 'ZZ'            in process: process = 'zz'
 
     if 'Filter' in inputDir: process = 'ttbbFilter'+process
 
@@ -402,9 +402,9 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
                 elif 'musfdown' in sys: eventweight *= event['lepton_SF'][2]
                 else                  : eventweight *= event['lepton_SF'][0]
 
-                #if   'mutrgup'   in sys: eventweight *= event['lepton_SF'][4]
-                #elif 'mutrgdown' in sys: eventweight *= event['lepton_SF'][5]
-                #else                   : eventweight *= event['lepton_SF'][3]
+                if   'mutrgup'   in sys: eventweight *= event['lepton_SF'][4]
+                elif 'mutrgdown' in sys: eventweight *= event['lepton_SF'][5]
+                else                   : eventweight *= event['lepton_SF'][3]
 
             elif passelectron:
                 #[0]~[2]: ID/Iso/Reco, [3]~[5]: Trigger
@@ -412,9 +412,9 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
                 elif 'elsfdown' in sys: eventweight *= event['lepton_SF'][2]
                 else                  : eventweight *= event['lepton_SF'][0]
 
-                #if   'eltrgup'   in sys: eventweight *= event['lepton_SF'][4]
-                #elif 'eltrgdown' in sys: eventweight *= event['lepton_SF'][5]
-                #else                   : eventweight *= event['lepton_SF'][3]
+                if   'eltrgup'   in sys: eventweight *= event['lepton_SF'][4]
+                elif 'eltrgdown' in sys: eventweight *= event['lepton_SF'][5]
+                else                   : eventweight *= event['lepton_SF'][3]
 
             #Scale Weight(ME)
             # [0] = muF up, [1] = muF down, [2] = muR up, [3] = muR up && muF up
