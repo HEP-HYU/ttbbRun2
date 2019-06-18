@@ -71,30 +71,6 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
     for i in xrange(chain.GetEntries()) :
         chain.GetEntry(i)
 
-        lepton_SF = 1.0
-        jet_SF_CSV = 1.0
-        pdfweight = []
-        scaleweight = []
-        PUWeight = []
-        lepton_SF = []
-        jet_SF_CSV_30 = []
-        if not data:
-            for j in xrange((chain.lepton_SF).size()):
-                lepton_SF.append(float(chain.lepton_SF[j]))
-            for j in xrange((chain.jet_SF_deepCSV_30).size()):
-                jet_SF_CSV_30.append(float(chain.jet_SF_deepCSV_30[j]))
-            for j in xrange((chain.PUWeight).size()):
-                PUWeight.append(float(chain.PUWeight[j]))
-        if 'TT' in inputDir or 'tt' in inputDir:
-            for j in xrange((chain.scaleweight).size()):
-                scaleweight.append(float(chain.scaleweight[j]))
-            for j in xrange((chain.pdfweight).size()):
-                pdfweight.append(float(chain.pdfweight[j]))
-
-        MET_px = chain.MET*math.cos(chain.MET_phi)
-        MET_py = chain.MET*math.sin(chain.MET_phi)
-        nu = TLorentzVector(MET_px, MET_py, 0, chain.MET)
-
         lep = TLorentzVector()
         lep.SetPtEtaPhiE(chain.lepton_pt, chain.lepton_eta, chain.lepton_phi, chain.lepton_e)
         passmuon = False
@@ -140,6 +116,30 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         if njets < 6 or nbjets < 3: continue
         #print("addbjet1: "+str(addbjet1.Pt())+" matched: "+str(addbjet1_matched.Pt()))
         #print("addbjet2: "+str(addbjet2.Pt())+" matched: "+str(addbjet2_matched.Pt()))
+
+        lepton_SF = 1.0
+        jet_SF_CSV = 1.0
+        pdfweight = []
+        scaleweight = []
+        PUWeight = []
+        lepton_SF = []
+        jet_SF_CSV_30 = []
+        if not data:
+            for j in xrange((chain.lepton_SF).size()):
+                lepton_SF.append(float(chain.lepton_SF[j]))
+            for j in xrange((chain.jet_SF_deepCSV_30).size()):
+                jet_SF_CSV_30.append(float(chain.jet_SF_deepCSV_30[j]))
+            for j in xrange((chain.PUWeight).size()):
+                PUWeight.append(float(chain.PUWeight[j]))
+        if 'TT' in inputDir or 'tt' in inputDir:
+            for j in xrange((chain.scaleweight).size()):
+                scaleweight.append(float(chain.scaleweight[j]))
+            for j in xrange((chain.pdfweight).size()):
+                pdfweight.append(float(chain.pdfweight[j]))
+
+        MET_px = chain.MET*math.cos(chain.MET_phi)
+        MET_py = chain.MET*math.sin(chain.MET_phi)
+        nu = TLorentzVector(MET_px, MET_py, 0, chain.MET)
 
         for j in range(len(chain.jet_pt)-1):
             for k in range(j+1, len(chain.jet_pt)):
