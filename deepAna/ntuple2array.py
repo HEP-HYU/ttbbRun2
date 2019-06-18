@@ -117,8 +117,6 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         #print("addbjet1: "+str(addbjet1.Pt())+" matched: "+str(addbjet1_matched.Pt()))
         #print("addbjet2: "+str(addbjet2.Pt())+" matched: "+str(addbjet2_matched.Pt()))
 
-        lepton_SF = 1.0
-        jet_SF_CSV = 1.0
         pdfweight = []
         scaleweight = []
         PUWeight = []
@@ -265,7 +263,8 @@ if __name__ == '__main__':
 
     (options,args) = parser.parse_args()
 
-    ntupleDir = '/data/users/seohyun/ntuple/Run2017/V9_5/split/'
+    tmpDir = '/data/users/seohyun/ntuple/Run2017/V9_5/'
+    ntupleDir = tmpDir+'/split/'
     arrayDir = './array/'
 
     processes = []
@@ -281,7 +280,7 @@ if __name__ == '__main__':
       merge(arrayDir)
 
     if options.deep:
-	makeCombi('/data/users/seohyun/ntuple/hep2019/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)
+	makeCombi(tmpDir+'/nosplit/', 'TTLJ_PowhegPythia_ttbb.root', arrayDir, True)
 
     if options.test:
 	if not os.path.exists("test"):
