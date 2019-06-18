@@ -24,5 +24,6 @@ print options.inputFile
 df = pd.read_hdf(options.inputFile)
 df = df.query(options.cuts)
 
-print df
+#print df
+print "total entries = " , len(df)
 
