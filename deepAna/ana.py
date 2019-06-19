@@ -122,7 +122,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
 
     #selEvent.reset_index(drop=True, inplace=True)
 
-    nMatchable = 4864
+    # should get the number automatically 
+    nMatchable = 6010
     #ttbbFilter nMatchable: 5557
     countMatchable = False
     if countMatchable :
@@ -526,12 +527,15 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
             matching_DNN = float(nEvt_isMatch_DNN) / float(nEvents)
             #matching_mindR = float(nEvt_isMatch_mindR) / float(nEvents)
         #print "\nSelected Events / Total Events : "+str(nEvents)+"/"+str(nTotal)
-        print "\nMatching ratio with matchable events from DNN : "+str(matching_DNN_able)+"("+str(nEvt_isMatch_DNN)+"/"+str(nMatchable)+")"
-        print "Matching ratio with step 3 events from DNN : "+str(matching_DNN)+"("+str(nEvt_isMatch_DNN)+"/"+str(nEvents)+")"
+        string_nmatch_matchable = "Matching ratio with matchable events from DNN : "+str(matching_DNN_able)+"("+str(nEvt_isMatch_DNN)+"/"+str(nMatchable)+")"
+        string_nmatch_final = "Matching ratio with step 3 events from DNN : "+str(matching_DNN)+"("+str(nEvt_isMatch_DNN)+"/"+str(nEvents)+")"
+        print string_nmatch_matchable
+        print string_nmatch_final
         #print "Matching Ratio from minimun dR : "+str(matching_mindR)+"("+str(nEvt_isMatch_mindR)+"/"+str(nEvents)+")"
         f_ratio = open('ratio.txt','a')
-        f_ratio.write(modelfile)
-        f_ratio.write("\nMatching ratio with matchable events from DNN: "+str(matching_DNN_able)+"("+str(nEvt_isMatch_DNN)+"/"+str(nMatchable)+")\n")
+        f_ratio.write(modelfile+"\n")
+        f_ratio.write(string_nmatch_matchable+"\n")
+        f_ratio.write(string_nmatch_final)
         f_ratio.close()
 
     for iChannel in range(nChannel) :
