@@ -1,5 +1,5 @@
 #!/usr/bin/python
-test = True
+test = False
 do_sys = True
 
 from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
@@ -23,17 +23,16 @@ def runAna(dir, file, name):
 
 p = TProof.Open("", "workers=8")
 
-inputDir = "/data/users/seohyun/ntuple/hep2017/v808/nosplit/"
+inputDir = "/data/users/seohyun/ntuple/Run2016/v808/nosplit/"
 
 if test:
-  runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
-  #runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
+  runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
 else:
   # v808 #
   ### Basic plots ###
   runAna(inputDir,"DataSingleEG.root","DataSingleEl")
   runAna(inputDir,"DataSingleMu.root","DataSingleMu")
-  runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
+  runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb")
 
   runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
   runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj")
@@ -92,7 +91,7 @@ else:
 
   if do_sys:
     for index, value in enumerate(sys_list):
-      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
+      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb")
 
       runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
@@ -117,7 +116,7 @@ else:
       runAna(inputDir,"ttZ_Madgraph.root","ttZ"+value)
 
     for index, value in enumerate(sys_list2):
-      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
+      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb")
       runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)
