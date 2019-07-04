@@ -4,13 +4,13 @@
 #include "../include/histBook.h"
 #include "../include/tdrstyle.C"
 
-const bool runSystematics = false;
+const bool runSystematics = true;
 const char *genMode = "mindR";
 
 HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst);
 void DrawHist(TH1 *h_in, std::string name, bool drawError);
 
-void makeCriteria(){
+void makeAcceptance(){
   string input_dir = "../output/post/";
   TFile *f_in = TFile::Open(Form("%s/hist_ttbb.root", input_dir.c_str()));
   TFile *f_out = TFile::Open(Form("%s/hist_criteria_%s.root", input_dir.c_str(), genMode),"recreate");
