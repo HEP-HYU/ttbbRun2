@@ -1,5 +1,5 @@
 #!/usr/bin/python
-test = False
+test = False 
 do_sys = True
 
 from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
@@ -26,7 +26,23 @@ p = TProof.Open("", "workers=8")
 inputDir = "/data/users/seohyun/ntuple/Run2016/v808/nosplit/"
 
 if test:
-  runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
+  runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb")
+  sys_list = [
+      "__jerup", "__jerdown", "__jecup", "__jecdown",
+      "__puup", "__pudown",
+      "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
+      "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
+      "__lfup", "__lfdown", "__hfup", "__hfdown",
+      "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
+      "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
+      "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down"
+  ]
+  sys_list2 = ["__scale0", "__scale1","__scale2","__scale3","__scale4","__scale5"]
+  for index, value in enumerate(sys_list):
+    runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb"+value)
+  for index, value in enumerate(sys_list2):
+    runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb"+value)
+
 else:
   # v808 #
   ### Basic plots ###
@@ -91,7 +107,7 @@ else:
 
   if do_sys:
     for index, value in enumerate(sys_list):
-      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb")
+      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb"+value)
 
       runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
@@ -116,7 +132,7 @@ else:
       runAna(inputDir,"ttZ_Madgraph.root","ttZ"+value)
 
     for index, value in enumerate(sys_list2):
-      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb")
+      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilterttbb"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
       runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)
