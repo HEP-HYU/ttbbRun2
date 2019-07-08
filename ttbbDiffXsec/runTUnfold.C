@@ -18,8 +18,8 @@ std::vector<TH1 *> runTUnfold(const char *data_name_, TH1 *h_in_, TH2 *h_resp_,
     bool fixTau_ = false, double fixedTau_ = 0.)
 {
   auto data_name = data_name_; 
-  auto h_in = h_in_;
-  auto h_resp = h_resp_;
+  TH1 * h_in = (TH1 *)h_in_->Clone();
+  TH2 * h_resp = (TH2 *)h_resp_->Clone();
   auto scanLcurve = scanLcurve_;
   string regMethod;
   if(scanLcurve_){

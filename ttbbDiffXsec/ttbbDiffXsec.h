@@ -43,7 +43,6 @@ const double SF_ttcc = 0.871;
 const double SF_ttLF = 0.890;
 
 std::vector<std::string> syst_list = {
-  //"__psup", "__psdown", "__swup", "__swdown",
   "__jerup", "__jerdown", "__jecup", "__jecdown",
   "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
   "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
@@ -51,6 +50,12 @@ std::vector<std::string> syst_list = {
   "__hfstat1up","__hfstat1down", "__hfstat2up", "__hfstat2down",
   "__lfstat1up","__lfstat1down", "__lfstat2up", "__lfstat2down",
   "__cferr1up", "__cferr1down",  "__cferr2up",  "__cferr2down",
+  "__puup", "__pudown"
+};
+
+std::vector<std::string> syst_ttbar = {
+  "__psup", "__psdown", "__swup", "__swdown",
+  "__hdampup", "__hdampdown", "__tuneup", "__tunedown"
 };
 
 TGraphErrors *buildGraphFromHist(TH1* h){

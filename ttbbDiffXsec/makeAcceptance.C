@@ -1,11 +1,9 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/histBook.h"
-#include "../include/tdrstyle.C"
-
-const bool runSystematics = true;
-const char *genMode = "mindR";
+#include "ttbbDiffXsec.h"
+//#include "../include/histBook.h"
+//#include "../include/tdrstyle.C"
 
 HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst);
 void DrawHist(TH1 *h_in, std::string name, bool drawError);
@@ -15,18 +13,9 @@ void makeAcceptance(){
   TFile *f_in = TFile::Open(Form("%s/hist_ttbb.root", input_dir.c_str()));
   TFile *f_out = TFile::Open(Form("%s/hist_criteria_%s.root", input_dir.c_str(), genMode),"recreate");
 
-  std::vector<std::string> v_syst_list = {
-    "", "__jerup", "__jerdown", "__jecup", "__jecdown",
-    "__puup", "__pudown",
-    "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
-    "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
-    "__lfup", "__lfdown", "__hfup", "__hfdown",
-    "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
-    "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
-    "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down",
-    //"__psup", "__psdown", "__swup", "__swdown",
-    "__hdampup", "__hdampdown", "__tuneup", "__tunedown"
-  };
+  std::vector<std::string> v_syst_list = {""};
+  v_syst_list.insert(v_syst_list.end(), syst_list.begin(), syst_list.end());
+  v_syst_list.insert(v_syst_list.end(), syst_ttbar.begin(), syst_ttbar.end());
 
   f_out->cd();
   for(auto v_itr = v_syst_list.begin(); v_itr != v_syst_list.end(); ++v_itr){

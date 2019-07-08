@@ -15,6 +15,8 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
   gErrorIgnoreLevel = kFatal; // kWarning
   gROOT->ProcessLine("setTDRStyle();");
 
+  auto syst_total = syst_list;
+  syst_total.insert(syst_total.end(), syst_ttbar.begin(), syst_ttbar.end());
   std::cout << "Load Files..." << std::endl;
   TFile *f_out = TFile::Open(Form("%s/hist_unfolded_%s.root", output_dir.c_str(), input.c_str()),"recreate");
 
@@ -60,10 +62,6 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
     
     if(runSystematics){
       for(auto v_itr = syst_list.begin(); v_itr != syst_list.end(); ++v_itr){
-	if((pos = (*v_itr).find("ps")) != std::string::npos) continue;
-	//if((pos = (*v_itr).find("sw")) != std::string::npos) continue;
-	//if((pos = (*v_itr).find("jer")) != std::string::npos) continue;
-	//if((pos = (*v_itr).find("jec")) != std::string::npos) continue;
 	TH2 *tmp_dR, *tmp_M, *tmp_dEta, *tmp_dPhi;
 	tmp_dR   = (TH2 *)f_matrix->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, MATRIX_DR_,   ich, (*v_itr).c_str()));
 	tmp_M    = (TH2 *)f_matrix->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, MATRIX_M_,    ich, (*v_itr).c_str()));
@@ -78,8 +76,6 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
       }
     }
   }
-  std::cout << "m_sys_dR[0]: " << m_sys_dR[0].size() << std::endl;
-
   std::map<const char *, TH1 *> m_bkg_dR[nChannel], m_bkg_M[nChannel], m_bkg_dEta[nChannel], m_bkg_dPhi[nChannel];
   std::map<const char *, double> m_scale;
   std::map<const char *, std::map<const char *, TH1 *>> m_bkgsys_dR[nChannel], m_bkgsys_M[nChannel], m_bkgsys_dEta[nChannel], m_bkgsys_dPhi[nChannel];
@@ -112,12 +108,8 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
       }
     }
     if(runSystematics){
-      std::cout << "Fill bkg sys samples" << std::endl;
       std::map<const char *, TH1 *> m_tmp_dR, m_tmp_M, m_tmp_dEta, m_tmp_dPhi;
       for(auto v_itr = syst_list.begin(); v_itr != syst_list.end(); ++v_itr){
-	if((pos = (*v_itr).find("ps")) != std::string::npos) continue;
-	std::cout << *v_itr << std::endl;
-	//if((pos = (*v_itr).find("sw")) != std::string::npos) continue;
 	for(int ich=0; ich<nChannel; ++ich){
 	  for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
 	    if(i == TTBB_) continue;
@@ -137,11 +129,47 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
 	  m_bkgsys_M[ich].insert(pair<const char *,    std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_M));
 	  m_bkgsys_dEta[ich].insert(pair<const char *, std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_dEta));
 	  m_bkgsys_dPhi[ich].insert(pair<const char *, std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_dPhi));
+
+	  m_tmp_dR.clear();
+	  m_tmp_M.clear();
+	  m_tmp_dEta.clear();
+	  m_tmp_dPhi.clear();
+	}	
+      }
+      for(auto v_itr = syst_ttbar.begin(); v_itr != syst_ttbar.end(); ++v_itr){
+        for(int ich=0; ich<nChannel; ++ich){
+	  for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
+	    if(i == TTBB_) continue;
+	    
+	    TH1 *tmp_dR, *tmp_M, *tmp_dEta, *tmp_dPhi;
+	    
+	    if(i <= TTOTHER_){
+	      tmp_dR   = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_DR_,   ich, (*v_itr).c_str()));
+	      tmp_M    = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_M_,    ich, (*v_itr).c_str()));
+	      tmp_dEta = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_DETA_, ich, (*v_itr).c_str()));
+	      tmp_dPhi = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_DPHI_, ich, (*v_itr).c_str()));
+	    }
+	    else{
+	      tmp_dR   = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_DR_,   ich));
+	      tmp_M    = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_M_,    ich));
+	      tmp_dEta = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_DETA_, ich));
+	      tmp_dPhi = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_DPHI_, ich));
+	    }
+	    m_tmp_dR.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_dR));
+	    m_tmp_M.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_M));
+	    m_tmp_dEta.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_dEta));
+	    m_tmp_dPhi.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_dPhi));
+	  }
+	  m_bkgsys_dR[ich].insert(pair<const char *,   std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_dR));
+	  m_bkgsys_M[ich].insert(pair<const char *,    std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_M));
+	  m_bkgsys_dEta[ich].insert(pair<const char *, std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_dEta));
+	  m_bkgsys_dPhi[ich].insert(pair<const char *, std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_dPhi));
+
+	  m_tmp_dR.clear();
+	  m_tmp_M.clear();
+	  m_tmp_dEta.clear();
+	  m_tmp_dPhi.clear();
 	}
-	m_tmp_dR.clear();
-	m_tmp_M.clear();
-	m_tmp_dEta.clear();
-	m_tmp_dPhi.clear();
       }
     }
   }
@@ -193,27 +221,33 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
 
       if(runSystematics){
         std::vector<TH1 *> v_tmp_dR, v_tmp_M, v_tmp_dEta, v_tmp_dPhi;
-        for(auto v_itr = syst_list.begin(); v_itr != syst_list.end(); ++v_itr){
+        for(auto m_itr = m_bkgsys_dR[ich].begin(); m_itr != m_bkgsys_dR[ich].end(); ++m_itr){
 	  v_tmp_dR = runTUnfold(
               input.c_str(), h_data_dR[ich], h_resp_dR[ich], 
-              (m_bkgsys_dR[ich])[(*v_itr).c_str()], m_scale, m_sys_dR[ich],
+              m_itr->second, m_scale, m_sys_dR[ich],
               scanLcurve, taumin_dR, taumax_dR, fixtau_dR, fixedtau_dR);
-	          v_tmp_M = runTUnfold(
+	  m_unbkgsys_dR.insert(std::pair<const char *, TH1 *>(m_itr->first, v_tmp_dR[0]));
+	}
+        for(auto m_itr = m_bkgsys_M[ich].begin(); m_itr != m_bkgsys_M[ich].end(); ++m_itr){
+	  v_tmp_M = runTUnfold(
               input.c_str(), h_data_M[ich], h_resp_M[ich],
-              (m_bkgsys_M[ich])[(*v_itr).c_str()], m_scale, m_sys_M[ich],
+              m_itr->second, m_scale, m_sys_M[ich],
               scanLcurve, taumin_M, taumax_M, fixtau_M, fixedtau_M);
+	  m_unbkgsys_M.insert(std::pair<const char *, TH1 *>(m_itr->first ,v_tmp_M[0]));
+	}
+        for(auto m_itr = m_bkgsys_dEta[ich].begin(); m_itr != m_bkgsys_dEta[ich].end(); ++m_itr){
           v_tmp_dEta = runTUnfold(
               input.c_str(), h_data_dEta[ich], h_resp_dEta[ich], 
-              (m_bkgsys_dEta[ich])[(*v_itr).c_str()], m_scale, m_sys_dEta[ich],
+              m_itr->second, m_scale, m_sys_dEta[ich],
               scanLcurve, taumin_dEta, taumax_dEta, fixtau_dEta, fixedtau_dEta);
+	  m_unbkgsys_dEta.insert(std::pair<const char *, TH1 *>(m_itr->first ,v_tmp_dEta[0]));
+	}
+        for(auto m_itr = m_bkgsys_dPhi[ich].begin(); m_itr != m_bkgsys_dPhi[ich].end(); ++m_itr){
           v_tmp_dPhi = runTUnfold(
               input.c_str(), h_data_dPhi[ich], h_resp_dPhi[ich], 
-              (m_bkgsys_dPhi[ich])[(*v_itr).c_str()], m_scale, m_sys_dPhi[ich],
+              m_itr->second, m_scale, m_sys_dPhi[ich],
               scanLcurve, taumin_dPhi, taumax_dPhi, fixtau_dPhi, fixedtau_dPhi);
-	  m_unbkgsys_dR.insert(std::pair<const char *, TH1 *>((*v_itr).c_str() ,v_tmp_dR[0]));
-	  m_unbkgsys_M.insert(std::pair<const char *, TH1 *>((*v_itr).c_str() ,v_tmp_M[0]));
-	  m_unbkgsys_dEta.insert(std::pair<const char *, TH1 *>((*v_itr).c_str() ,v_tmp_dEta[0]));
-	  m_unbkgsys_dPhi.insert(std::pair<const char *, TH1 *>((*v_itr).c_str() ,v_tmp_dPhi[0]));
+	  m_unbkgsys_dPhi.insert(std::pair<const char *, TH1 *>(m_itr->first ,v_tmp_dPhi[0]));
 	}
       }
     }
@@ -304,7 +338,8 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
     std::vector<TH1 *>v_dR_sys, v_M_sys, v_dEta_sys, v_dPhi_sys;
     if( runSystematics ){
       // Acceptance uncertainties
-      for(auto v_itr=syst_list.begin(); v_itr != syst_list.end(); ++v_itr){
+      for(auto v_itr=syst_total.begin(); v_itr != syst_total.end(); ++v_itr){
+	std::cout << *v_itr << std::endl;
         TH1 *h_dR1 = (TH1 *)f_criteria->Get(Form("h_%s_Ch%d%s", ACC_DR_, ich, (*v_itr).c_str()));
 	TH1 *h_dR2 = (TH1 *)calculateDiffXsec(h_unfolded_dR, h_dR1);
 	h_dR2->SetName(Form("%s_Acceptance%s", h_dR2->GetName(), (*v_itr).c_str()));

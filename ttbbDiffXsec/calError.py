@@ -24,14 +24,16 @@ f_list = []
 f_list.append(TFile.Open("../output/unfold/hist_unfolded_hist_DataSingleMu.root"))
 f_list.append(TFile.Open("../output/unfold/hist_unfolded_hist_DataSingleEl.root"))
 syst_list = [
-    #"__ps", "__sw",
     "__jer", "__jec",
     "__musf", "__mutrg",
     "__elsf", "__eltrg",
     "__lf", "__hf",
     "__hfstat1", "__hfstat2",
     "__lfstat1", "__lfstat2",
-    "__cferr1",  "__cferr2"
+    "__cferr1",  "__cferr2",
+    "__pu",
+    "__ps", "__sw",
+    "__hdamp", "__tune"
 ]
 syst_lep  = ["__musf", "__mutrg", "__elsf", "__eltrg"]
 syst_btag = [
@@ -68,6 +70,7 @@ for f_in in f_list:
 	f_err.write('            Matrix uncertainties \\\\\n')
         syst_errors = {}
         for sys in syst_list:
+            if "ps" in sys or "sw" in sys or "hdamp" in sys or "tune" in sys: continue
             histname = "diffXsec_h_"+genmode+"_"+hist+"_Ch"+str(ich)+"_S3_DeltaSysSource"+sys
             if 'Ch0' in hist and 'el' in sys: continue
             elif 'Ch1' in hist and 'mu' in sys: continue
