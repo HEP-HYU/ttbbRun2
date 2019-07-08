@@ -24,13 +24,14 @@ void makeAcceptance(){
     "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
     "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
     "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down",
-    "__psup", "__psdown", "__swup", "__swdown",
+    //"__psup", "__psdown", "__swup", "__swdown",
     "__hdampup", "__hdampdown", "__tuneup", "__tunedown"
   };
 
   f_out->cd();
   for(auto v_itr = v_syst_list.begin(); v_itr != v_syst_list.end(); ++v_itr){
     if(!(runSystematics || *v_itr == "")) continue;
+    std::cout << "systematics:" << *v_itr << std::endl;
     auto h_tmp = MakeHist(genMode, f_in, *v_itr);
     
     for(int ich=0; ich<nChannel; ++ich){

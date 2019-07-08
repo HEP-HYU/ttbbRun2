@@ -112,31 +112,32 @@ std::vector<TH1 *> runTUnfold(const char *data_name_, TH1 *h_in_, TH2 *h_resp_,
   //h2_ematrix->SetName(Form("Ematrix_%s",h_in->GetName()));
   //Output vector
   //[0]: TUnfold output
-  //[1]: TUnfold input
-  //[2]: Covariance matrix including all contributions
-  //[3]: Covariance contribution from the input uncertainties
-  //[4]: Covariance contribution from uncorrelated (statistical) uncertainties of the response matrix
+  //[1]: Covariance matrix including all contributions
+  //[2]: Covariance contribution from the input statistical uncertainties
+  //[3]: Covariance contribution from uncorrelated (statistical) uncertainties of the response matrix
+  //[4]~[35]: Correlated systematic 1-sigma shift of the input matrix
+  //[36]: 1-sigma shift corresponding to the uncertainty on tau
+  //Useless....
   //[5]~[22]: Covariance contribution from the uncorrelated background uncertainties
   //[23]~[40]: 1-sigma shift corresponding to a background scale uncertainty
   //[41]~[72]: Correlated systematic 1-sigma shift of the input matrix
-  //[73]: 1-sigma shift corresponding to the uncertainty on tau
   //[74]~[105]: Correlated shifts of the input matrix. These shifts are taken as 1-sigma effects when switching on a given error source.
   vector<TH1 *> v_output;
   v_output.push_back(h_output);
   v_output.push_back(unfold->GetEmatrixTotal(Form("%s_EmatrixTot", h_in->GetName())));
   v_output.push_back(unfold->GetEmatrixInput(Form("%s_EmatrixInput",h_in->GetName())));
   v_output.push_back(unfold->GetEmatrixSysUncorr(Form("%s_EmatrixSysUncorr", h_in->GetName())));
-  for(auto m_itr=m_bkgs_.begin(); m_itr != m_bkgs_.end(); ++m_itr){
-    v_output.push_back(unfold->GetEmatrixSysBackgroundUncorr(m_itr->first,
-      Form("%s_EmatrixSysBkgUncorr_%s", h_in->GetName(), m_itr->first)));
-    v_output.push_back(unfold->GetDeltaSysBackgroundScale(m_itr->first,
-      Form("%s_DeltaBkgScale_%s", h_in->GetName(),  m_itr->first)));
-  }
   for(auto m_itr=m_sys_.begin(); m_itr != m_sys_.end(); ++m_itr){
     v_output.push_back(unfold->GetDeltaSysSource(m_itr->first,
       Form("%s_DeltaSysSource%s", h_in->GetName(), m_itr->first)));
-  }
-  v_output.push_back(unfold->GetDeltaSysTau(Form("%s_DeltaSysTau", h_in->GetName())));
+  } 
+  //v_output.push_back(unfold->GetDeltaSysTau(Form("%s_DeltaSysTau", h_in->GetName())));
+  //for(auto m_itr=m_bkgs_.begin(); m_itr != m_bkgs_.end(); ++m_itr){
+  //  v_output.push_back(unfold->GetEmatrixSysBackgroundUncorr(m_itr->first,
+  //    Form("%s_EmatrixSysBkgUncorr_%s", h_in->GetName(), m_itr->first)));
+  //  v_output.push_back(unfold->GetDeltaSysBackgroundScale(m_itr->first,
+  //    Form("%s_DeltaBkgScale_%s", h_in->GetName(),  m_itr->first)));
+  //}
   //for(auto m_itr=m_sys_.begin(); m_itr != m_sys_.end(); ++m_sys){
   //  v_output.push_back(unfold->GetEmatrixSysSource(
   //}

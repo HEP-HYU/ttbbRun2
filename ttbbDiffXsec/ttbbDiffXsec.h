@@ -13,7 +13,7 @@ string outdir = "../output/unfold/";
 
 //Unfolding options
 const char *genMode = "mindR";
-const bool runSystematics = false;
+const bool runSystematics = true;
 
 const bool   useTUnfold = true; 
 const bool   scanLcurve = true;
@@ -43,7 +43,7 @@ const double SF_ttcc = 0.871;
 const double SF_ttLF = 0.890;
 
 std::vector<std::string> syst_list = {
-  "__psup", "__psdown", "__swup", "__swdown",
+  //"__psup", "__psdown", "__swup", "__swdown",
   "__jerup", "__jerdown", "__jecup", "__jecdown",
   "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
   "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
