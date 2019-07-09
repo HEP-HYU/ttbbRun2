@@ -1,4 +1,5 @@
 import math
+import os
 
 from ROOT import *
 import ROOT
@@ -18,6 +19,51 @@ def calError(h_nom, h_sys, delta=True):
 	error.append(err)
 
     return error
+
+def drawHist(h_nom, h_sys_up, h_sys_down):
+    style = TStyle("","")
+    style.SetOptStat(0)
+
+    sysname = (h_sys_up.GetName()).split('__')[1]
+    outname = h_nom.GetName()+'__'+sysname[:-2]
+    if 'Background' in h_sys_up.GetName(): outname = 'Background'+outname
+    if 'DeltaSysSource' in h_sys_up.GetName(): outname = 'Matrix'+outname
+    if 'Acceptance' in h_sys_up.GetName(): outname = 'Acceptance'+outname
+
+    if 'DeltaR' in h_nom.GetName():
+        h_nom.SetXTitle("#DeltaR_{b#bar{b}}")
+        h_nom.SetYTitle("#frac{d#sigma^{full}}{d#DeltaR}[pb]")
+    if 'InvMass' in h_nom.GetName():
+        h_nom.SetXTitle("M_{b#bar{b}}(GeV)")
+        h_nom.SetYTitle("#frac{d#sigma^{full}}{dM}[pb/GeV]")
+        #h_nom.GetXaxis().SetTitleOffset(0.2)
+        h_nom.GetYaxis().SetLabelSize(0.03)
+
+    h_nom.GetYaxis().SetTitleSize(0.045)
+    h_nom.GetYaxis().SetTitleOffset(1.6)
+
+
+    c = TCanvas("","",800,800)
+    leg = TLegend(0.40,0.70,0.89,0.87)
+    leg.SetHeader(sysname[:-2])
+    leg.AddEntry(h_nom, "Central", "p")
+    leg.AddEntry(h_sys_up, "Sys up", "l")
+    leg.AddEntry(h_sys_down, "Sys down", "l")
+
+    style.cd()
+    h_sys_up.SetLineColor(kRed)
+    h_sys_down.SetLineColor(kBlue)
+    h_nom.SetMinimum(0)
+    h_nom.SetMaximum(h_sys_up.GetMaximum()*2.0)
+    h_nom.Draw("axis")
+    h_sys_up.Draw("hist same")
+    h_sys_down.Draw("hist same")
+    h_nom.Draw("p same")
+    leg.Draw("same")
+
+    if not os.path.exists('../output/unfold/syst/'):
+        os.mkdir('../output/unfold/syst')
+    c.Print('../output/unfold/syst/'+outname+'.pdf', "pdf")
 
 f_err = open('../output/unfold/syst_errors.tex', 'w')
 f_list = []
@@ -41,7 +87,10 @@ syst_btag = [
     "__lfstat1", "__lfstat2", "__cferr1", "__cferr2"
 ]
 genmode = "mindR"
-histlist = ["RecoAddbJetDeltaR", "RecoAddbJetInvMass", "RecoAddbJetDeltaPhi", "RecoAddbJetDeltaEta"]
+histlist = ["RecoAddbJetDeltaR", "RecoAddbJetInvMass", "RecoAddbJetDeltaPhi", "RecoAddbJetDeltaEta"] 
+f_err.write('\\documentclass[a4paper]{report}\n')
+f_err.write('\\begin{document}\n')
+
 for f_in in f_list:
     ich = 999
     if   "Mu" in f_in.GetName(): ich = 0
@@ -60,14 +109,14 @@ for f_in in f_list:
 	tmpname = hist.replace('_',' ')
 	f_err.write('\\begin{table}\n')
 	f_err.write('    \\caption{'+tmpname+'}\n')
-	f_err.write('    \\begin{center}\n')
+	f_err.write('    \\begin{flushleft}\n')
 	f_err.write('        \\begin{tabular}{'+row+'}\n')
 	f_err.write('            \\hline\\hline\n')
 	col = ''
 	for i in range(binnum): col += ' & '+str(i+1)+' bin'
 	f_err.write('            Source '+col+'\\\\\n')
 	f_err.write('            \\hline\n')
-	f_err.write('            Matrix uncertainties \\\\\n')
+	f_err.write('            \multicolumn{'+str(binnum+1)+'}{l}{Matrix uncertainties}\\\\\n')
         syst_errors = {}
         for sys in syst_list:
             if "ps" in sys or "sw" in sys or "hdamp" in sys or "tune" in sys: continue
@@ -76,6 +125,7 @@ for f_in in f_list:
             elif 'Ch1' in hist and 'mu' in sys: continue
             
 	    errors = []
+            drawHist(h_nom, f_in.Get(histname+'up'), f_in.Get(histname+'down'))
             err_up = calError(h_nom,f_in.Get(histname+'up'))
             err_down = calError(h_nom, f_in.Get(histname+'down'))
             for index2, up in enumerate(err_up):
@@ -110,17 +160,20 @@ for f_in in f_list:
             tmp = ''
             for i in value: tmp += ' & $\\pm$'+str(format(i,'.3f')) + '\\%'
             tmpkey = key.replace('__','')
+            if not key in syst_btag: continue
+            #if key in syst_lep: continue
             f_err.write('            '+tmpkey+tmp+'\\\\\n')
         
 	# Calculate Acceptance Uncertainties
 	f_err.write('            \\hline\n')
-	f_err.write('            Acceptance uncertainties \\\\\n')
+	f_err.write('            \multicolumn{'+str(binnum+1)+'}{l}{Acceptance uncertainties}\\\\\n')
         syst_errors = {}
         for sys in syst_list:
             histname = "diffXsec_Unfolded_h_"+genmode+"_"+hist+"_Ch"+str(ich)+"_S3_Acceptance"+sys
             if 'Ch0' in hist and 'el' in sys: continue
             elif 'Ch1' in hist and 'mu' in sys: continue
             errors = []
+            drawHist(h_nom, f_in.Get(histname+'up'), f_in.Get(histname+'down'))
             err_up = calError(h_nom,f_in.Get(histname+'up'), False)
             err_down = calError(h_nom, f_in.Get(histname+'down'), False)
             for index2, up in enumerate(err_up):
@@ -155,17 +208,20 @@ for f_in in f_list:
             tmp = ''
             for i in value: tmp += ' & $\\pm$'+str(format(i,'.3f')) + '\\%'
             tmpkey = key.replace('__','')
+            if not key in syst_btag: continue
+            #if key in syst_lep: continue
             f_err.write('            '+tmpkey+tmp+'\\\\\n')
 
         # Calculate Background Uncertainties
 	f_err.write('            \\hline\n')
-	f_err.write('            Background uncertainties \\\\\n')
+	f_err.write('            \multicolumn{'+str(binnum+1)+'}{l}{Background uncertainties}\\\\\n')
         syst_errors = {}
         for sys in syst_list:
             histname = "diffXsec_Unfolded_h_"+genmode+"_"+hist+"_Ch"+str(ich)+"_S3_Background"+sys
             if 'Ch0' in hist and 'el' in sys: continue
             elif 'Ch1' in hist and 'mu' in sys: continue
             errors = []
+            drawHist(h_nom, f_in.Get(histname+'up'), f_in.Get(histname+'down'))
             err_up = calError(h_nom,f_in.Get(histname+'up'), False)
             err_down = calError(h_nom, f_in.Get(histname+'down'), False)
             for index2, up in enumerate(err_up):
@@ -200,17 +256,21 @@ for f_in in f_list:
             tmp = ''
             for i in value: tmp += ' & $\\pm$'+str(format(i,'.3f')) + '\\%'
             tmpkey = key.replace('__','')
+            if not key in syst_btag: continue
+            #if key in syst_lep: continue
             f_err.write('            '+tmpkey+tmp+'\\\\\n')
 
         # Write total systematic uncertainties
         tmp2 = ''
 	for value in sys_tot_sqaure:
             tmp2 += ' & $\\pm$' + str(format(math.sqrt(value),'.3f')) + '\\%'
+	f_err.write('            \\hline\n')
 	f_err.write('            Total sys. unc.'+tmp2+'\\\\\n')
         f_err.write('            \\hline\\hline\n')
 	f_err.write('        \\end{tabular}\n')
-	f_err.write('    \\end{center}\n')
+	f_err.write('    \\end{flushleft}\n')
 	f_err.write('\\end{table}\n')
-
+f_err.write('\\end{document}\n')
 f_err.close()
+
 
