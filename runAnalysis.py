@@ -1,181 +1,153 @@
 #!/usr/bin/python
-test = True
-do_sys = True
+test   = False 
+do_sys = False
 
 from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
 
 def runAna(dir, file, name):
-  chain = TChain("ttbbLepJets/tree","events")
-  chain.Add(dir+"/"+file)
-  chain.SetProof();
-  chain.Process("macro/MyAnalysis.C+",name)
+    chain = TChain("ttbbLepJets/tree","events")
+    chain.Add(dir+"/"+file)
+    chain.SetProof();
+    chain.Process("macro/MyAnalysis.C+",name)
 
-  f = TFile(dir+"/"+file,"read")
+    f = TFile(dir+"/"+file,"read")
 
-  ## save Event Summary histogram ##
-  out = TFile("output/root/hist_"+name+".root","update")
-  hevt = f.Get("ttbbLepJets/EventInfo")
-  hsw = f.Get("ttbbLepJets/ScaleWeights")
-  hevt.Write()
-  hsw.Write()
-  out.Write()
-  out.Close()
+    ## save Event Summary histogram ##
+    out = TFile("output/root/hist_"+name+".root","update")
+    hevt = f.Get("ttbbLepJets/EventInfo")
+    hsw = f.Get("ttbbLepJets/ScaleWeights")
+    hevt.Write()
+    hsw.Write()
+    out.Write()
+    out.Close()
 
 p = TProof.Open("", "workers=8")
 
-inputDir = "/data/users/seohyun/ntuple/hep2017/v808/nosplit/"
+inputDir = "/data/users/seohyun/ntuple/Run2018/V10_2/nosplit"
 
 if test:
-  runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
-  #runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
+    runAna(inputDir, "ttWToLNu_aMCatNLOMadspinPythia.root",    "ttWtolnu")
 else:
-  # v808 #
-  ### Basic plots ###
-  runAna(inputDir,"DataSingleEG.root","DataSingleEl")
-  runAna(inputDir,"DataSingleMu.root","DataSingleMu")
-  runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
+    #Response matrix
+    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbmatrix")
 
-  runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb")
-  runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj")
-  runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc")
-  runAna(inputDir,"TTLJ_PowhegPythia_ttLF.root","ttLF")
-  runAna(inputDir,"TTLJ_PowhegPythia_ttother.root","ttother")
+    runAna(inputDir, "DataSingleEG.root","DataSingleEl")
+    runAna(inputDir, "DataSingleMu.root","DataSingleMu")
 
-  runAna(inputDir,"WJets_aMCatNLO.root","wjets")
-  runAna(inputDir,"ZJets_M10to50_aMCatNLO.root","zjets10to50")
-  runAna(inputDir,"ZJets_M50_aMCatNLO.root","zjets")
-  runAna(inputDir,"WW_Pythia.root","ww")
-  runAna(inputDir,"WZ_Pythia.root","wz")
-  runAna(inputDir,"ZZ_Pythia.root","zz")
-  runAna(inputDir,"t_Powheg.root","tchannel")
-  runAna(inputDir,"tbar_Powheg.root","tbarchannel")
-  runAna(inputDir,"tW_Powheg.root","tWchannel")
-  runAna(inputDir,"tbarW_Powheg.root","tbarWchannel")
-  runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg")
+    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root",    "ttbb")
+    runAna(inputDir, "TTLJ_PowhegPythia_ttbj.root",    "ttbj")
+    runAna(inputDir, "TTLJ_PowhegPythia_ttcc.root",    "ttcc")
+    runAna(inputDir, "TTLJ_PowhegPythia_ttLF.root",    "ttLF")
+    runAna(inputDir, "TTLJ_PowhegPythia_ttother.root", "ttother")
 
-  runAna(inputDir,"ttHbb_PowhegPythia.root","ttH")
-  runAna(inputDir,"ttW_Madgraph.root","ttW")
-  runAna(inputDir,"ttZ_Madgraph.root","ttZ")
+    runAna(inputDir, "TTLL_PowhegPythiaBkg.root", "ttbkg_ttll")
+    runAna(inputDir, "TTLJ_PowhegPythiaBkg.root", "ttbkg_ttlj")
+    runAna(inputDir, "TTJJ_PowhegPythiaBkg.root", "ttbkg_ttjj")
 
-  ### Systematics ###
-  ##### List #####
-  # PileUp
-  #   __puup, __pudown
-  # Muon
-  #   __muidup, __muiddown, __muisoup, __muisodown, __mutrgup, __mutrgdown
-  # Electron
-  #   __elidup, __eliddown, __elrecoup, __elrecodown, __elzvtxup, __elzvtxdown
-  #   __eltrgup, __eltrgdown
-  # CSV shape
-  #   __lfup, __lfdown, __hfup, __hfdown
-  #   __hfstat1up, __hfstat1down, __hfstat2up, __hfstat2down
-  #   __lfstat1up, __lfstat1down, __lfstat2up, __lfstat2down
-  #   __cferr1up, __cferr1down, __cferr2up, __cferr2down
-  # Scale Weight(ME)
-  #   __scale0, __scale1, __scale2, __scale3, __scale4, __scale5
-  # Parton Shower(PS)
-  #   __isrup, __isrdown, __fsrup, __fsrdown
-  # ME & PS
-  #   __hdampup, __hdampdown
-  #####
-  sys_list = [
-      "__jerup", "__jerdown", "__jecup", "__jecdown",
-      "__puup", "__pudown",
-      "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
-      "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
-      "__lfup", "__lfdown", "__hfup", "__hfdown",
-      "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
-      "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
-      "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down"
-  ]
-  sys_list2 = ["__scale0", "__scale1","__scale2","__scale3","__scale4","__scale5"]
+    runAna(inputDir, "ttHToNonbb_PowhegPythia.root",           "ttHtononbb")
+    runAna(inputDir, "ttHTobb_PowhegPythia.root",              "ttHtobb")
+    runAna(inputDir, "ttWToLNu_aMCatNLOMadspinPythia.root",    "ttWtolnu")
+    runAna(inputDir, "ttWToQQ_aMCatNLOMadspinPythia.root",     "ttWtoqq")
+    runAna(inputDir, "ttZToLLNuNu_aMCatNLOMadspinPythia.root", "ttZtollnunu")
+    runAna(inputDir, "ttZToQQ_aMCatNLOMadspinPythia.root",     "ttZtoqq")
 
-  if do_sys:
-    for index, value in enumerate(sys_list):
-      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
+    runAna(inputDir, "WJetsToLNu_MadgraphPythia.root",    "wjets")
+    runAna(inputDir, "W1JetsToLNu_MadgraphPythia.root",   "w1jets")
+    runAna(inputDir, "W2JetsToLNu_MadgraphPythia.root",   "w2jets")
+    runAna(inputDir, "W3JetsToLNu_MadgraphPythia.root",   "w3jets")
+    runAna(inputDir, "W4JetsToLNu_MadgraphPythia.root",   "w4jets")
+    runAna(inputDir, "ZJets_M10to50_MadgraphPythia.root", "zjets10to50")
+    runAna(inputDir, "ZJets_M50_aMCatNLOPythia.root",     "zjets50")
+    runAna(inputDir, "WW_Pythia.root",                    "ww")
+    runAna(inputDir, "WZ_Pythia.root",                    "wz")
+    runAna(inputDir, "ZZ_Pythia.root",                    "zz")
+    runAna(inputDir, "SingleTop_s_aMCatNLOPythia.root",   "singletop_s")
+    runAna(inputDir, "SingleTop_t_PowhegPythia.root",     "singletop_t")
+    runAna(inputDir, "SingleTop_tW_PowhegPythia.root",    "singletop_tW")
+    runAna(inputDir, "SingleTbar_t_PowhegPythia.root",    "singletbar_t")
+    runAna(inputDir, "SingleTbar_tW_PowhegPythia.root",   "singletbar_tW")
 
-      runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttLF.root","ttLF"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttother.root","ttother"+value)
+    ### Systematics ###
+    ##### List #####
+    # PileUp
+    #   __puup, __pudown
+    # Muon
+    #   __muidup, __muiddown, __muisoup, __muisodown, __mutrgup, __mutrgdown
+    # Electron
+    #   __elidup, __eliddown, __elrecoup, __elrecodown, __elzvtxup, __elzvtxdown
+    #   __eltrgup, __eltrgdown
+    # CSV shape
+    #   __lfup, __lfdown, __hfup, __hfdown
+    #   __hfstat1up, __hfstat1down, __hfstat2up, __hfstat2down
+    #   __lfstat1up, __lfstat1down, __lfstat2up, __lfstat2down
+    #   __cferr1up, __cferr1down, __cferr2up, __cferr2down
+    # Scale Weight(ME)
+    #   __scale0, __scale1, __scale2, __scale3, __scale4, __scale5
+    # Parton Shower(PS)
+    #   __isrup, __isrdown, __fsrup, __fsrdown
+    # ME & PS
+    #   __hdampup, __hdampdown
+    # Pythia Tune
+    #   __tuneup, __tunedown
+    #####
+    sys_list = [
+	"__jerup", "__jerdown", "__jecup", "__jecdown",
+	"__puup", "__pudown",
+	"__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
+	"__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
+	"__lfup", "__lfdown", "__hfup", "__hfdown",
+	"__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
+	"__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
+	"__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down"
+    ]
+    sys_list2 = [
+	"__scale0", "__scale1","__scale2","__scale3","__scale4","__scale5",
+	"__isrup", "__isrdown", "__fsrup", "__fsrdown", "__pdfup", "__pdfdown"
+    ]
 
-      runAna(inputDir,"WJets_aMCatNLO.root","wjets"+value)
-      runAna(inputDir,"ZJets_M10to50_aMCatNLO.root","zjets10to50"+value)
-      runAna(inputDir,"ZJets_M50_aMCatNLO.root","zjets"+value)
-      runAna(inputDir,"WW_Pythia.root","ww"+value)
-      runAna(inputDir,"WZ_Pythia.root","wz"+value)
-      runAna(inputDir,"ZZ_Pythia.root","zz"+value)
-      runAna(inputDir,"t_Powheg.root","tchannel"+value)
-      runAna(inputDir,"tbar_Powheg.root","tbarchannel"+value)
-      runAna(inputDir,"tW_Powheg.root","tWchannel"+value)
-      runAna(inputDir,"tbarW_Powheg.root","tbarWchannel"+value)
-      runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg"+value)
+    if do_sys:
+        for index, value in enumerate(sys_list):
+            runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbmatrix"+value)
 
-      runAna(inputDir,"ttHbb_PowhegPythia.root","ttH"+value)
-      runAna(inputDir,"ttW_Madgraph.root","ttW"+value)
-      runAna(inputDir,"ttZ_Madgraph.root","ttZ"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root",    "ttbb"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbj.root",    "ttbj"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttcc.root",    "ttcc"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttLF.root",    "ttLF"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttother.root", "ttother"+value)
 
-    for index, value in enumerate(sys_list2):
-      runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ttbbFilter_ttbb")
-      runAna(inputDir,"TTLJ_PowhegPythia_ttbb.root","ttbb"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttbj.root","ttbj"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttcc.root","ttcc"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttLF.root","ttLF"+value)
-      runAna(inputDir,"TTLJ_PowhegPythia_ttother.root","ttother"+value)
-      runAna(inputDir,"ttbar_PowhegPythiaBkg.root","ttbkg"+value)
-      runAna(inputDir,"ttHbb_PowhegPythia.root","ttH"+value)
-      runAna(inputDir,"ttW_Madgraph.root","ttW"+value)
-      runAna(inputDir,"ttZ_Madgraph.root","ttZ"+value)
+	    runAna(inputDir, "TTLL_PowhegPythiaBkg.root", "ttbkg_ttll"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythiaBkg.root", "ttbkg_ttlj"+value)
+	    runAna(inputDir, "TTJJ_PowhegPythiaBkg.root", "ttbkg_ttjj"+value)
 
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttbb.root","ttbb__isrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttbj.root","ttbj__isrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttcc.root","ttcc__isrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttLF.root","ttLF__isrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttother.root","ttother__isrup")
-    runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_ISRup.root","ttbkg__isrup")
+	    runAna(inputDir, "ttHToNonbb_PowhegPythia.root",           "ttHtononbb"+value)
+	    runAna(inputDir, "ttHTobb_PowhegPythia.root",              "ttHtobb"+value)
+	    runAna(inputDir, "ttWToLNu_aMCatNLOMadspinPythia.root",    "ttWtolnu"+value)
+	    runAna(inputDir, "ttWToQQ_aMCatNLOMadspinPythia.root",     "ttWtoqq"+value)
+	    runAna(inputDir, "ttZToLLNuNu_aMCatNLOMadspinPythia.root", "ttZtollnunu"+value)
+	    runAna(inputDir, "ttZToQQ_aMCatNLOMadspinPythia.root",     "ttZtoqq"+value)
 
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttbb.root","ttbb__isrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttbj.root","ttbj__isrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttcc.root","ttcc__isrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttLF.root","ttLF__isrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttother.root","ttother__isrdown")
-    runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_ISRdown.root","ttbkg__isrdown")
+	    runAna(inputDir, "WJetsToLNu_MadgraphPythia.root",    "wjets"+value)
+	    runAna(inputDir, "W1JetsToLNu_MadgraphPythia.root",   "w1jets"+value)
+	    runAna(inputDir, "W2JetsToLNu_MadgraphPythia.root",   "w2jets"+value)
+	    runAna(inputDir, "W3JetsToLNu_MadgraphPythia.root",   "w3jets"+value)
+	    runAna(inputDir, "W4JetsToLNu_MadgraphPythia.root",   "w4jets"+value)
+	    runAna(inputDir, "ZJets_M10to50_MadgraphPythia.root", "zjets10to50"+value)
+	    runAna(inputDir, "ZJets_M50_aMCatNLOPythia.root",     "zjets50"+value)
+	    runAna(inputDir, "WW_Pythia.root",                    "ww"+value)
+	    runAna(inputDir, "WZ_Pythia.root",                    "wz"+value)
+	    runAna(inputDir, "ZZ_Pythia.root",                    "zz"+value)
+	    runAna(inputDir, "SingleTop_s_aMCatNLOPythia.root",   "singletop_s"+value)
+	    runAna(inputDir, "SingleTop_t_PowhegPythia.root",     "singletop_t"+value)
+	    runAna(inputDir, "SingleTop_tW_PowhegPythia.root",    "singletop_tW"+value)
+	    runAna(inputDir, "SingleTbar_t_PowhegPythia.root",    "singletbar_t"+value)
+	    runAna(inputDir, "SingleTbar_tW_PowhegPythia.root",   "singletbar_tW"+value)
 
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttbb.root","ttbb__fsrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttbj.root","ttbj__fsrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttcc.root","ttcc__fsrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttLF.root","ttLF__fsrup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttother.root","ttother__fsrup")
-    runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_FSRup.root","ttbkg__fsrup")
+	for index, value in enumerate(sys_list2):
+            runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbmatrix"+value)
+	    
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbb"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbj.root", "ttbj"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttcc.root", "ttcc"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttLF.root", "ttLF"+value)
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttother.root", "ttother"+value)
 
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttbb.root","ttbb__fsrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttbj.root","ttbj__fsrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttcc.root","ttcc__fsrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttLF.root","ttLF__fsrdown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttother.root","ttother__fsrdown")
-    runAna(inputDir, "ttbar_PowhegPythiaBkg_SYS_FSRdown.root","ttbkg__fsrdown")
-
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampUp_ttbb.root", "ttbb__hdampup")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampUp_ttbj.root", "ttbj__hdampup")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampUp_ttcc.root", "ttcc__hdampup")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampUp_ttLF.root", "ttLF__hdampup")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampUp_ttother.root", "ttother__hdampup")
-
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampDown_ttbb.root", "ttbb__hdampdown")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampDown_ttbj.root", "ttbj__hdampdown")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampDown_ttcc.root", "ttcc__hdampdown")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampDown_ttLF.root", "ttLF__hdampdown")
-    runAna(inputDir, "TTLJ_PowhegPythia_SYS_hdampDown_ttother.root", "ttother__hdampdown")
-
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbb.root", "ttbb__tuneup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttbj.root", "ttbj__tuneup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttcc.root", "ttcc__tuneup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttLF.root", "ttLF__tuneup")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneUp_ttother.root", "ttother__tuneup")
-
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbb.root", "ttbb__tunedown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttbj.root", "ttbj__tunedown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttcc.root", "ttcc__tunedown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttLF.root", "ttLF__tunedown")
-    runAna(inputDir, "TT_PowhegPythia_SYS_TuneDown_ttother.root", "ttother__tunedown")

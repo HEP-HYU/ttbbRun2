@@ -26,7 +26,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "/home/seohyun/work/ttbb/heptool/include/histBook.h"
+#include "/home/seohyun/work/ttbb/heptool_Run2017/include/histBook.h"
 
 class MyAnalysis : public TSelector {
 public :
@@ -45,51 +45,50 @@ public :
    TTreeReaderArray<float>   scaleweight       = {fReader, "lepton_SF"};
    TTreeReaderValue<Float_t> MET               = {fReader, "MET"};
    TTreeReaderValue<Float_t> MET_phi           = {fReader, "MET_phi"};
-   TTreeReaderValue<Float_t> lepton_pT         = {fReader, "lepton_pT"};
+   TTreeReaderValue<Float_t> lepton_pT         = {fReader, "lepton_pt"};
    TTreeReaderValue<Float_t> lepton_eta        = {fReader, "lepton_eta"};
    TTreeReaderValue<Float_t> lepton_phi        = {fReader, "lepton_phi"};
-   TTreeReaderValue<Float_t> lepton_E          = {fReader, "lepton_E"};
-   TTreeReaderValue<Float_t> lepton_LES        = {fReader, "lepton_LES"};
+   TTreeReaderValue<Float_t> lepton_E          = {fReader, "lepton_e"};
    TTreeReaderValue<Float_t> lepton_relIso     = {fReader, "lepton_relIso"};
    TTreeReaderValue<bool>    lepton_isIso      = {fReader, "lepton_isIso"};
    TTreeReaderArray<float>   lepton_SF         = {fReader, "lepton_SF"};
-   TTreeReaderArray<float>   jet_pT            = {fReader, "jet_pT"};
+   TTreeReaderArray<float>   jet_pT            = {fReader, "jet_pt"};
    TTreeReaderArray<float>   jet_eta           = {fReader, "jet_eta"};
    TTreeReaderArray<float>   jet_phi           = {fReader, "jet_phi"};
-   TTreeReaderArray<float>   jet_E             = {fReader, "jet_E"};
+   TTreeReaderArray<float>   jet_E             = {fReader, "jet_e"};
    TTreeReaderArray<int>     jet_index         = {fReader, "jet_index"};
-   TTreeReaderArray<float>   jet_CSV           = {fReader, "jet_CSV"};
-   TTreeReaderArray<float>   jet_SF_CSV_25     = {fReader, "jet_SF_CSV_25"};
-   TTreeReaderArray<float>   jet_SF_CSV_30     = {fReader, "jet_SF_CSV_30"};
-   TTreeReaderArray<float>   jet_SF_CSV_35     = {fReader, "jet_SF_CSV_35"};
-   TTreeReaderArray<float>   jet_SF_CSV_40     = {fReader, "jet_SF_CSV_40"};
-   TTreeReaderArray<float>   jet_SF_CSV        = {fReader, "jet_SF_CSV"};
-   TTreeReaderArray<float>   jet_CvsL          = {fReader, "jet_CvsL"};
-   TTreeReaderArray<float>   jet_CvsB          = {fReader, "jet_CvsB"};
-   TTreeReaderValue<Int_t>   jet_number        = {fReader, "jet_number"};
-   TTreeReaderArray<int>     jet_partonFlavour = {fReader, "jet_partonFlavour"};
-   TTreeReaderArray<int>     jet_hadronFlavour = {fReader, "jet_hadronFlavour"};
+   TTreeReaderArray<float>   jet_CSV           = {fReader, "jet_deepCSV"};
+   //TTreeReaderArray<float>   jet_SF_CSV_25     = {fReader, "jet_SF_CSV_25"};
+   TTreeReaderArray<float>   jet_SF_CSV_30     = {fReader, "jet_SF_deepCSV_30"};
+   //TTreeReaderArray<float>   jet_SF_CSV_35     = {fReader, "jet_SF_CSV_35"};
+   //TTreeReaderArray<float>   jet_SF_CSV_40     = {fReader, "jet_SF_CSV_40"};
+   //TTreeReaderArray<float>   jet_SF_CSV        = {fReader, "jet_SF_deepCSV_30"};
+   //TTreeReaderArray<float>   jet_CvsL          = {fReader, "jet_CvsL"};
+   //TTreeReaderArray<float>   jet_CvsB          = {fReader, "jet_CvsB"};
+   //TTreeReaderValue<Int_t>   jet_number        = {fReader, "jet_number"};
+   //TTreeReaderArray<int>     jet_partonFlavour = {fReader, "jet_partonFlavour"};
+   //TTreeReaderArray<int>     jet_hadronFlavour = {fReader, "jet_hadronFlavour"};
    TTreeReaderArray<float>   jet_JES_Up        = {fReader, "jet_JES_Up"};
    TTreeReaderArray<float>   jet_JES_Down      = {fReader, "jet_JES_Down"};
    TTreeReaderArray<float>   jet_JER_Up        = {fReader, "jet_JER_Up"};
    TTreeReaderArray<float>   jet_JER_Nom       = {fReader, "jet_JER_Nom"};
    TTreeReaderArray<float>   jet_JER_Down      = {fReader, "jet_JER_Down"};
-   TTreeReaderValue<float>   addbjet1_pt       = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   addbjet1_eta      = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   addbjet1_phi      = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   addbjet1_e        = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   addbjet2_pt       = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   addbjet2_eta      = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   addbjet2_phi      = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   addbjet2_e        = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet1_pt     = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet1_eta    = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet1_phi    = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet1_e      = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet2_pt     = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet2_eta    = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet2_phi    = {fReader, "lepton_pT"};
-   TTreeReaderValue<float>   mindRbjet2_e      = {fReader, "lepton_pT"};
+   TTreeReaderValue<float>   addbjet1_pt       = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   addbjet1_eta      = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   addbjet1_phi      = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   addbjet1_e        = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   addbjet2_pt       = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   addbjet2_eta      = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   addbjet2_phi      = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   addbjet2_e        = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet1_pt     = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet1_eta    = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet1_phi    = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet1_e      = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet2_pt     = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet2_eta    = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet2_phi    = {fReader, "lepton_pt"};
+   TTreeReaderValue<float>   mindRbjet2_e      = {fReader, "lepton_pt"};
 
 
    MyAnalysis(TTree * /*tree*/ =0) { }

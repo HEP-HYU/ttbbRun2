@@ -80,19 +80,18 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     addbjet2_phi   = {fReader, "addbjet2_phi"};
     addbjet2_e     = {fReader, "addbjet2_e"};
 
-    mindRbjet1_pt  = {fReader, "mindRbjet1_pt"};
-    mindRbjet1_eta = {fReader, "mindRbjet1_eta"};
-    mindRbjet1_phi = {fReader, "mindRbjet1_phi"};
-    mindRbjet1_e   = {fReader, "mindRbjet1_e"};
-    mindRbjet2_pt  = {fReader, "mindRbjet2_pt"};
-    mindRbjet2_eta = {fReader, "mindRbjet2_eta"};
-    mindRbjet2_phi = {fReader, "mindRbjet2_phi"};
-    mindRbjet2_e   = {fReader, "mindRbjet2_e"};
+    mindRbjet1_pt  = {fReader, "mindRjet1_pt"};
+    mindRbjet1_eta = {fReader, "mindRjet1_eta"};
+    mindRbjet1_phi = {fReader, "mindRjet1_phi"};
+    mindRbjet1_e   = {fReader, "mindRjet1_e"};
+    mindRbjet2_pt  = {fReader, "mindRjet2_pt"};
+    mindRbjet2_eta = {fReader, "mindRjet2_eta"};
+    mindRbjet2_phi = {fReader, "mindRjet2_phi"};
+    mindRbjet2_e   = {fReader, "mindRjet2_e"};
   }
 }
 
 Bool_t MyAnalysis::Process(Long64_t entry){
-  std::cout << "Process" << std::endl;
   fReader.SetEntry(entry);
   option = GetOption();
   process = option.Data();
@@ -127,7 +126,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   if ( !passmuon and !passelectron ) return kTRUE;
   
   double jet_pt_sum = 0.0;
-  multimap<float /*jet_CSV*/, TLorentzVector /*jet_4-momentum*/> m_jets;
+  multimap<float /*jet_Pt*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets;
   vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
   for (unsigned int iJet = 0; iJet < jet_pT.GetSize() ; ++iJet) {
     float jetSystVar = 1.0;
@@ -145,18 +144,19 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
     if ( jet.Pt() <= JET_PT_ || abs(jet.Eta()) >= JET_ETA_ ) continue;
 
-    m_jets.insert(pair<float,TLorentzVector>(jet_CSV[iJet],jet));
+    //m_jets.insert(pair<float,TLorentzVector>(jet_CSV[iJet],jet));
+    m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
     jet_pt_sum += jet.Pt();
     ++njets;
-    if( jet_CSV[iJet] > JET_CSV_TIGHT_ ){
+    if( jet_CSV[iJet] > 0.8001 ){
       ++nbjets;
       v_reco_bjets.push_back(jet);
     }
   }
 
-  double a_jetCSV[6] = {0,0,0,0,0,0};
-  double a_jetPt[6] = {0,0,0,0,0,0};
-  double a_jetEta[6] = {0,0,0,0,0,0};
+  double a_jetCSV[6] = {-999,-999,-999,-999,-999,-999};
+  double a_jetPt[6] = {-999,-999,-999,-999,-999,-999};
+  double a_jetEta[6] = {-999,-999,-999,-999,-999,-999};
   int tmp_idx = 0;
   for(auto m_itr = m_jets.begin(); m_itr != m_jets.end(); ++m_itr){
     if(tmp_idx >= 6) continue;
@@ -189,7 +189,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       }
     }
   } 
-  
+
   TLorentzVector gen_addbjet1, gen_addbjet2;
   TLorentzVector gen_mindRbjet1, gen_mindRbjet2;
   if( process.Contains("ttbb") ){
@@ -208,7 +208,11 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   double gen_mindR_invMass  = (gen_mindRbjet1+gen_mindRbjet2).M(); 
   double gen_mindR_deltaEta = abs(gen_mindRbjet1.Eta() - gen_mindRbjet2.Eta()); 
   double gen_mindR_deltaPhi = abs(gen_mindRbjet1.DeltaPhi(gen_mindRbjet2)); 
-  
+
+  std::cout << "Lepton pt: " << lepton.Pt() << std::endl;
+  std::cout << "Reco dR: " << reco_addbjet_deltaR << std::endl;
+  std::cout << "mindR : " << gen_mindR_deltaR << std::endl;
+
   int passchannel = -999;
   bool passlepton = false;
   if     ( passmuon and !passelectron) passchannel = MUON_;
@@ -230,31 +234,39 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   if( !option.Contains("Data") ){
     EventWeight *= *genWeight;
     ssize_t pos;
-    if     ( (pos = syst_ext.find("puup",0)) != std::string::npos )
+    //Pile Up weight
+    if     ( (pos = syst_ext.find("puup")) != std::string::npos )
       EventWeight *= PUWeight[1];
-    else if( (pos = syst_ext.find("pudown",0)) != std::string::npos )
+    else if( (pos = syst_ext.find("pudown")) != std::string::npos )
       EventWeight *= PUWeight[2];
     else
       EventWeight *= PUWeight[0];
-  
+ 
     if( passchannel == 0 ){
-      //mu [0]~[2]: ID/Iso, [3]~[5]: Trigger
-      if     ( (pos = syst_ext.find("musfup",0)) != std::string::npos )
+      //mu [0]~[2]:ID, [3]~[5]:Iso, [6]~[8]:Trigger
+      if     ( (pos = syst_ext.find("muidup",0)) != std::string::npos )
 	EventWeight *= lepton_SF[1];
-      else if( (pos = syst_ext.find("musfdown",0)) != std::string::npos )
+      else if( (pos = syst_ext.find("muiddown",0)) != std::string::npos )
 	EventWeight *= lepton_SF[2];
       else
 	EventWeight *= lepton_SF[0];
 
-      if     ( (pos = syst_ext.find("mutrgup",0)) != std::string::npos )
+      if     ( (pos = syst_ext.find("muisoup",0)) != std::string::npos )
 	EventWeight *= lepton_SF[4];
-      else if( (pos = syst_ext.find("mutrgdown",0)) != std::string::npos ) 
+      else if( (pos = syst_ext.find("muisodown",0)) != std::string::npos ) 
 	EventWeight *= lepton_SF[5];
       else
 	EventWeight *= lepton_SF[3];
+
+      if     ( (pos = syst_ext.find("mutrgup",0)) != std::string::npos )
+	EventWeight *= lepton_SF[7];
+      else if( (pos = syst_ext.find("mutrgdown",0)) != std::string::npos ) 
+	EventWeight *= lepton_SF[8];
+      else
+	EventWeight *= lepton_SF[6];
     }
     else if( passchannel == 1){
-      //el [0]~[2]: ID/Iso/Reco, [3]~[5]: Trigger
+      //el [0]~[2]: ID, [3]~[5]:Reco, [6]~[8]:Zvtx, [9]~[11]: Trigger
       if     ( (pos = syst_ext.find("elsfup",0)) != std::string::npos )
 	EventWeight *= lepton_SF[1];
       else if( (pos = syst_ext.find("elsfdown",0)) != std::string::npos )
@@ -262,12 +274,26 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       else
 	EventWeight *= lepton_SF[0];
 
-      if     ( (pos = syst_ext.find("eltrgup",0)) != std::string::npos )
+      if     ( (pos = syst_ext.find("elrecoup",0)) != std::string::npos )
 	EventWeight *= lepton_SF[4];
-      else if( (pos = syst_ext.find("eltrgdown",0)) != std::string::npos )
+      else if( (pos = syst_ext.find("elrecodown",0)) != std::string::npos )
 	EventWeight *= lepton_SF[5];
       else
 	EventWeight *= lepton_SF[3];
+
+      if     ( (pos = syst_ext.find("elzvtxup",0)) != std::string::npos )
+	EventWeight *= lepton_SF[7];
+      else if( (pos = syst_ext.find("elzvtxdown",0)) != std::string::npos )
+	EventWeight *= lepton_SF[8];
+      else
+	EventWeight *= lepton_SF[6];
+
+      if     ( (pos = syst_ext.find("eltrgup",0)) != std::string::npos )
+	EventWeight *= lepton_SF[10];
+      else if( (pos = syst_ext.find("eltrgdown",0)) != std::string::npos )
+	EventWeight *= lepton_SF[11];
+      else
+	EventWeight *= lepton_SF[9];
     }
     
     //Scale Weight(ME)
@@ -338,8 +364,11 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     else if( (pos = syst_ext.find("pdfdown",0)) != std::string::npos )
       EventWeight *= pdfweight[100];
   }
-
-
+ 
+  //std::cout << "genWeight: " << *genWeight << std::endl;
+  //std::cout << "PUWeight: " << PUWeight[0] << std::endl;
+  //std::cout << "lepton SF: " << lepton_SF[0] << std::endl;
+  //std::cout << "jet_SF_CSV_30: " << jet_SF_CSV_30[0] << std::endl;
   for(int iCut=0; iCut <= passcut; ++iCut){
     h_control->h_lepton_pt[passchannel][iCut] ->Fill(lepton.Pt(),                  EventWeight);
     h_control->h_lepton_eta[passchannel][iCut]->Fill(abs(lepton.Eta()),            EventWeight);
