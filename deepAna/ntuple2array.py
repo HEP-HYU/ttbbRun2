@@ -75,8 +75,10 @@ def makeCombi(inputDir, inputFile, outputDir, makeTrainingInput=False, sys=''):
         lep.SetPtEtaPhiE(chain.lepton_pt, chain.lepton_eta, chain.lepton_phi, chain.lepton_e)
         passmuon = False
         passelectron = False
-        passmuon = chain.channel == muon_ch and lep.Pt() > muon_pt and abs(lep.Eta()) < muon_eta
-        passelectron = chain.channel == electron_ch and lep.Pt() > electron_pt and abs(lep.Eta()) < electron_eta
+        #passmuon = chain.channel == muon_ch and lep.Pt() > muon_pt and abs(lep.Eta()) < muon_eta
+        #passelectron = chain.channel == electron_ch and lep.Pt() > electron_pt and abs(lep.Eta()) < electron_eta
+        passmuon = chain.channel == muon_ch
+        passelectron = chain.channel == electron_ch 
         if passmuon == False and passelectron == False:
             continue
 
@@ -263,7 +265,7 @@ if __name__ == '__main__':
 
     (options,args) = parser.parse_args()
 
-    tmpDir = '/data/users/seohyun/ntuple/Run2017/V9_5/'
+    tmpDir = '/data/users/seohyun/ntuple/Run2017/V9_6/'
     ntupleDir = tmpDir+'/split/'
     arrayDir = './array/'
 

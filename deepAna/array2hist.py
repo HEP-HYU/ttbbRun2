@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import sys, os
 import google.protobuf
 
@@ -27,12 +28,18 @@ from keras.optimizers import Adam, SGD
 from keras.callbacks import Callback, ModelCheckpoint
 
 import utils as ut
+import multiprocessing as mp
+import time
+from tqdm import tqdm
+
+import variableAnalyzer as var
 
 def ana(inputDir, process, outputDir, sys='', flag1=False):
 
     ##for now,it is different from inputDir
     ##needed for gentree and event info.
-    ntuple_path = '/data/users/seohyun/ntuple/Run2017/V9_5/nosplit/'
+    #ntuple_path = '/data/users/seohyun/ntuple/Run2017/V9_5/nosplit/'
+    ntuple_path = '/data/users/seohyun/ntuple/Run2017/V9_6/nosplit/'
 
     if '__' in process:
         process = process.split('__')[0]
@@ -601,3 +608,82 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     realtime = timer.RealTime()
     cputime = timer.CpuTime()
     print("Real Time : {0:6.2f} seconds, CPU Time : {1:6.2f} seconds").format(realtime,cputime)
+
+
+#Options
+if __name__ == '__main__':
+    from optparse import OptionParser 
+
+    parser = OptionParser()
+    parser.usage = """
+    %make histogram from array
+    """
+
+    parser.add_option("-t", "--test", dest="test",
+                      action = 'store_true',
+                      default=False,
+                      help='Test single root file')
+
+    parser.add_option("-s", "--sys", dest="sys",
+                      action = 'store_true',
+                      default=False,
+                      help='all root fiels in input directory')
+
+    (options,args) = parser.parse_args()
+   
+ 
+    start_time = time.time()
+
+    ntupleDir = '/data/users/seohyun/ntuple/hep2019/split/'
+    arrayDir = './array/'
+    histDir = './hist/'
+
+    syslist = [
+        '__puup', '__pudown',
+        '__musfup', '__musfdown', '__mutrgup', '__mutrgdown',
+        '__elsfup', '__elsfdown', '__eltrgup', '__eltrgdown',
+        '__lfup', '__lfdown', '__hfup', '__hfdown',
+        '__hfstat1up', '__hfstat1down', '__hfstat2up', '__hfstat2down',
+        '__lfstat1up', '__lfstat1down', '__lfstat2up', '__lfstat2down',
+        '__cferr1up', '__cferr1down', '__cferr2up', '__cferr2down',
+        '__scale0', '__scale1', '__scale2', '__scale3', '__scale4', '__scale5',
+        '__pdfup', '__pdfdown'
+    ]
+
+    if options.test:
+        process = 'TTLJ_PowhegPythia_ttbb'
+        ana(arrayDir+process, process, histDir, flag1=True)
+
+    else:
+        for process in os.listdir(arrayDir):
+            #if not "ttbbFilter" in process: continue
+            if process.endswith(".h5"): continue
+
+            if not ('SYS' in process or '__' in process or 'Herwig' in process or 'Evtgen' in process or 'TT_aMCatNLO' in process):
+                print("Start "+str(process))
+                ana(arrayDir+process, process, histDir)
+
+                if options.sys and not 'Data' in process:
+                    for sys in syslist:
+                        if 'scale' in sys and not 'tt' in process: continue
+                        ana(arrayDir+process, process, histDir, sys)
+            else:
+                if   'FSRup'   in process: sys = '__fsrup'
+                elif 'FSRdown' in process: sys = '__fsrdown'
+                elif 'ISRup'   in process: sys = '__isrup'
+                elif 'ISRdown' in process: sys = '__isrdown'
+                elif 'hdampUp' in process: sys = '__hdampup'
+                elif 'hdampDown' in process: sys = '__hdampdown'
+                elif 'TuneUp'  in process: sys = '__tuneup'
+                elif 'TuneDown'in process: sys = '__tunedown'
+                elif 'jecdown' in process: sys = '__jecdown'
+                elif 'jecup'   in process: sys = '__jecup'
+                elif 'jerdown' in process: sys = '__jerdown'
+                elif 'jerup'   in process: sys = '__jerup'
+                elif 'Herwig'  in process: sys = '__powhegherwig'
+                elif 'TT_aMCatNLO'in process: sys = '__amcatnlopythia'
+                elif 'Evtgen'  in process: sys = '__powhegpythiaevtgen'
+                else:                      sys = ''
+                ana(arrayDir+process, process, histDir, sys)
+
+    print("Total running time :%s " %(time.time() - start_time))
