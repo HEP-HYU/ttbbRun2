@@ -165,13 +165,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   if ( !passmuon and !passelectron ) return kTRUE;
   
   double jet_pt_sum = 0.0;
-<<<<<<< HEAD
   multimap<float /*jet_Pt*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets;
   vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
-=======
-  std::multimap<float /*jet_pt*/, std::pair<float /*jet_CSV*/, TLorentzVector /*jet_4-momentum*/>> m_jets;
-  std::vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
->>>>>>> fbc2120cbe49b2828e2fe3719e5c264f9736392d
   for (unsigned int iJet = 0; iJet < jet_pT.GetSize() ; ++iJet) {
     float jetSystVar = 1.0;
     if( !process.Contains("Data") ){
@@ -188,14 +183,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
     if ( jet.Pt() <= JET_PT_ || abs(jet.Eta()) >= JET_ETA_ ) continue;
 
-<<<<<<< HEAD
     //m_jets.insert(pair<float,TLorentzVector>(jet_CSV[iJet],jet));
     m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
-=======
-
-    m_jets.insert(std::make_pair(jet.Pt(), std::make_pair(jet_CSV[iJet], jet)));
-    //m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
->>>>>>> fbc2120cbe49b2828e2fe3719e5c264f9736392d
     jet_pt_sum += jet.Pt();
     ++njets;
     if( jet_CSV[iJet] > 0.8001 ){
