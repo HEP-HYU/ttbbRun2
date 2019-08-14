@@ -1,36 +1,26 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/histBook.h"
-#include "../include/tdrstyle.C"
-
-const bool runSystematics = false;
-const char *genMode = "mindR";
+#include "ttbbDiffXsec.h"
+//#include "../include/histBook.h"
+//#include "../include/tdrstyle.C"
 
 HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst);
-void DrawHist(TH1 *h_in, std::string name, bool drawError);
+void DrawHist(TH1 *h_in, bool drawError = false);
 
 void makeAcceptance(){
   string input_dir = "../output/post/";
   TFile *f_in = TFile::Open(Form("%s/hist_ttbb.root", input_dir.c_str()));
   TFile *f_out = TFile::Open(Form("%s/hist_criteria_%s.root", input_dir.c_str(), genMode),"recreate");
 
-  std::vector<std::string> v_syst_list = {
-    "", "__jerup", "__jerdown", "__jecup", "__jecdown",
-    "__puup", "__pudown",
-    "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
-    "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
-    "__lfup", "__lfdown", "__hfup", "__hfdown",
-    "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
-    "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
-    "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down",
-    "__psup", "__psdown", "__swup", "__swdown",
-    "__hdampup", "__hdampdown", "__tuneup", "__tunedown"
-  };
+  std::vector<std::string> v_syst_list = {""};
+  v_syst_list.insert(v_syst_list.end(), syst_list.begin(), syst_list.end());
+  v_syst_list.insert(v_syst_list.end(), syst_ttbar.begin(), syst_ttbar.end());
 
   f_out->cd();
   for(auto v_itr = v_syst_list.begin(); v_itr != v_syst_list.end(); ++v_itr){
     if(!(runSystematics || *v_itr == "")) continue;
+    std::cout << "systematics:" << *v_itr << std::endl;
     auto h_tmp = MakeHist(genMode, f_in, *v_itr);
     
     for(int ich=0; ich<nChannel; ++ich){
@@ -46,6 +36,21 @@ void makeAcceptance(){
       h_tmp->h_acceptance_invMass[ich]->Write();
       h_tmp->h_acceptance_deltaEta[ich]->Write();
       h_tmp->h_acceptance_deltaPhi[ich]->Write();
+
+      if(*v_itr == ""){
+        DrawHist(h_tmp->h_stability_deltaR[ich]);
+        DrawHist(h_tmp->h_stability_invMass[ich]);
+        DrawHist(h_tmp->h_stability_deltaEta[ich]);
+        DrawHist(h_tmp->h_stability_deltaPhi[ich]);
+        DrawHist(h_tmp->h_purity_deltaR[ich]);
+        DrawHist(h_tmp->h_purity_invMass[ich]);
+        DrawHist(h_tmp->h_purity_deltaEta[ich]);
+        DrawHist(h_tmp->h_purity_deltaPhi[ich]);
+        DrawHist(h_tmp->h_acceptance_deltaR[ich], true);
+        DrawHist(h_tmp->h_acceptance_invMass[ich], true);
+        DrawHist(h_tmp->h_acceptance_deltaEta[ich], true);
+        DrawHist(h_tmp->h_acceptance_deltaPhi[ich], true);
+      }
     }
     h_tmp->~HistoBook();
   }
@@ -400,7 +405,7 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
   return h_stb;
 }
 
-void DrawHist(TH1* h_in_, std::string name, bool drawError){    
+void DrawHist(TH1* h_in_, bool drawError = false){    
   gROOT->ProcessLine("setTDRStyle();");
 
   gStyle->SetHatchesSpacing(1);
@@ -427,22 +432,22 @@ void DrawHist(TH1* h_in_, std::string name, bool drawError){
   h_in->SetMaximum(h_in->GetMaximum()*1.05);
   if((pos = histname.find("AcceptanceDeltaR")) != string::npos){
     h_in->GetYaxis()->SetTitle("Acceptance(%)");
-    h_in->SetMaximum(1.2);
-    h_in->SetMinimum(0.6);
+    h_in->SetMaximum(2.0);
+    h_in->SetMinimum(0.0);
   }
   if((pos = histname.find("AcceptanceInvMass")) != string::npos){
     h_in->GetYaxis()->SetTitle("Acceptance(%)");
-    h_in->SetMaximum(2.0);
+    h_in->SetMaximum(2.5);
     h_in->SetMinimum(0.0);
   }
   if((pos = histname.find("Purity")) != string::npos){
     h_in->GetYaxis()->SetTitle("Purity(%)");
-    h_in->SetMaximum(80);
-    h_in->SetMinimum(30);
+    h_in->SetMaximum(100);
+    h_in->SetMinimum(0);
   }
   if((pos = histname.find("Stability")) != string::npos){
     h_in->GetYaxis()->SetTitle("Stability(%)");
-    h_in->SetMaximum(80);
+    h_in->SetMaximum(100);
     h_in->SetMinimum(0);
   }
   
@@ -457,9 +462,9 @@ void DrawHist(TH1* h_in_, std::string name, bool drawError){
     h_err->Draw("e2 same");
   }
 
-  label_work->Draw("same");
+  //label_work->Draw("same");
   label_sim->Draw("same");
-  c->Print(Form("../output/pdf/%s_%s.pdf", h_in->GetName(), name.c_str()),"pdf");
+  c->Print(Form("../output/pdf/%s.pdf", h_in->GetName()),"pdf");
 
   c->~TCanvas();
   h_in->~TH1();
