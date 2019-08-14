@@ -165,16 +165,21 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   if ( !passmuon and !passelectron ) return kTRUE;
   
   double jet_pt_sum = 0.0;
+<<<<<<< HEAD
   multimap<float /*jet_Pt*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets;
   vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
+=======
+  std::multimap<float /*jet_pt*/, std::pair<float /*jet_CSV*/, TLorentzVector /*jet_4-momentum*/>> m_jets;
+  std::vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
+>>>>>>> fbc2120cbe49b2828e2fe3719e5c264f9736392d
   for (unsigned int iJet = 0; iJet < jet_pT.GetSize() ; ++iJet) {
     float jetSystVar = 1.0;
     if( !process.Contains("Data") ){
-      if     ( syst_ext == "jecup"   ) jetSystVar = jet_JER_Nom[iJet] * jet_JES_Up[iJet];
-      else if( syst_ext == "jecdown" ) jetSystVar = jet_JER_Nom[iJet] * jet_JES_Down[iJet];
-      else if( syst_ext == "jerup"   ) jetSystVar = jet_JER_Up[iJet];
-      else if( syst_ext == "jerdown" ) jetSystVar = jet_JER_Down[iJet];
-      else                             jetSystVar = jet_JER_Nom[iJet];
+      if     ( syst_ext == "__jecup"   ) jetSystVar = jet_JER_Nom[iJet] * jet_JES_Up[iJet];
+      else if( syst_ext == "__jecdown" ) jetSystVar = jet_JER_Nom[iJet] * jet_JES_Down[iJet];
+      else if( syst_ext == "__jerup"   ) jetSystVar = jet_JER_Up[iJet];
+      else if( syst_ext == "__jerdown" ) jetSystVar = jet_JER_Down[iJet];
+      else                               jetSystVar = jet_JER_Nom[iJet];
     }
 
     TLorentzVector jet;
@@ -183,8 +188,14 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
     if ( jet.Pt() <= JET_PT_ || abs(jet.Eta()) >= JET_ETA_ ) continue;
 
+<<<<<<< HEAD
     //m_jets.insert(pair<float,TLorentzVector>(jet_CSV[iJet],jet));
     m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
+=======
+
+    m_jets.insert(std::make_pair(jet.Pt(), std::make_pair(jet_CSV[iJet], jet)));
+    //m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
+>>>>>>> fbc2120cbe49b2828e2fe3719e5c264f9736392d
     jet_pt_sum += jet.Pt();
     ++njets;
     if( jet_CSV[iJet] > 0.8001 ){
@@ -199,9 +210,9 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   int tmp_idx = 0;
   for(auto m_itr = m_jets.begin(); m_itr != m_jets.end(); ++m_itr){
     if(tmp_idx >= 6) continue;
-    a_jetCSV[tmp_idx] = m_itr->first;
-    a_jetPt[tmp_idx] = (m_itr->second).Pt();
-    a_jetEta[tmp_idx] = (m_itr->second).Eta();
+    a_jetPt[tmp_idx] = m_itr->first;
+    a_jetCSV[tmp_idx] = (m_itr->second).first;
+    a_jetEta[tmp_idx] = ((m_itr->second).second).Eta();
     ++tmp_idx;
   }
 

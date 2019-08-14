@@ -13,7 +13,7 @@ string outdir = "../output/unfold/";
 
 //Unfolding options
 const char *genMode = "mindR";
-const bool runSystematics = false;
+const bool runSystematics = true;
 
 const bool   useTUnfold = true; 
 const bool   scanLcurve = true;

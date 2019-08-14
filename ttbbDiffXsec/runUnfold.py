@@ -9,15 +9,21 @@ def runUnfold(dir1, dir2, file, sys=""):
     if sys is not "": os.system('root -l -b -q ttbbDiffXsec.C\'("'+dir1+'","'+dir2+'","'+file+'","'+sys+'")\'')
     else            : os.system('root -l -b -q ttbbDiffXsec.C\'("'+dir1+'","'+dir2+'","'+file+'")\'')
 
-if not os.path.exists("/home/seohyun/work/ttbb/heptool/output/unfold"):
+if not os.path.exists("../output/unfold"):
     os.makedirs("../output/unfold")
 
-inputDir = "/home/seohyun/work/ttbb/heptool/output/post/"
-outputDir = "/home/seohyun/work/ttbb/heptool/output/unfold/"
+inputDir = "../output/post/"
+outputDir = "../output/unfold/"
 
+<<<<<<< HEAD
 
 
 runUnfold(inputDir, outputDir, "hist_ttbb"        )
 #runUnfold(inputDir, outputDir, "hist_DataSingleEl")
 #runUnfold(inputDir, outputDir, "hist_DataSingleMu")
+=======
+#runUnfold(inputDir, outputDir, "hist_ttbb"        )
+runUnfold(inputDir, outputDir, "hist_DataSingleEl")
+runUnfold(inputDir, outputDir, "hist_DataSingleMu")
+>>>>>>> fbc2120cbe49b2828e2fe3719e5c264f9736392d
 
