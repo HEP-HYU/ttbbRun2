@@ -99,9 +99,6 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     }
   }
   else{
-    if( process.Contains("2017") ){
-      prefireweight = {fReader, "prefireweight"};
-    }
     lepton_pT     = {fReader, "lepton_pt"};
     lepton_E      = {fReader, "lepton_e"};
     jet_pT        = {fReader, "jet_pt"};
@@ -127,6 +124,20 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       mindRbjet2_eta = {fReader, "mindRjet2_eta"};
       mindRbjet2_phi = {fReader, "mindRjet2_phi"};
       mindRbjet2_e   = {fReader, "mindRjet2_e"};
+    }
+    
+    if( process.Contains("2017") ){
+      MUON_ETA_      = 2.4;
+      ELECTRON_PT_   = 30.0;
+      ELECTRON_ETA_  = 2.4;
+      JET_CSV_TIGHT_ = 0.8001;
+      prefireweight = {fReader, "prefireweight"};
+    }
+    if( process.Contains("2018") ){
+      MUON_ETA_      = 2.4;
+      ELECTRON_PT_   = 30.0;
+      ELECTRON_ETA_  = 2.4;
+      JET_CSV_TIGHT_ = 0.7527;
     }
   }
 }
@@ -187,7 +198,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
     jet_pt_sum += jet.Pt();
     ++njets;
-    if( jet_CSV[iJet] > 0.8001 ){
+    if( jet_CSV[iJet] > JET_CSV_TIGHT_ ){
       ++nbjets;
       v_reco_bjets.push_back(jet);
     }

@@ -129,16 +129,16 @@ std::vector<double> QCDXSEC_ = {
 };
 
 const double TTBAR_XSEC_ = 831.76;
-//OBJECT SELECTION
+//OBJECT SELECTION for 2016
 const int MUON_        = 0;
-const double MUON_PT_  = 30.0;
-const double MUON_ETA_ = 2.1;
+double MUON_PT_  = 30.0;
+double MUON_ETA_ = 2.1;
 const double MUON_PHI_ = 0.0;
 const double MUON_E_   = 0.0;
 
 const int ELECTRON_        = 1;
-const double ELECTRON_PT_  = 35.0;
-const double ELECTRON_ETA_ = 2.1;
+double ELECTRON_PT_  = 35.0;
+double ELECTRON_ETA_ = 2.1;
 const double ELECTRON_PHI_ = 0.0;
 const double ELECTRON_E_   = 0.0;
 
@@ -147,7 +147,7 @@ const double JET_ETA_ = 2.4;
 const double JET_PHI_ = 0.0;
 const double JET_E_   = 0.0;
 
-const double JET_CSV_TIGHT_  = 0.9535;
+double JET_CSV_TIGHT_  = 0.9535;
 const double JET_CSV_MEDIUM_ = 0.8484;
 const double JET_CSV_LOOSE_  = 0.0;
 
