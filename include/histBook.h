@@ -3,61 +3,40 @@
 #include <TH2.h>
 
 //SAMPLE LIST
-enum class Sample_List_ {
+enum class Sample16 {
   TTBB = 0,TTBJ,TTCC,/*TTJJ,*/TTLF,TTOTHER,TTBKG,WJETS,ZJETS,ZJETS10TO50,
   TCHANNEL,TBARCHANNEL,TWCHANNEL,TBARWCHANNEL,WW,WZ,ZZ,TTH,TTW,TTZ,LAST
 };
 
-const int TTBB_ = static_cast<int>(Sample_List_::TTBB);
-const int TTBJ_ = static_cast<int>(Sample_List_::TTBJ);
-const int TTCC_ = static_cast<int>(Sample_List_::TTCC);
-//const int TTJJ_ = static_cast<int>(Sample_List_::TTJJ);
-const int TTLF_ = static_cast<int>(Sample_List_::TTLF);
-const int TTOTHER_ = static_cast<int>(Sample_List_::TTOTHER);
-const int TTBKG_ = static_cast<int>(Sample_List_::TTBKG);
-const int WJETS_ = static_cast<int>(Sample_List_::WJETS);
-const int ZJETS_ = static_cast<int>(Sample_List_::ZJETS);
-const int ZJETS10TO50_ = static_cast<int>(Sample_List_::ZJETS10TO50);
-const int TCHANNEL_ = static_cast<int>(Sample_List_::TCHANNEL);
-const int TBARCHANNEL_ = static_cast<int>(Sample_List_::TBARCHANNEL);
-const int TWCHANNEL_ = static_cast<int>(Sample_List_::TWCHANNEL);
-const int TBARWCHANNEL_ = static_cast<int>(Sample_List_::TBARWCHANNEL);
-const int WW_ = static_cast<int>(Sample_List_::WW);
-const int WZ_ = static_cast<int>(Sample_List_::WZ);
-const int ZZ_ = static_cast<int>(Sample_List_::ZZ);
-const int TTH_ = static_cast<int>(Sample_List_::TTH);
-const int TTW_ = static_cast<int>(Sample_List_::TTW);
-const int TTZ_ = static_cast<int>(Sample_List_::TTZ);
+enum class Sample17 {
+  TTBB = 0,TTBJ,TTCC,TTLJ,TTOTHER,TTBKG_TTLL,TTBKG_TTLJ,TTBKG_TTJJ,
+  WJETS,ZJETS,ZJETS10TO50,
+  SCHANNEL,TCHANNEL,TBARCHANNEL,TWCHANNEL,TBARWCHANNEL,
+  WW,WZ,ZZ,TTHNONBB,TTHBB,TTWTOLNU,TTWTOQQ,TTZTOLLNUNU,TTZTOQQ,LAST
+};
 
 std::vector<string> DATA_ = {"DataSingleMu","DataSingleEl"};
-std::vector<string> NAME_ = {
+std::vector<string> NAME16_ = {
   "ttbb","ttbj","ttcc",/*"ttjj",*/"ttLF","ttother","ttbkg","wjets","zjets","zjets10to50",
   "tchannel","tbarchannel","tWchannel","tbarWchannel","ww","wz","zz",
   "ttH","ttW","ttZ"
 };
-
-std::vector<const char *> V_SYS_ = {
-  "__puup", "__pudown",
-  "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
-  "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
-  "__lfup", "__lfdown", "__hfup", "__hfdown",
-  "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
-  "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
-  "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down",
-  "__scale0", "__scale1", "__scale2", "__scale3", "__scale4", "__scale5",
-  "__ps0", "__ps1", "__ps2", "__ps3"
+std::vector<string> NAME17_ = {
+  "ttbb","ttbj","ttcc","ttLF","ttother","ttbkg_ttll","ttbkg_ttlj","ttbkg_ttjj",
+  "wjets","zjets10to50","zjets50",
+  "singletop_s","singletop_t","singletbar_t","singletop_tW","singletbar_tW",
+  "ww","wz","zz","ttHtononbb","ttHtobb","ttWtolnu","ttWtoqq","ttZtollnunu","ttZtoqq"
 };
 
-//SCALE
-const double LUMINOSITY_ = 35922;
-const double BRANCHINGRATIO_ = 0.436572;//2*3*0.1086*0.67
-//const double LUMINOSITY_ = 35867;
+const double LUMI16_ = 35922;
+const double LUMI17_ = 41529;
+const double LUMI18_ = 59693;
+const double BRATIO_ = 0.436572;//2*3*0.1086*0.67
 
-std::vector<double> XSEC_ = {
+std::vector<double> XSEC16_ = {
   365.34, //ttbb 
   365.34, //ttbj 
   365.34, //ttcc
-  //356.34,//ttjj
   365.34, //ttLF
   365.34, //ttother
   831.76, //ttbkg
@@ -75,30 +54,35 @@ std::vector<double> XSEC_ = {
   0.2043, //ttW
   0.2529 //ttZ
 };
-//v808
-/*
-std::vector<double> XSEC_ = {
-  332.704, //ttbb 
-  332.704, //ttbj 
-  332.704, //ttcc
-  //332.704,//ttjj
-  332.704, //ttLF
-  332.704, //ttohter
-  831.76, //ttbkg
+
+std::vector<double> XSEC17_ = {
+  365.34, //ttbb 
+  365.34, //ttbj 
+  365.34, //ttcc
+  365.34, //ttLF
+  365.34, //ttother
+  88.29, //ttbkg_ttll
+  365.34, //ttbkg_ttlj
+  377.96, //ttbkg_ttjj
   61526.7, //wjets
-  5765.4, //6025.2, //zjets
+  6225.42, //zjets
   18610.0, //zjets10to50
-  136.02, //t tchannel
-  80.95, //tbar tchannel
+  3.36, //schannel
+  136.02, //tchannel
+  80.95, //tbarchannel
   35.85, //tWchannel
   35.85, //tbarWchannel
   118.7, //ww
   47.13, //wz
   16.523, //zz
-  0.2151, //ttH
-  0.61, //ttW
-  0.78 //ttZ
-};*/
+  0.2151, //ttHtononbb
+  0.2923, //ttHtobb
+  0.2043, //ttWtolnu
+  0.4062, //ttWtoqq
+  0.2529, //ttZtollnunu
+  0.5297 //tZtoqq
+};
+
 enum class QCD_List_ {
   El20to30 = 0, El30to50, El50to80, El80to120, El120to170, El170to300, El300toInf,
   Mu20to30, Mu30to50, Mu50to80, Mu80to120, Mu120to170, Mu170to300, Mu300to470, Mu470to600,
@@ -144,7 +128,6 @@ std::vector<double> QCDXSEC_ = {
   1.62131692
 };
 
-//tchannel : 44.33, tbarchannel : 26.38
 const double TTBAR_XSEC_ = 831.76;
 //OBJECT SELECTION
 const int MUON_        = 0;
@@ -242,32 +225,44 @@ const double wmass_min=0; const double wmass_max=200;
 const int nbins_csv=20;
 const double csv_min=0; const double csv_max=1;
 
-const int nbins_njets=10;
-const double njets_min=0; const double njets_max=10;
+const int nbins_njets=4;
+const double njets_min=6; const double njets_max=10;
 //const double njets_width[xNbins_njets+1] = {};
-const int nbins_nbjets=10;
-const double nbjets_min=0; const double nbjets_max=10;
+const int nbins_nbjets=5;
+const double nbjets_min=0; const double nbjets_max=5;
 //const double nbjets_width[xNbins_nbjets+1] = {};
 
-const int nbins_reco_addbjets_dR=12;
+//For unfolding
+const int nbins_reco_addbjets_dR=8;
 const double reco_addbjets_dR_min=0.4; const double reco_addbjets_dR_max=4.0;
-const double reco_addbjets_dR_width[13] = 
-{0.4,0.55,0.7,0.85,1.0,1.15,1.3,1.45,1.6,1.8,2.0,3.0,4.0};
-const int nbins_gen_addbjets_dR=6;
-const double gen_addbjets_dR_min=0.4; const double gen_addbjets_dR_max=4.0;
-const double gen_addbjets_dR_width[7] =
-{0.4,0.7,1.0,1.3,1.6,2.0,4.0};
+const double reco_addbjets_dR_width[9] = 
+{0.4,0.5,0.6,0.8,1.0,1.5,2.0,3.0,4.0};
+//For draw
+//const int nbins_reco_addbjets_dR=4;
+//const double reco_addbjets_dR_min=0.4; const double reco_addbjets_dR_max=4.0;
+//const double reco_addbjets_dR_width[5] = 
+//{0.4,0.6,1.0,2.0,4.0};
 
+const int nbins_gen_addbjets_dR=4;
+const double gen_addbjets_dR_min=0.4; const double gen_addbjets_dR_max=4.0;
+const double gen_addbjets_dR_width[5] =
+{0.4,0.6,1.0,2.0,4.0};
+
+//For unfolding
 const int nbins_reco_addbjets_M=8;
 const double reco_addbjets_M_min=0; double reco_addbjets_M_max=400;
 const double reco_addbjets_M_width[9] =
-{0.0,30.0,60.0,75.0,90.0,135.0,180.0,290.0,400.0};
-//{0.0,30.0,60.0,90.0,120.0,180.0,400.0};
+{0.0,30.0,60.0,80.0,100.0,135.0,170.0,285.0,400.0};
+//For draw
+//const int nbins_reco_addbjets_M=4;
+//const double reco_addbjets_M_min=0; double reco_addbjets_M_max=400;
+//const double reco_addbjets_M_width[5] =
+//{0.0,60.0,100.0,170.0,400.0};
+
 const int nbins_gen_addbjets_M=4;
 const double gen_addbjets_M_min=0; const double gen_addbjets_M_max=400;
 const double gen_addbjets_M_width[5] =
-{0.0,60.0,90.0,180.0,400.0};
-//{0.0,30.0,60.0,90.0,120.0,180.0,400.0};
+{0.0,60.0,100.0,170.0,400.0};
 
 const int nbins_reco_addbjets_dEta=12;
 const double reco_addbjets_dEta_min=0; const double reco_addbjets_dEta_max=2.4;
@@ -362,12 +357,34 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	h_lepton_eta[iChannel][iStep]->SetYTitle("Entries");
 	h_lepton_eta[iChannel][iStep]->Sumw2();
 
-	h_njets[iChannel][iStep] = new TH1D(
-	    Form("h_%s_Ch%d_S%d%s",RECO_N_JETS_,iChannel,iStep,_process),"",
-	    nbins_njets,
-	    njets_min,njets_max
-	    //njets_width
-	    );
+        if(iStep == 0){
+	  h_njets[iChannel][iStep] = new TH1D(
+	    Form("h_%s_Ch%d_S%d%s", RECO_N_JETS_, iChannel, iStep, _process), "",
+	    10, 0, 10);
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "4");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(6, "5");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(7, "6");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(8, "7");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(9, "8");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(10, "#geq 9");
+	}
+	else{
+	  h_njets[iChannel][iStep] = new TH1D(
+	      Form("h_%s_Ch%d_S%d%s",RECO_N_JETS_,iChannel,iStep,_process),"",
+	      nbins_njets,
+	      njets_min,njets_max
+	      //njets_width
+	      );
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "6");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "7");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "8");
+	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "#geq 9");
+
+	}
 	h_njets[iChannel][iStep]->SetXTitle("Jet multiplicity");
 	h_njets[iChannel][iStep]->SetYTitle("Entries");
 	h_njets[iChannel][iStep]->Sumw2();
@@ -380,6 +397,11 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	    );
 	h_nbjets[iChannel][iStep]->SetXTitle("bJet multiplicity");
 	h_nbjets[iChannel][iStep]->SetYTitle("Entries");
+	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
+	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
+	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
+	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
+	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "#geq 4");
 	h_nbjets[iChannel][iStep]->Sumw2();
 	
 	h_jet_pt_sum[iChannel][iStep] = new TH1D(

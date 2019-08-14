@@ -1,21 +1,21 @@
 #include "../include/histBook.h"
 
-void runGentree(){
-  TFile *f_in = TFile::Open("/data/users/seohyun/ntuple/hep2017/v808/nosplit/TTLJ_PowhegPythia_ttbb.root");
-  TFile *f_out = TFile::Open("../output/root/hist_gen.root", "recreate");
+void runGentree(std::string input_path, std::string output_path){
+  TFile *f_in = TFile::Open(Form("%s/TTLJ_PowhegPythia_ttbb.root", input_path.c_str()));
+  TFile *f_out = TFile::Open(Form("%s/hist_gen.root", output_path.c_str()), "recreate");
 
   TTreeReader gentree("ttbbLepJets/gentree", f_in);
-  TTreeReaderValue<Int_t>   event          = {gentree, "event"};
+  //TTreeReaderValue<Int_t>   event          = {gentree, "event"};
   TTreeReaderValue<Float_t> genweight      = {gentree, "genweight"};
   TTreeReaderValue<Int_t>   channel        = {gentree, "genchannel"};
-  TTreeReaderValue<float>   mindRbjet1_pt  = {gentree, "mindRbjet1_pt"};
-  TTreeReaderValue<float>   mindRbjet1_eta = {gentree, "mindRbjet1_eta"};
-  TTreeReaderValue<float>   mindRbjet1_phi = {gentree, "mindRbjet1_phi"};
-  TTreeReaderValue<float>   mindRbjet1_e   = {gentree, "mindRbjet1_e"};
-  TTreeReaderValue<float>   mindRbjet2_pt  = {gentree, "mindRbjet2_pt"};
-  TTreeReaderValue<float>   mindRbjet2_eta = {gentree, "mindRbjet2_eta"};
-  TTreeReaderValue<float>   mindRbjet2_phi = {gentree, "mindRbjet2_phi"};
-  TTreeReaderValue<float>   mindRbjet2_e   = {gentree, "mindRbjet2_e"};
+  TTreeReaderValue<float>   mindRbjet1_pt  = {gentree, "mindRjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet1_eta = {gentree, "mindRjet1_eta"};
+  TTreeReaderValue<float>   mindRbjet1_phi = {gentree, "mindRjet1_phi"};
+  TTreeReaderValue<float>   mindRbjet1_e   = {gentree, "mindRjet1_e"};
+  TTreeReaderValue<float>   mindRbjet2_pt  = {gentree, "mindRjet2_pt"};
+  TTreeReaderValue<float>   mindRbjet2_eta = {gentree, "mindRjet2_eta"};
+  TTreeReaderValue<float>   mindRbjet2_phi = {gentree, "mindRjet2_phi"};
+  TTreeReaderValue<float>   mindRbjet2_e   = {gentree, "mindRjet2_e"};
   TTreeReaderValue<float>   addbjet1_pt    = {gentree, "addbjet1_pt"};
   TTreeReaderValue<float>   addbjet1_eta   = {gentree, "addbjet1_eta"};
   TTreeReaderValue<float>   addbjet1_phi   = {gentree, "addbjet1_phi"};
@@ -116,6 +116,7 @@ void runGentree(){
     h_gen_mindR_deltaPhi_nosel[ich]->Sumw2();
   }
 
+  std::cout << "Start" << std::endl;
   while(gentree.Next()){
     TLorentzVector mindRbjet1, mindRbjet2;
     mindRbjet1.SetPtEtaPhiE(*mindRbjet1_pt, *mindRbjet1_eta, *mindRbjet1_phi, *mindRbjet1_e);
