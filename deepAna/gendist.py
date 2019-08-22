@@ -24,7 +24,13 @@ h_gen_addbjets_invMass_nosel = [[0] for i in range(nChannel)]
 
 for iChannel in range(0,nChannel):
     h_gen_addbjets_deltaR_nosel[iChannel] = ROOT.TH1D("h_gentop_GenAddbJetDeltaR_Ch" + str(iChannel) + "_nosel","", nbins_gen_addjets_dr, array('d', gen_addjets_dr_width))
+    h_gen_addbjets_deltaR_nosel[iChannel].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
+    h_gen_addbjets_deltaR_nosel[iChannel].GetYaxis().SetTitle("Entries")
+    h_gen_addbjets_deltaR_nosel[iChannel].Sumw2()
     h_gen_addbjets_invMass_nosel[iChannel] = ROOT.TH1D("h_gentop_GenAddbJetInvMass_Ch" + str(iChannel) + "_nosel","", nbins_gen_addjets_mass, array('d', gen_addjets_mass_width))
+    h_gen_addbjets_invMass_nosel[iChannel].GetXaxis().SetTitle("m_{b#bar{b}}(GeV)")
+    h_gen_addbjets_invMass_nosel[iChannel].GetYaxis().SetTitle("Entries")
+    h_gen_addbjets_invMass_nosel[iChannel].Sumw2()
 
 muon_ch = 0
 electron_ch = 1
@@ -41,11 +47,11 @@ for i in xrange(genchain.GetEntries()):
     genM = (addbjet1+addbjet2).M()
 
     if genchain.genchannel == muon_ch:
-	h_gen_addbjets_deltaR_nosel[muon_ch].Fill(gendR,genchain.genweight)
-	h_gen_addbjets_invMass_nosel[muon_ch].Fill(genM,genchain.genweight)
+        h_gen_addbjets_deltaR_nosel[muon_ch].Fill(gendR,genchain.genweight)
+        h_gen_addbjets_invMass_nosel[muon_ch].Fill(genM,genchain.genweight)
     elif genchain.genchannel == electron_ch:
-	h_gen_addbjets_deltaR_nosel[electron_ch].Fill(gendR,genchain.genweight)
-	h_gen_addbjets_invMass_nosel[electron_ch].Fill(genM,genchain.genweight)
+        h_gen_addbjets_deltaR_nosel[electron_ch].Fill(gendR,genchain.genweight)
+        h_gen_addbjets_invMass_nosel[electron_ch].Fill(genM,genchain.genweight)
     else: print("Error")
 
 #Add overflow bins 
@@ -53,6 +59,8 @@ for iChannel in range(nChannel) :
     h_gen_addbjets_deltaR_nosel[iChannel].AddBinContent(nbins_gen_addjets_dr, h_gen_addbjets_deltaR_nosel[iChannel].GetBinContent(nbins_gen_addjets_dr+1))
     h_gen_addbjets_invMass_nosel[iChannel].AddBinContent(nbins_gen_addjets_mass, h_gen_addbjets_invMass_nosel[iChannel].GetBinContent(nbins_gen_addjets_mass+1))
 
+    h_gen_addbjets_deltaR_nosel[iChannel].ClearUnderflowAndOverflow()
+    h_gen_addbjets_invMass_nosel[iChannel].ClearUnderflowAndOverflow()
 
 f_out.cd() 
 f_out.Write()

@@ -36,11 +36,6 @@ import variableAnalyzer as var
 
 def ana(inputDir, process, outputDir, sys='', flag1=False):
 
-    ##for now,it is different from inputDir
-    ##needed for gentree and event info.
-    #ntuple_path = '/data/users/seohyun/ntuple/Run2017/V9_5/nosplit/'
-    ntuple_path = '/data/users/seohyun/ntuple/Run2017/V9_6/nosplit/'
-
     if '__' in process:
         process = process.split('__')[0]
     print("Process: "+process+"\n")
@@ -130,11 +125,11 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     #selEvent.reset_index(drop=True, inplace=True)
 
     # should get the number automatically 
-    nMatchable = 6010
+#    nMatchable = 6010
     #ttbbFilter nMatchable: 5557
-    countMatchable = False
+    countMatchable = True
     if countMatchable :
-        df = pd.read_hdf("array/array_ttbb.h5")
+        df = pd.read_hdf("/home/sarakm0704/WORK/ttbb/ttbbRun2/deepAna/array/array_train_ttbb.h5")
         df = df.filter(['signal','event','dR'], axis=1)
         df = df.query('signal > 0')
         #tmpId = df.groupby(['event'])['dR'].transform(max) == df['dR']
@@ -175,8 +170,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     #gen_addjets_mass_width = [0.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,400.0]
 
     #Histograms for unfolding
-    h_gen_addbjets_deltaR_nosel = [[0] for i in range(nChannel)]
-    h_gen_addbjets_invMass_nosel = [[0] for i in range(nChannel)]
     h_njets = [[0] for i in range(nChannel)]
     h_nbjets = [[0] for i in range(nChannel)]
     h_reco_addjets_deltaR = [[0] for i in range(nChannel)]
@@ -203,26 +196,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
             h_hist[iChannel][i].GetXaxis().SetTitle(xlabel[varlist[i]])
             h_hist[iChannel][i].GetYaxis().SetTitle("Entries")
             h_hist[iChannel][i].Sumw2()
-
-        h_gen_addbjets_deltaR_nosel[iChannel] = ROOT.TH1D(
-                "h_gentop_GenAddbJetDeltaR_Ch" + str(iChannel) + "_nosel" + sys,
-                "", nbins_gen_addjets_dr,
-                #gen_addjets_dr_min, gen_addjets_dr_max
-                array('d', gen_addjets_dr_width)
-                )
-        h_gen_addbjets_deltaR_nosel[iChannel].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
-        h_gen_addbjets_deltaR_nosel[iChannel].GetYaxis().SetTitle("Entries")
-        h_gen_addbjets_deltaR_nosel[iChannel].Sumw2()
-
-        h_gen_addbjets_invMass_nosel[iChannel] = ROOT.TH1D(
-                "h_gentop_GenAddbJetInvMass_Ch" + str(iChannel) + "_nosel" + sys,
-                "", nbins_gen_addjets_mass,
-                #gen_addjets_m_min, gen_addjets_m_max
-                array('d', gen_addjets_mass_width)
-                )
-        h_gen_addbjets_invMass_nosel[iChannel].GetXaxis().SetTitle("m_{b#bar{b}}(GeV)")
-        h_gen_addbjets_invMass_nosel[iChannel].GetYaxis().SetTitle("Entries")
-        h_gen_addbjets_invMass_nosel[iChannel].Sumw2()
 
         h_njets[iChannel] = ROOT.TH1D(
                 "h_keras_nJets_Ch" + str(iChannel) + "_S3" + sys,
@@ -305,32 +278,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_respMatrix_invMass[iChannel].GetXaxis().SetTitle("Reco. m_{b#bar{b}}(GeV)")
         h_respMatrix_invMass[iChannel].GetYaxis().SetTitle("Gen. m_{b#bar{b}}(GeV)")
         h_respMatrix_invMass[iChannel].Sumw2()
-
-    if ttbb == True:
-        genchain = TChain("ttbbLepJets/gentree")
-        genchain.Add(ntuple_path+"/"+ntuple+".root")
-
-        print "GENTREE RUN"
-        for i in xrange(genchain.GetEntries()):
-            #if closureTest:
-            #    if i%2 == 0 : continue
-            ut.printProgress(i, genchain.GetEntries(), 'Progress:', 'Complete', 1, 50)
-            genchain.GetEntry(i)
-            addbjet1 = TLorentzVector()
-            addbjet2 = TLorentzVector()
-            addbjet1.SetPtEtaPhiE(genchain.addbjet1_pt, genchain.addbjet1_eta, genchain.addbjet1_phi, genchain.addbjet1_e)
-            addbjet2.SetPtEtaPhiE(genchain.addbjet2_pt, genchain.addbjet2_eta, genchain.addbjet2_phi, genchain.addbjet2_e)
-
-            gendR = addbjet1.DeltaR(addbjet2)
-            genM = (addbjet1+addbjet2).M()
-
-            if genchain.genchannel == muon_ch:
-                h_gen_addbjets_deltaR_nosel[muon_ch].Fill(gendR,genchain.genweight)
-                h_gen_addbjets_invMass_nosel[muon_ch].Fill(genM,genchain.genweight)
-            elif genchain.genchannel == electron_ch:
-                h_gen_addbjets_deltaR_nosel[electron_ch].Fill(gendR,genchain.genweight)
-                h_gen_addbjets_invMass_nosel[electron_ch].Fill(genM,genchain.genweight)
-            else: print("Error")
 
     #f_pred = open('pred.txt','w')
     print "\nLoad modelfile : "+str(modelfile)
@@ -540,7 +487,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         print string_nmatch_final
         #print "Matching Ratio from minimun dR : "+str(matching_mindR)+"("+str(nEvt_isMatch_mindR)+"/"+str(nEvents)+")"
         f_ratio = open('ratio.txt','a')
-        f_ratio.write(modelfile+"\n")
+        f_ratio.write("\n"+modelfile+"\n")
         f_ratio.write(string_nmatch_matchable+"\n")
         f_ratio.write(string_nmatch_final)
         f_ratio.close()
@@ -552,8 +499,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_reco_addjets_invMass[iChannel].AddBinContent(nbins_reco_addjets_mass, h_reco_addjets_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1))
         h_gen_addbjets_deltaR[iChannel].AddBinContent(nbins_gen_addjets_dr, h_gen_addbjets_deltaR[iChannel].GetBinContent(nbins_gen_addjets_dr+1))
         h_gen_addbjets_invMass[iChannel].AddBinContent(nbins_gen_addjets_mass, h_gen_addbjets_invMass[iChannel].GetBinContent(nbins_gen_addjets_mass+1))
-        h_gen_addbjets_deltaR_nosel[iChannel].AddBinContent(nbins_gen_addjets_dr, h_gen_addbjets_deltaR_nosel[iChannel].GetBinContent(nbins_gen_addjets_dr+1))
-        h_gen_addbjets_invMass_nosel[iChannel].AddBinContent(nbins_gen_addjets_mass, h_gen_addbjets_invMass_nosel[iChannel].GetBinContent(nbins_gen_addjets_mass+1))
 
         for index, value in enumerate(varlist):
             tmp = ut.getHistRange(value)
@@ -585,22 +530,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_reco_addjets_invMass[iChannel].ClearUnderflowAndOverflow()
         h_gen_addbjets_deltaR[iChannel].ClearUnderflowAndOverflow()
         h_gen_addbjets_invMass[iChannel].ClearUnderflowAndOverflow()
-        h_gen_addbjets_deltaR_nosel[iChannel].ClearUnderflowAndOverflow()
-        h_gen_addbjets_invMass_nosel[iChannel].ClearUnderflowAndOverflow()
         h_respMatrix_deltaR[iChannel].ClearUnderflowAndOverflow()
         h_respMatrix_invMass[iChannel].ClearUnderflowAndOverflow()
-
-
-    f_ntuple = TFile.Open(os.path.join(ntuple_path, ntuple+'.root'),'read')
-    h_eventinfo = f_ntuple.Get("ttbbLepJets/EventInfo")
-    h_scaleweight = f_ntuple.Get("ttbbLepJets/ScaleWeights")
-
-    f_out.cd()
-    h_eventinfo.Write()
-    h_scaleweight.Write()
-    f_out.Write()
-    f_out.Close()
-    #f_pred.close()
 
     keras.backend.clear_session()
 
