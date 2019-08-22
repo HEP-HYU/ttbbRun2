@@ -148,15 +148,17 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     elif sys == '' : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+'.root', 'recreate')
     else           : f_out = ROOT.TFile(outputDir+'/'+modelfile+'/hist_'+process+sys+'.root', 'recreate')
 
-    nbins_reco_addjets_dr = 12 #4
+    nbins_reco_addjets_dr_fine = 12
+    nbins_reco_addjets_dr = 4
     reco_addjets_dr_min = 0.4
     reco_addjets_dr_max = 4.0
-    #reco_addjets_dr_width = [0.4,0.6,1.0,2.0,4.0]
+    reco_addjets_dr_width = [0.4,0.6,1.0,2.0,4.0]
 
-    nbins_reco_addjets_mass = 12 #4
+    nbins_reco_addjets_mass_fine = 12 
+    nbins_reco_addjets_mass = 4
     reco_addjets_m_min = 0
     reco_addjets_m_max = 400
-    #reco_addjets_mass_width = [0.0,60.0,100.0,170.0,400.0]
+    reco_addjets_mass_width = [0.0,60.0,100.0,170.0,400.0]
 
     nbins_gen_addjets_dr = 4
     gen_addjets_dr_min = 0.4
@@ -174,10 +176,14 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     h_nbjets = [[0] for i in range(nChannel)]
     h_reco_addjets_deltaR = [[0] for i in range(nChannel)]
     h_reco_addjets_invMass = [[0] for i in range(nChannel)]
+    h_reco_addjets_deltaR_fine = [[0] for i in range(nChannel)]
+    h_reco_addjets_invMass_fine = [[0] for i in range(nChannel)]
     h_gen_addbjets_deltaR = [[0] for i in range(nChannel)]
     h_gen_addbjets_invMass = [[0] for i in range(nChannel)]
     h_respMatrix_deltaR = [[0] for i in range(nChannel)]
     h_respMatrix_invMass = [[0] for i in range(nChannel)]
+    h_respMatrix_deltaR_fine = [[0] for i in range(nChannel)]
+    h_respMatrix_invMass_fine = [[0] for i in range(nChannel)]
     #h_respMatrix_invMass = [[0]*nStep for i in range(nChannel)]
 
     #Histograms of DNN input variables
@@ -213,11 +219,13 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_nbjets[iChannel].GetYaxis().SetTitle("Entries")
         h_nbjets[iChannel].Sumw2()
 
+        h_reco_addjets_deltaR_fine[iChannel] = ROOT.TH1D("h_keras_RecoAddbJetDeltaR_fine_Ch" + str(iChannel) + "_S3" + sys,"",nbins_reco_addjets_dr_fine,reco_addjets_dr_min, reco_addjets_dr_max)
+        h_reco_addjets_invMass_fine[iChannel] = ROOT.TH1D("h_keras_RecoAddbJetInvMass_fine_Ch" + str(iChannel) + "_S3" + sys,"", nbins_reco_addjets_mass_fine, reco_addjets_m_min, reco_addjets_m_max)
+
         h_reco_addjets_deltaR[iChannel] = ROOT.TH1D(
                 "h_keras_RecoAddbJetDeltaR_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_dr,
-                reco_addjets_dr_min, reco_addjets_dr_max
-                #array('d', reco_addjets_dr_width)
+                array('d', reco_addjets_dr_width)
                 )
         h_reco_addjets_deltaR[iChannel].GetXaxis().SetTitle("#DeltaR_{b#bar{b}}")
         h_reco_addjets_deltaR[iChannel].GetYaxis().SetTitle("Entries")
@@ -226,8 +234,7 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_reco_addjets_invMass[iChannel] = ROOT.TH1D(
                 "h_keras_RecoAddbJetInvMass_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_mass,
-                reco_addjets_m_min, reco_addjets_m_max
-                #array('d', reco_addjets_mass_width)
+                array('d', reco_addjets_mass_width)
                 )
         h_reco_addjets_invMass[iChannel].GetXaxis().SetTitle("m_{b#bar{b}}(GeV)")
         h_reco_addjets_invMass[iChannel].GetYaxis().SetTitle("Entries")
@@ -253,13 +260,28 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_gen_addbjets_invMass[iChannel].GetYaxis().SetTitle("Entries")
         h_gen_addbjets_invMass[iChannel].Sumw2()
 
+        h_respMatrix_deltaR_fine[iChannel] = ROOT.TH2D(
+                "h_keras_ResponseMatrixDeltaR_fine_Ch" + str(iChannel) + "_S3" + sys,"",
+                nbins_reco_addjets_dr_fine,
+                reco_addjets_dr_min, reco_addjets_dr_max,
+                nbins_gen_addjets_dr,
+                array('d', gen_addjets_dr_width)
+                )
+
+        h_respMatrix_invMass_fine[iChannel] = ROOT.TH2D(
+                "h_keras_ResponseMatrixInvMass_fine_Ch" + str(iChannel) + "_S3" + sys,
+                "", nbins_reco_addjets_mass_fine,
+                reco_addjets_m_min, reco_addjets_m_max,
+                nbins_gen_addjets_mass,#
+                array('d', gen_addjets_mass_width)
+                )
+     
+
         h_respMatrix_deltaR[iChannel] = ROOT.TH2D(
                 "h_keras_ResponseMatrixDeltaR_Ch" + str(iChannel) + "_S3" + sys,"",
                 nbins_reco_addjets_dr,
-                reco_addjets_dr_min, reco_addjets_dr_max,
-                #array('d', reco_addjets_dr_width),
+                array('d', reco_addjets_dr_width),
                 nbins_gen_addjets_dr,
-                #gen_addjets_dr_min, gen_addjets_dr_max
                 array('d', gen_addjets_dr_width)
                 )
         h_respMatrix_deltaR[iChannel].GetXaxis().SetTitle("Reco. #DeltaR_{b#bar{b}}")
@@ -269,10 +291,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_respMatrix_invMass[iChannel] = ROOT.TH2D(
                 "h_keras_ResponseMatrixInvMass_Ch" + str(iChannel) + "_S3" + sys,
                 "", nbins_reco_addjets_mass,
-                reco_addjets_m_min, reco_addjets_m_max,
-                #array('d', reco_addjets_mass_width),
+                array('d', reco_addjets_mass_width),
                 nbins_gen_addjets_mass,#
-                #gen_addjets_m_min, gen_addjets_m_max
                 array('d', gen_addjets_mass_width)
                 )
         h_respMatrix_invMass[iChannel].GetXaxis().SetTitle("Reco. m_{b#bar{b}}(GeV)")
@@ -455,16 +475,22 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
                 h_nbjets[passchannel].Fill(nbjets, eventweight)
                 h_reco_addjets_deltaR[passchannel].Fill(reco_dR, eventweight)
                 h_reco_addjets_invMass[passchannel].Fill(reco_M, eventweight)
+                h_reco_addjets_deltaR_fine[passchannel].Fill(reco_dR, eventweight)
+                h_reco_addjets_invMass_fine[passchannel].Fill(reco_M, eventweight)
                 h_gen_addbjets_deltaR[passchannel].Fill(gen_dR, eventweight)
                 h_gen_addbjets_invMass[passchannel].Fill(gen_M, eventweight)
             else:
                 h_respMatrix_deltaR[passchannel].Fill(reco_dR, gen_dR, eventweight)
                 h_respMatrix_invMass[passchannel].Fill(reco_M, gen_M, eventweight)
+                h_respMatrix_deltaR_fine[passchannel].Fill(reco_dR, gen_dR, eventweight)
+                h_respMatrix_invMass_fine[passchannel].Fill(reco_M, gen_M, eventweight)
         else:
             h_njets[passchannel].Fill(njets, eventweight)
             h_nbjets[passchannel].Fill(nbjets, eventweight)
             h_reco_addjets_deltaR[passchannel].Fill(reco_dR, eventweight)
             h_reco_addjets_invMass[passchannel].Fill(reco_M, eventweight)
+            h_reco_addjets_deltaR_fine[passchannel].Fill(reco_dR, eventweight)
+            h_reco_addjets_invMass_fine[passchannel].Fill(reco_M, eventweight)
             for index, value in enumerate(varlist):
                 h_hist[passchannel][index].Fill(event[value], eventweight)
             if ttbb:
@@ -472,6 +498,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
                 h_gen_addbjets_invMass[passchannel].Fill(gen_M, eventweight)
                 h_respMatrix_deltaR[passchannel].Fill(reco_dR, gen_dR, eventweight)
                 h_respMatrix_invMass[passchannel].Fill(reco_M, gen_M, eventweight)
+                h_respMatrix_deltaR_fine[passchannel].Fill(reco_dR, gen_dR, eventweight)
+                h_respMatrix_invMass_fine[passchannel].Fill(reco_M, gen_M, eventweight)
 
     if ttbb:
         matching_DNN = 0.0
@@ -497,6 +525,8 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         h_nbjets[iChannel].AddBinContent(10,h_nbjets[iChannel].GetBinContent(11))
         h_reco_addjets_deltaR[iChannel].AddBinContent(nbins_reco_addjets_dr, h_reco_addjets_deltaR[iChannel].GetBinContent(nbins_reco_addjets_dr+1))
         h_reco_addjets_invMass[iChannel].AddBinContent(nbins_reco_addjets_mass, h_reco_addjets_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1))
+        h_reco_addjets_deltaR_fine[iChannel].AddBinContent(nbins_reco_addjets_dr_fine, h_reco_addjets_deltaR_fine[iChannel].GetBinContent(nbins_reco_addjets_dr_fine+1))
+        h_reco_addjets_invMass_fine[iChannel].AddBinContent(nbins_reco_addjets_mass_fine, h_reco_addjets_invMass_fine[iChannel].GetBinContent(nbins_reco_addjets_mass_fine+1))
         h_gen_addbjets_deltaR[iChannel].AddBinContent(nbins_gen_addjets_dr, h_gen_addbjets_deltaR[iChannel].GetBinContent(nbins_gen_addjets_dr+1))
         h_gen_addbjets_invMass[iChannel].AddBinContent(nbins_gen_addjets_mass, h_gen_addbjets_invMass[iChannel].GetBinContent(nbins_gen_addjets_mass+1))
 
@@ -524,6 +554,27 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
         tmp = h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass+1,nbins_gen_addjets_mass+1)+h_respMatrix_invMass[iChannel].GetBinContent(nbins_reco_addjets_mass,nbins_gen_addjets_mass)
         h_respMatrix_invMass[iChannel].SetBinContent(nbins_reco_addjets_mass,nbins_gen_addjets_mass,tmp)
 
+        #for fine binning
+        for iXaxis in range(1, nbins_reco_addjets_dr_fine+1) :
+            tmp = h_respMatrix_deltaR_fine[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_dr)+h_respMatrix_deltaR_fine[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_dr+1)
+            h_respMatrix_deltaR_fine[iChannel].SetBinContent(iXaxis, nbins_gen_addjets_dr, tmp)
+        for iYaxis in range(1, nbins_gen_addjets_dr+1) :
+            tmp = h_respMatrix_deltaR_fine[iChannel].GetBinContent(nbins_reco_addjets_dr_fine, iYaxis)+h_respMatrix_deltaR_fine[iChannel].GetBinContent(nbins_reco_addjets_dr_fine+1, iYaxis)
+            h_respMatrix_deltaR_fine[iChannel].SetBinContent(nbins_reco_addjets_dr_fine, iYaxis, tmp)
+
+        for iXaxis in range(1, nbins_reco_addjets_mass_fine+1) :
+            tmp = h_respMatrix_invMass_fine[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_mass)+h_respMatrix_invMass_fine[iChannel].GetBinContent(iXaxis, nbins_gen_addjets_mass+1)
+            h_respMatrix_invMass_fine[iChannel].SetBinContent(iXaxis, nbins_gen_addjets_mass, tmp)
+        for iYaxis in range(1, nbins_gen_addjets_mass+1) :
+            tmp = h_respMatrix_invMass_fine[iChannel].GetBinContent(nbins_reco_addjets_mass_fine, iYaxis)+h_respMatrix_invMass_fine[iChannel].GetBinContent(nbins_reco_addjets_mass_fine+1, iYaxis)
+            h_respMatrix_invMass_fine[iChannel].SetBinContent(nbins_reco_addjets_mass_fine, iYaxis,tmp)
+
+        tmp_fine = h_respMatrix_deltaR_fine[iChannel].GetBinContent(nbins_reco_addjets_dr_fine+1,nbins_gen_addjets_dr+1)+h_respMatrix_deltaR_fine[iChannel].GetBinContent(nbins_reco_addjets_dr_fine,nbins_gen_addjets_dr)
+        h_respMatrix_deltaR_fine[iChannel].SetBinContent(nbins_reco_addjets_dr_fine,nbins_gen_addjets_dr,tmp_fine)
+        tmp_fine = h_respMatrix_invMass_fine[iChannel].GetBinContent(nbins_reco_addjets_mass_fine+1,nbins_gen_addjets_mass+1)+h_respMatrix_invMass_fine[iChannel].GetBinContent(nbins_reco_addjets_mass_fine,nbins_gen_addjets_mass)
+        h_respMatrix_invMass_fine[iChannel].SetBinContent(nbins_reco_addjets_mass_fine,nbins_gen_addjets_mass,tmp_fine)
+ 
+
         h_njets[iChannel].ClearUnderflowAndOverflow()
         h_nbjets[iChannel].ClearUnderflowAndOverflow()
         h_reco_addjets_deltaR[iChannel].ClearUnderflowAndOverflow()
@@ -539,7 +590,6 @@ def ana(inputDir, process, outputDir, sys='', flag1=False):
     realtime = timer.RealTime()
     cputime = timer.CpuTime()
     print("Real Time : {0:6.2f} seconds, CPU Time : {1:6.2f} seconds").format(realtime,cputime)
-
 
 #Options
 if __name__ == '__main__':
