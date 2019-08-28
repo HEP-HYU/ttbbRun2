@@ -6,10 +6,10 @@
 //#include "../include/tdrstyle.C"
 
 HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst);
-void DrawHist(TH1 *h_in, bool drawError = false);
+void DrawHist(int year, TH1 *h_in, bool drawError = false);
 
-void makeAcceptance(){
-  string input_dir = "../output/post/";
+void makeAcceptance(int year){
+  string input_dir = "../output/post" + std::to_string(year);
   TFile *f_in = TFile::Open(Form("%s/hist_ttbb.root", input_dir.c_str()));
   TFile *f_out = TFile::Open(Form("%s/hist_criteria_%s.root", input_dir.c_str(), genMode),"recreate");
 
@@ -26,30 +26,30 @@ void makeAcceptance(){
     for(int ich=0; ich<nChannel; ++ich){
       h_tmp->h_stability_deltaR[ich]->Write();
       h_tmp->h_stability_invMass[ich]->Write();
-      h_tmp->h_stability_deltaEta[ich]->Write();
-      h_tmp->h_stability_deltaPhi[ich]->Write();
+      //h_tmp->h_stability_deltaEta[ich]->Write();
+      //h_tmp->h_stability_deltaPhi[ich]->Write();
       h_tmp->h_purity_deltaR[ich]->Write();
       h_tmp->h_purity_invMass[ich]->Write();
-      h_tmp->h_purity_deltaEta[ich]->Write();
-      h_tmp->h_purity_deltaPhi[ich]->Write();
+      //h_tmp->h_purity_deltaEta[ich]->Write();
+      //h_tmp->h_purity_deltaPhi[ich]->Write();
       h_tmp->h_acceptance_deltaR[ich]->Write();
       h_tmp->h_acceptance_invMass[ich]->Write();
-      h_tmp->h_acceptance_deltaEta[ich]->Write();
-      h_tmp->h_acceptance_deltaPhi[ich]->Write();
+      //h_tmp->h_acceptance_deltaEta[ich]->Write();
+      //h_tmp->h_acceptance_deltaPhi[ich]->Write();
 
       if(*v_itr == ""){
-        DrawHist(h_tmp->h_stability_deltaR[ich]);
-        DrawHist(h_tmp->h_stability_invMass[ich]);
-        DrawHist(h_tmp->h_stability_deltaEta[ich]);
-        DrawHist(h_tmp->h_stability_deltaPhi[ich]);
-        DrawHist(h_tmp->h_purity_deltaR[ich]);
-        DrawHist(h_tmp->h_purity_invMass[ich]);
-        DrawHist(h_tmp->h_purity_deltaEta[ich]);
-        DrawHist(h_tmp->h_purity_deltaPhi[ich]);
-        DrawHist(h_tmp->h_acceptance_deltaR[ich], true);
-        DrawHist(h_tmp->h_acceptance_invMass[ich], true);
-        DrawHist(h_tmp->h_acceptance_deltaEta[ich], true);
-        DrawHist(h_tmp->h_acceptance_deltaPhi[ich], true);
+        DrawHist(year, h_tmp->h_stability_deltaR[ich]);
+        DrawHist(year, h_tmp->h_stability_invMass[ich]);
+        //DrawHist(year, h_tmp->h_stability_deltaEta[ich]);
+        //DrawHist(year, h_tmp->h_stability_deltaPhi[ich]);
+        DrawHist(year, h_tmp->h_purity_deltaR[ich]);
+        DrawHist(year, h_tmp->h_purity_invMass[ich]);
+        //DrawHist(year, h_tmp->h_purity_deltaEta[ich]);
+        //DrawHist(year, h_tmp->h_purity_deltaPhi[ich]);
+        DrawHist(year, h_tmp->h_acceptance_deltaR[ich], true);
+        DrawHist(year, h_tmp->h_acceptance_invMass[ich], true);
+        //DrawHist(year, h_tmp->h_acceptance_deltaEta[ich], true);
+        //DrawHist(year, h_tmp->h_acceptance_deltaPhi[ich], true);
       }
     }
     h_tmp->~HistoBook();
@@ -77,44 +77,44 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
 
   TH2D *h_matrix_deltaR[nChannel];
   TH2D *h_matrix_invMass[nChannel];
-  TH2D *h_matrix_deltaEta[nChannel];
-  TH2D *h_matrix_deltaPhi[nChannel];
+  //TH2D *h_matrix_deltaEta[nChannel];
+  //TH2D *h_matrix_deltaPhi[nChannel];
 
   TH1D *h_gen_deltaR[nChannel];
   TH1D *h_gen_invMass[nChannel];
-  TH1D *h_gen_deltaEta[nChannel];
-  TH1D *h_gen_deltaPhi[nChannel];
+  //TH1D *h_gen_deltaEta[nChannel];
+  //TH1D *h_gen_deltaPhi[nChannel];
 
   TH1D *h_reco_deltaR[nChannel];
   TH1D *h_reco_invMass[nChannel];
-  TH1D *h_reco_deltaEta[nChannel];
-  TH1D *h_reco_deltaPhi[nChannel];
+  //TH1D *h_reco_deltaEta[nChannel];
+  //TH1D *h_reco_deltaPhi[nChannel];
 
   TH1D *h_gen_deltaR_nosel[nChannel];
   TH1D *h_gen_invMass_nosel[nChannel];
-  TH1D *h_gen_deltaEta_nosel[nChannel];
-  TH1D *h_gen_deltaPhi_nosel[nChannel];
+  //TH1D *h_gen_deltaEta_nosel[nChannel];
+  //TH1D *h_gen_deltaPhi_nosel[nChannel];
 
   for(int ich=0; ich < nChannel; ++ich){    
     h_gen_deltaR_nosel[ich]    = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_nosel", genmode, GEN_ADD_DR_,   ich));
     h_gen_invMass_nosel[ich]   = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_nosel", genmode, GEN_ADD_M_,    ich));
-    h_gen_deltaEta_nosel[ich]  = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_nosel", genmode, GEN_ADD_DETA_, ich));
-    h_gen_deltaPhi_nosel[ich]  = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_nosel", genmode, GEN_ADD_DPHI_, ich));
+    //h_gen_deltaEta_nosel[ich]  = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_nosel", genmode, GEN_ADD_DETA_, ich));
+    //h_gen_deltaPhi_nosel[ich]  = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_nosel", genmode, GEN_ADD_DPHI_, ich));
     
     h_matrix_deltaR[ich]   = (TH2D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, MATRIX_DR_,   ich, syst.c_str()));
     h_matrix_invMass[ich]  = (TH2D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, MATRIX_M_,    ich, syst.c_str()));
-    h_matrix_deltaEta[ich] = (TH2D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, MATRIX_DETA_, ich, syst.c_str()));
-    h_matrix_deltaPhi[ich] = (TH2D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, MATRIX_DPHI_, ich, syst.c_str()));
+    //h_matrix_deltaEta[ich] = (TH2D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, MATRIX_DETA_, ich, syst.c_str()));
+    //h_matrix_deltaPhi[ich] = (TH2D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, MATRIX_DPHI_, ich, syst.c_str()));
 
     h_gen_deltaR[ich]   = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, GEN_ADD_DR_,   ich, syst.c_str()));
     h_gen_invMass[ich]  = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, GEN_ADD_M_,    ich, syst.c_str()));
-    h_gen_deltaEta[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, GEN_ADD_DETA_, ich, syst.c_str()));
-    h_gen_deltaPhi[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, GEN_ADD_DPHI_, ich, syst.c_str()));
+    //h_gen_deltaEta[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, GEN_ADD_DETA_, ich, syst.c_str()));
+    //h_gen_deltaPhi[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, GEN_ADD_DPHI_, ich, syst.c_str()));
 
     h_reco_deltaR[ich]   = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, RECO_ADD_DR_,   ich, syst.c_str())); 
     h_reco_invMass[ich]  = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, RECO_ADD_M_,   ich, syst.c_str())); 
-    h_reco_deltaEta[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, RECO_ADD_DETA_, ich, syst.c_str())); 
-    h_reco_deltaPhi[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, RECO_ADD_DPHI_, ich, syst.c_str())); 
+    //h_reco_deltaEta[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, RECO_ADD_DETA_, ich, syst.c_str())); 
+    //h_reco_deltaPhi[ich] = (TH1D *)f_in->Get(Form("h_%s_%s_Ch%d_S3%s", genmode, RECO_ADD_DPHI_, ich, syst.c_str())); 
   }
 
   for(int ich=0; ich<nChannel; ++ich){
@@ -165,7 +165,7 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "----------------------------------------" << std::endl;
     }
 
-    fout << "----------------------------------------" << std::endl;
+    /*fout << "----------------------------------------" << std::endl;
     fout << "Variable: delta Eta" << endl;
 
     for(int ibin=1; ibin < nbins_reco_addbjets_dEta+1; ++ibin){
@@ -205,7 +205,7 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       }
       h_stb->h_purity_deltaPhi[ich]->SetBinContent(ibin, purity_dPhi);
       fout << "----------------------------------------" << std::endl;
-    }
+    }*/
 
     fout << "----------------------------------------" << std::endl;
     fout << "************** Stability  **************" << std::endl;
@@ -258,7 +258,7 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "----------------------------------------" << std::endl;
     }
 
-    fout << "----------------------------------------" << std::endl;
+    /*fout << "----------------------------------------" << std::endl;
     fout << "Variable: delta Eta" << endl;
     for(int ibin=1; ibin<nbins_gen_addbjets_dEta+1; ++ibin){
       fout << "------" << ibin << "th Bin ------" << std::endl;
@@ -306,7 +306,7 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       }
       h_stb->h_stability_deltaPhi[ich]->SetBinContent(ibin, stability_dPhi);
       fout << "----------------------------------------" << std::endl;
-    }
+    }*/
 
     fout << "----------------------------------------" << std::endl;
     fout << "************** Acceptance  *************" << std::endl;
@@ -355,7 +355,7 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "----------------------------------------" << std::endl;
     }
 
-    fout << "----------------------------------------" << std::endl;
+    /*fout << "----------------------------------------" << std::endl;
     fout << "Variable : delta Eta" << std::endl;
     for(int ibin=1; ibin<nbins_gen_addbjets_dEta+1;++ibin){
       fout << "------" << ibin << "th Bin ------" << std::endl;
@@ -399,13 +399,13 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "value :" << acceptance_dPhi << std::endl;
       fout << "err :" << dPhi_err << std::endl;
       fout << "----------------------------------------" << std::endl;
-    }
+    }*/
   }//Channel
 
   return h_stb;
 }
 
-void DrawHist(TH1* h_in_, bool drawError = false){    
+void DrawHist(int year, TH1* h_in_, bool drawError = false){    
   gROOT->ProcessLine("setTDRStyle();");
 
   gStyle->SetHatchesSpacing(1);
@@ -464,7 +464,7 @@ void DrawHist(TH1* h_in_, bool drawError = false){
 
   //label_work->Draw("same");
   label_sim->Draw("same");
-  c->Print(Form("../output/pdf/%s.pdf", h_in->GetName()),"pdf");
+  c->Print(Form("../output/unfold%d/%s.pdf", year, h_in->GetName()),"pdf");
 
   c->~TCanvas();
   h_in->~TH1();

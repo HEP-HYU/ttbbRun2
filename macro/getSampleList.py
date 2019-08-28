@@ -9,12 +9,6 @@ def getSampleList():
     f_list16.write(path16+'\n')
 
     for item in os.listdir(path16):
-	if "Data"  in item: continue
-	if "part"  in item: continue
-	if "ISR"   in item: continue
-	if "FSR"   in item: continue
-	if "Tune"  in item: continue
-	if "hdamp" in item: continue
 	if "Herwig" in item: continue
 	if "Evtgen" in item: continue
 	if "TT_aMC" in item: continue

@@ -98,12 +98,15 @@ for year in range(16,19):
 	runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
 	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
 
-	for index, sample in enumerate(samples):
+	for sample in samples:
+	    if "part" in sample: continue
+	    if "SYS" in sample: continue
 	    runAna(inputDir, str(sample)+".root", str(sample))
 
 	if do_sys:
-	    for index, value in enumerate(sys_list):
-		for sample in enumerate(samples):
+	    for value in sys_list:
+		for sample in samples:
+		    if "SYS" in sample: continue
 		    runAna(inputDir, str(sample)+".root", sample+value)
 
 	    for index, value in enumerate(sys_ttbar):
@@ -114,6 +117,47 @@ for year in range(16,19):
 		runAna(inputDir, "TTLJ_PowhegPythia_ttother.root", "TTLJ_PowhegPythia_ttother"+value)
 		if "Run2016" in inputDir:
 		    runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "TTLJ_PowhegPythia_ttbbFilter_ttbb"+value)
+
+            # hdamp, Tune
+	    for sample in samples:
+	        if not "SYS" in sample: continue
+		if sample.find("tt") is not -1:
+		    tmp = sample[sample.find("SYS"):] + sample[sample.find("tt"):]
+		else:
+		    tmp = sample[sample.find("SYS")-1:]
+		if "hdampUp"   in sample: tmp += "__hdampup"
+		if "hdampDown" in sample: tmp += "__hdampdown"
+		if "Tune" in sample and "Up"   in sample: tmp += "__tuneup"
+		if "Tune" in sample and "Down" in sample: tmp += "__tunedown"
+		runAna(inputDir, str(sample)+".root", tmp)
+
+            # 2016 only (Isr, Fsr)
+	    if year == 16:
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttbb.root",    "ttbb__isrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttbj.root",    "ttbj__isrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttcc.root",    "ttcc__isrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttLF.root",    "ttLF__isrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRup_ttother.root", "ttother__isrup")
+		runAna(inputDir, "TT_PowhegPythiaBkg_SYS_ISRup.root",      "ttbkg__isrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttbb.root",    "ttbb__isrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttbj.root",    "ttbj__isrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttcc.root",    "ttcc__isrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttLF.root",    "ttLF__isrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_ISRdown_ttother.root", "ttother__isrdown")
+		runAna(inputDir, "TT_PowhegPythiaBkg_SYS_ISRdown.root",      "ttbkg__isrdown")
+
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttbb.root",    "ttbb__fsrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttbj.root",    "ttbj__fsrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttcc.root",    "ttcc__fsrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttLF.root",    "ttLF__fsrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRup_ttother.root", "ttother__fsrup")
+		runAna(inputDir, "TT_PowhegPythiaBkg_SYS_FSRup.root",      "ttbkg__fsrup")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttbb.root",    "ttbb__fsrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttbj.root",    "ttbj__fsrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttcc.root",    "ttcc__fsrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttLF.root",    "ttLF__fsrdown")
+	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttother.root", "ttother__fsrdown")
+		runAna(inputDir, "TT_PowhegPythiaBkg_SYS_FSRdown.root",      "ttbkg__fsrdown")
 
     outdir = 'output/root'+str(year)
     os.system('mv output/root '+outdir)
