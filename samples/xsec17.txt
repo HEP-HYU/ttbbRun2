@@ -1,48 +1,48 @@
-Sample Xsec DrawOrder Color
-ttZToQQ_aMCatNLOMadspinPythia 0.5297 12 #ff66ff 
-ttZToLLNuNu_aMCatNLOMadspinPythia 0.2529 13 #ff66ff
-ttWToQQ_aMCatNLOMadspinPythia 0.4062 10 #ff66ff
-ttWToLNu_aMCatNLOMadspinPythia 0.2043 11 #ff66ff
-ttHTobb_PowhegPythia 0.2923 8 #ff66ff
-ttHToNonbb_PowhegPythia 0.2151 9 #ff66ff
-ZZ_Pythia 16.523 21 #00cccc
-ZJets_M50_aMCatNLOPythia 6225.42 22 #000099
-ZJets_M10to50_MadgraphPythia 18610.0 23 #000099
-WZ_Pythia 47.13 20 #00cccc
-WW_Pythia 118.7 19 #00cccc
-WJetsToLNu_MadgraphPythia 61526.7 24 #ff9933
-W4JetsToLNu_MadgraphPythia 544.3 25 #ff9933
-W3JetsToLNu_MadgraphPythia 992.5 26 #ff9933
-W2JetsToLNu_MadgraphPythia 2793 27 #ff9933
-W1JetsToLNu_MadgraphPythia 9625 28 #ff9933
-TTLL_PowhegPythiaBkg 88.29 5 #ff6666
-TTLJ_PowhegPythia_ttother 365.34 4 #ff6666
-TTLJ_PowhegPythia_ttcc 365.34 2 #990000
-TTLJ_PowhegPythia_ttbj 365.34 1 #660000
-TTLJ_PowhegPythia_ttbb 365.34 0 #330000
-TTLJ_PowhegPythia_ttLF 365.34 3 #cc0000
-TTLJ_PowhegPythiaBkg 365.34 6 #ff6666
-TTJJ_PowhegPythiaBkg 377.96 7 #ff6666
-SingleTop_t_PowhegPythia 136.02 14 #990099
-SingleTop_tW_PowhegPythia 35.85 15 #990099
-SingleTop_s_aMCatNLOPythia 3.36 16 #990099
-SingleTbar_t_PowhegPythia 80.95 17 #990099
-SingleTbar_tW_PowhegPythia 35.85 18 #990099
-QCD_Pt-15to20_MuEnriched 3819570 29 #d0cfd4
-QCD_Pt-20to30_MuEnriched 2960198.4 30 #d0cfd4
-QCD_Pt-50to80_MuEnriched 437504.1 31 #d0cfd4
-QCD_Pt-80to120_MuEnriched 106033.6648 32 #d0cfd4
-QCD_Pt-120to170_MuEnriched 25190.51514 33 #d0cfd4
-QCD_Pt-170to300_MuEnriched 8654.49315 34 #d0cfd4
-QCD_Pt-300to470_MuEnriched 797.35269 35 #d0cfd4
-QCD_Pt-470to600_MuEnriched 79.02553776 36 #d0cfd4
-QCD_Pt-600to800_MuEnriched 25.09505908 37 #d0cfd4
-QCD_Pt-800to1000_MuEnriched 4.707368272 38 #d0cfd4
-QCD_Pt-1000toInf_MuEnriched 1.621311692 39 #d0cfd4
-QCD_Pt-15to20_EMEnriched 2302200 40 #d0cfd4
-QCD_Pt-20to30_EMEnriched 5352960 41 #d0cfd4
-QCD_Pt-30to50_EMEnriched 9928000 42 #d0cfd4
-QCD_Pt-50to80_EMEnriched 2890800 43 #d0cfd4
-QCD_Pt-80to120_EMEnriched 350000 44 #d0cfd4
-QCD_Pt-120to170_EMEnriched 62964 45 #d0cfd4
-QCD_Pt-300toInf_EMEnriched 1350 46 #d0cfd4
+Sample Xsec DrawOrder Color Legend
+ttZToQQ_aMCatNLOMadspinPythia 0.5297 12 #ff66ff ttX
+ttZToLLNuNu_aMCatNLOMadspinPythia 0.2529 13 #ff66ff ttX
+ttWToQQ_aMCatNLOMadspinPythia 0.4062 10 #ff66ff ttX
+ttWToLNu_aMCatNLOMadspinPythia 0.2043 11 #ff66ff ttX
+ttHTobb_PowhegPythia 0.2923 8 #ff66ff ttX
+ttHToNonbb_PowhegPythia 0.2151 9 #ff66ff ttX
+ZZ_Pythia 16.523 21 #00cccc VV
+ZJets_M50_aMCatNLOPythia 6225.42 22 #000099 ZJets
+ZJets_M10to50_MadgraphPythia 18610.0 23 #000099 ZJets
+WZ_Pythia 47.13 20 #00cccc VV
+WW_Pythia 118.7 19 #00cccc VV
+WJetsToLNu_MadgraphPythia 61526.7 24 #ff9933 WJets
+W4JetsToLNu_MadgraphPythia 544.3 25 #ff9933 WJets
+W3JetsToLNu_MadgraphPythia 992.5 26 #ff9933 WJets
+W2JetsToLNu_MadgraphPythia 2793 27 #ff9933 WJets
+W1JetsToLNu_MadgraphPythia 9625 28 #ff9933 WJets
+TTLL_PowhegPythiaBkg 88.29 5 #ff6666 ttbkg
+TTLJ_PowhegPythia_ttother 365.34 4 #ff6666 ttbkg
+TTLJ_PowhegPythia_ttcc 365.34 2 #990000 ttcc
+TTLJ_PowhegPythia_ttbj 365.34 1 #660000 ttbj
+TTLJ_PowhegPythia_ttbb 365.34 0 #330000 ttbb
+TTLJ_PowhegPythia_ttLF 365.34 3 #cc0000 ttLF
+TTLJ_PowhegPythiaBkg 365.34 6 #ff6666 ttbkg
+TTJJ_PowhegPythiaBkg 377.96 7 #ff6666 ttbkg
+SingleTop_t_PowhegPythia 136.02 14 #990099 SingleT
+SingleTop_tW_PowhegPythia 35.85 15 #990099 SingleT
+SingleTop_s_aMCatNLOPythia 3.36 16 #990099 SingleT
+SingleTbar_t_PowhegPythia 80.95 17 #990099 SingleT
+SingleTbar_tW_PowhegPythia 35.85 18 #990099 SingleT
+QCD_Pt-15to20_MuEnriched 3819570 29 #d0cfd4 QCD
+QCD_Pt-20to30_MuEnriched 2960198.4 30 #d0cfd4 QCD
+QCD_Pt-50to80_MuEnriched 437504.1 31 #d0cfd4 QCD
+QCD_Pt-80to120_MuEnriched 106033.6648 32 #d0cfd4 QCD
+QCD_Pt-120to170_MuEnriched 25190.51514 33 #d0cfd4 QCD
+QCD_Pt-170to300_MuEnriched 8654.49315 34 #d0cfd4 QCD
+QCD_Pt-300to470_MuEnriched 797.35269 35 #d0cfd4 QCD
+QCD_Pt-470to600_MuEnriched 79.02553776 36 #d0cfd4 QCD
+QCD_Pt-600to800_MuEnriched 25.09505908 37 #d0cfd4 QCD
+QCD_Pt-800to1000_MuEnriched 4.707368272 38 #d0cfd4 QCD
+QCD_Pt-1000toInf_MuEnriched 1.621311692 39 #d0cfd4 QCD
+QCD_Pt-15to20_EMEnriched 2302200 40 #d0cfd4 QCD
+QCD_Pt-20to30_EMEnriched 5352960 41 #d0cfd4 QCD
+QCD_Pt-30to50_EMEnriched 9928000 42 #d0cfd4 QCD
+QCD_Pt-50to80_EMEnriched 2890800 43 #d0cfd4 QCD
+QCD_Pt-80to120_EMEnriched 350000 44 #d0cfd4 QCD
+QCD_Pt-120to170_EMEnriched 62964 45 #d0cfd4 QCD
+QCD_Pt-300toInf_EMEnriched 1350 46 #d0cfd4 QCD

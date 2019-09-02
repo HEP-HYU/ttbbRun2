@@ -8,14 +8,14 @@ void runGentree(std::string input_path, std::string output_path){
   //TTreeReaderValue<Int_t>   event          = {gentree, "event"};
   TTreeReaderValue<Float_t> genweight      = {gentree, "genweight"};
   TTreeReaderValue<Int_t>   channel        = {gentree, "genchannel"};
-  TTreeReaderValue<float>   mindRbjet1_pt  = {gentree, "mindRjet1_pt"};
-  TTreeReaderValue<float>   mindRbjet1_eta = {gentree, "mindRjet1_eta"};
-  TTreeReaderValue<float>   mindRbjet1_phi = {gentree, "mindRjet1_phi"};
-  TTreeReaderValue<float>   mindRbjet1_e   = {gentree, "mindRjet1_e"};
-  TTreeReaderValue<float>   mindRbjet2_pt  = {gentree, "mindRjet2_pt"};
-  TTreeReaderValue<float>   mindRbjet2_eta = {gentree, "mindRjet2_eta"};
-  TTreeReaderValue<float>   mindRbjet2_phi = {gentree, "mindRjet2_phi"};
-  TTreeReaderValue<float>   mindRbjet2_e   = {gentree, "mindRjet2_e"};
+  TTreeReaderValue<float>   mindRbjet1_pt  = {gentree, "addbjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet1_eta = {gentree, "addbjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet1_phi = {gentree, "addbjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet1_e   = {gentree, "addbjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet2_pt  = {gentree, "addbjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet2_eta = {gentree, "addbjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet2_phi = {gentree, "addbjet1_pt"};
+  TTreeReaderValue<float>   mindRbjet2_e   = {gentree, "addbjet1_pt"};
   TTreeReaderValue<float>   addbjet1_pt    = {gentree, "addbjet1_pt"};
   TTreeReaderValue<float>   addbjet1_eta   = {gentree, "addbjet1_eta"};
   TTreeReaderValue<float>   addbjet1_phi   = {gentree, "addbjet1_phi"};
@@ -24,6 +24,28 @@ void runGentree(std::string input_path, std::string output_path){
   TTreeReaderValue<float>   addbjet2_eta   = {gentree, "addbjet2_eta"};
   TTreeReaderValue<float>   addbjet2_phi   = {gentree, "addbjet2_phi"};
   TTreeReaderValue<float>   addbjet2_e     = {gentree, "addbjet2_e"};
+
+  ssize_t pos;
+  if((pos = input_path.find("2016")) != std::string::npos ){
+    mindRbjet1_pt  = {gentree, "mindRbjet1_pt"};
+    mindRbjet1_eta = {gentree, "mindRbjet1_eta"};
+    mindRbjet1_phi = {gentree, "mindRbjet1_phi"};
+    mindRbjet1_e   = {gentree, "mindRbjet1_e"};
+    mindRbjet2_pt  = {gentree, "mindRbjet2_pt"};
+    mindRbjet2_eta = {gentree, "mindRbjet2_eta"};
+    mindRbjet2_phi = {gentree, "mindRbjet2_phi"};
+    mindRbjet2_e   = {gentree, "mindRbjet2_e"};
+  }
+  else{
+    mindRbjet1_pt  = {gentree, "mindRjet1_pt"};
+    mindRbjet1_eta = {gentree, "mindRjet1_eta"};
+    mindRbjet1_phi = {gentree, "mindRjet1_phi"};
+    mindRbjet1_e   = {gentree, "mindRjet1_e"};
+    mindRbjet2_pt  = {gentree, "mindRjet2_pt"};
+    mindRbjet2_eta = {gentree, "mindRjet2_eta"};
+    mindRbjet2_phi = {gentree, "mindRjet2_phi"};
+    mindRbjet2_e   = {gentree, "mindRjet2_e"};
+  }
 
   TH1D *h_gen_gentop_deltaR_nosel[nChannel];
   TH1D *h_gen_gentop_invMass_nosel[nChannel];

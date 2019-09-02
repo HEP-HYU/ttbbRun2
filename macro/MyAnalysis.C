@@ -211,8 +211,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   for(auto m_itr = m_jets.begin(); m_itr != m_jets.end(); ++m_itr){
     if(tmp_idx >= 6) continue;
     a_jetPt[tmp_idx] = m_itr->first;
-    a_jetCSV[tmp_idx] = (m_itr->second).first;
-    a_jetEta[tmp_idx] = ((m_itr->second).second).Eta();
+    //a_jetCSV[tmp_idx] = (m_itr->second).first;
+    a_jetEta[tmp_idx] = (m_itr->second).Eta();
     ++tmp_idx;
   }
 
@@ -297,61 +297,95 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       else
 	EventWeight *= prefireweight[0];
     }
+    if(process.Contains("2016")){
+      if( passchannel == 0 ){
+	//mu [0]~[2]:ID/Iso, [3]~[5]:Trigger
+	if     ( (pos = syst_ext.find("musfup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[1];
+	else if( (pos = syst_ext.find("musfdown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[2];
+	else
+	  EventWeight *= lepton_SF[0];
+	
+	if     ( (pos = syst_ext.find("mutrgup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[4];
+	else if( (pos = syst_ext.find("mutrgdown",0)) != std::string::npos ) 
+	  EventWeight *= lepton_SF[5];
+	else
+	  EventWeight *= lepton_SF[3];
+      }
+      else if( passchannel == 1){
+	//el [0]~[2]: ID/Iso/Reco, [3]~[5]: Trigger
+	if     ( (pos = syst_ext.find("elsfup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[1];
+	else if( (pos = syst_ext.find("elsfdown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[2];
+	else
+	  EventWeight *= lepton_SF[0];
 
-    if( passchannel == 0 ){
-      //mu [0]~[2]:ID, [3]~[5]:Iso, [6]~[8]:Trigger
-      if     ( (pos = syst_ext.find("muidup",0)) != std::string::npos )
-	EventWeight *= lepton_SF[1];
-      else if( (pos = syst_ext.find("muiddown",0)) != std::string::npos )
-	EventWeight *= lepton_SF[2];
-      else
-	EventWeight *= lepton_SF[0];
-
-      if     ( (pos = syst_ext.find("muisoup",0)) != std::string::npos )
-	EventWeight *= lepton_SF[4];
-      else if( (pos = syst_ext.find("muisodown",0)) != std::string::npos ) 
-	EventWeight *= lepton_SF[5];
-      else
-	EventWeight *= lepton_SF[3];
-
-      if     ( (pos = syst_ext.find("mutrgup",0)) != std::string::npos )
-	EventWeight *= lepton_SF[7];
-      else if( (pos = syst_ext.find("mutrgdown",0)) != std::string::npos ) 
-	EventWeight *= lepton_SF[8];
-      else
-	EventWeight *= lepton_SF[6];
+        if     ( (pos = syst_ext.find("eltrgup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[4];
+	else if( (pos = syst_ext.find("eltrgdown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[5];
+	else
+	  EventWeight *= lepton_SF[3];
+      }
     }
-    else if( passchannel == 1){
-      //el [0]~[2]: ID, [3]~[5]:Reco, [6]~[8]:Zvtx, [9]~[11]: Trigger
-      if     ( (pos = syst_ext.find("elsfup",0)) != std::string::npos )
-	EventWeight *= lepton_SF[1];
-      else if( (pos = syst_ext.find("elsfdown",0)) != std::string::npos )
-	EventWeight *= lepton_SF[2];
-      else
-	EventWeight *= lepton_SF[0];
+    else{
+      if( passchannel == 0 ){
+	//mu [0]~[2]:ID, [3]~[5]:Iso, [6]~[8]:Trigger
+	if     ( (pos = syst_ext.find("muidup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[1];
+	else if( (pos = syst_ext.find("muiddown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[2];
+	else
+	  EventWeight *= lepton_SF[0];
 
-      if     ( (pos = syst_ext.find("elrecoup",0)) != std::string::npos )
-	EventWeight *= lepton_SF[4];
-      else if( (pos = syst_ext.find("elrecodown",0)) != std::string::npos )
-	EventWeight *= lepton_SF[5];
-      else
-	EventWeight *= lepton_SF[3];
+	if     ( (pos = syst_ext.find("muisoup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[4];
+	else if( (pos = syst_ext.find("muisodown",0)) != std::string::npos ) 
+	  EventWeight *= lepton_SF[5];
+	else
+	  EventWeight *= lepton_SF[3];
 
-      if     ( (pos = syst_ext.find("elzvtxup",0)) != std::string::npos )
-	EventWeight *= lepton_SF[7];
-      else if( (pos = syst_ext.find("elzvtxdown",0)) != std::string::npos )
-	EventWeight *= lepton_SF[8];
-      else
-	EventWeight *= lepton_SF[6];
+	if     ( (pos = syst_ext.find("mutrgup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[7];
+	else if( (pos = syst_ext.find("mutrgdown",0)) != std::string::npos ) 
+	  EventWeight *= lepton_SF[8];
+	else
+	  EventWeight *= lepton_SF[6];
+      }
+      else if( passchannel == 1){
+	//el [0]~[2]: ID, [3]~[5]:Reco, [6]~[8]:Zvtx, [9]~[11]: Trigger
+	if     ( (pos = syst_ext.find("elsfup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[1];
+	else if( (pos = syst_ext.find("elsfdown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[2];
+	else
+	  EventWeight *= lepton_SF[0];
 
-      if     ( (pos = syst_ext.find("eltrgup",0)) != std::string::npos )
-	EventWeight *= lepton_SF[10];
-      else if( (pos = syst_ext.find("eltrgdown",0)) != std::string::npos )
-	EventWeight *= lepton_SF[11];
-      else
-	EventWeight *= lepton_SF[9];
+	if     ( (pos = syst_ext.find("elrecoup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[4];
+	else if( (pos = syst_ext.find("elrecodown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[5];
+	else
+	  EventWeight *= lepton_SF[3];
+
+	if     ( (pos = syst_ext.find("elzvtxup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[7];
+	else if( (pos = syst_ext.find("elzvtxdown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[8];
+	else
+	  EventWeight *= lepton_SF[6];
+
+	if     ( (pos = syst_ext.find("eltrgup",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[10];
+	else if( (pos = syst_ext.find("eltrgdown",0)) != std::string::npos )
+	  EventWeight *= lepton_SF[11];
+	else
+	  EventWeight *= lepton_SF[9];
+      }
     }
-    
     //Scale Weight(ME)
     //[0] = muF up , [1] = muF down, [2] = muR up, [3] = muR up && muF up
     //[4] = muR down, [5] = muF down && muF down
