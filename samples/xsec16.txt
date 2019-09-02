@@ -13,7 +13,7 @@ WZ_Pythia 47.13 14 #00cccc VV
 WW_Pythia 118.7 13 #00cccc VV
 WJets_aMCatNLO 61526.7 18 #ff9933 WJets
 TT_PowhegPythiaBkg 831.76 5 #ff6666 ttbkg
-TTLJ_PowhegPythia_ttother 365.34 4 #ff666 ttbkg
+TTLJ_PowhegPythia_ttother 365.34 4 #ff6666 ttbkg
 TTLJ_PowhegPythia_ttcc 365.34 2 #990000 ttcc
 TTLJ_PowhegPythia_ttbj 365.34 1 #660000 ttbj
 TTLJ_PowhegPythia_ttbbFilter_ttbb 31.06 -1 #000000 ttbb
