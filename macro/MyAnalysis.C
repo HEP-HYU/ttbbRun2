@@ -455,10 +455,6 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       EventWeight *= pdfweight[100];
   }
  
-  //std::cout << "genWeight: " << *genWeight << std::endl;
-  //std::cout << "PUWeight: " << PUWeight[0] << std::endl;
-  //std::cout << "lepton SF: " << lepton_SF[0] << std::endl;
-  //std::cout << "jet_SF_CSV_30: " << jet_SF_CSV_30[0] << std::endl;
   for(int iCut=0; iCut <= passcut; ++iCut){
     h_control->h_lepton_pt[passchannel][iCut] ->Fill(lepton.Pt(),                  EventWeight);
     h_control->h_lepton_eta[passchannel][iCut]->Fill(abs(lepton.Eta()),            EventWeight);

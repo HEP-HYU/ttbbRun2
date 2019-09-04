@@ -1,8 +1,8 @@
 #!/usr/bin/python
-run16  = True
+run16  = False 
 run17  = True
-run18  = True
-test   = False
+run18  = False
+test   = False 
 do_sys = False
 
 import os
@@ -57,7 +57,7 @@ def runAna(dir, file, name):
 #   __tuneup, __tunedown
 #####
 
-macro.getSampleList()
+macro.getSampleList.getSampleList(os.getcwd()+'/samples')
 
 sys_list = [
     "__jerup", "__jerdown", "__jecup", "__jecdown",
@@ -160,12 +160,14 @@ for year in range(16,19):
 		runAna(inputDir, "TT_PowhegPythiaBkg_SYS_FSRdown.root",      "ttbkg__fsrdown")
 
     outdir = 'output/root'+str(year)
+    if os.path.exists(outdir):
+        os.system('rm -rf'+outdir)
     os.system('mv output/root '+outdir)
 
     p.Close()
 
     os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
-    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)'/hist_gen.root')
+    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
     os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
 
     if do_sys:

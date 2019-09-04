@@ -43,7 +43,7 @@ public :
    TTreeReaderArray<float>   PUWeight          = {fReader, "PUWeight"};
    TTreeReaderArray<float>   pdfweight         = {fReader, "PUWeight"};
    TTreeReaderArray<float>   scaleweight       = {fReader, "PUWeight"};
-   TTreeReaderArray<Float_t>  prefireweight    = {fReader, "lepton_eta"};
+   TTreeReaderArray<Double_t>  prefireweight    = {fReader, "lepton_eta"};
    TTreeReaderValue<Float_t> MET               = {fReader, "MET"};
    TTreeReaderValue<Float_t> MET_phi           = {fReader, "MET_phi"};
    TTreeReaderValue<Float_t> lepton_pT         = {fReader, NULL};

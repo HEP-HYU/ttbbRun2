@@ -7,9 +7,9 @@ GWJets:
 GttBkg:
   fill-color: '#ff6666'
   legend: 'ttBkg'
-GttV:
+GttX:
   fill-color: '#ff66ff'
-  legend: 'ttV'
+  legend: 'ttX'
 GZJets:
   fill-color: '#000099'
   legend: 'ZJets'
@@ -19,6 +19,6 @@ GSingleT:
 GVV:
   fill-color: '#00cccc'
   legend: 'VV'
-GTTHut:
-  fill-color: '#cccc00'
-  legend: "TTHut"
+GQCD:
+  fill-color: '#d0cfd4'
+  legend: 'QCD'
