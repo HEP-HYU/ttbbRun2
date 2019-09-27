@@ -35,6 +35,14 @@ for year in range(16,19):
             tmp = line.split(' ')
             genevt[tmp[0]] = float(tmp[1])
 
+    sf = {}
+    with open('../samples/scale'+str(year)+'.txt','r') as f:
+        while True:
+	    line = f.readline()
+	    if not line: break
+	    tmp = line.split(' ')
+	    sf[tmp[0]] = float(tmp[1])
+
     hist_name = 'h_nJets'
     with open('../samples/xsec'+str(year)+'.txt','r') as f:
         f_nevt.write('\\begin{table}\n')
@@ -74,11 +82,12 @@ for year in range(16,19):
 		if not group == '': f_config.write("  group: "+group+"\n")
 		else: f_config.write("  legend: '"+legend+"'\n")
 		f_config.write("  order: "+str(order)+"\n")
-		f_config.write("  scale: 1\n")
+		f_config.write("  scale: "+str(sf[sample])+"\n")
 		f_config.write("\n")
 
 		f_sample = ROOT.TFile('../output/root'+str(year)+'/hist_'+sample+'.root')
-		scale = luminosities[year]*xsec/genevt[sample]
+		scale = (luminosities[year]*xsec/genevt[sample])*sf[sample]
+		print(sample+": "+str(scale))
 		nevt = sample
 		for ich in range(0,2):
                     for istep in range(0,4):

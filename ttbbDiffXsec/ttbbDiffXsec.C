@@ -2,28 +2,97 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 #include <TLegend.h>
 #include <TAttFill.h>
+#include <TPaveText.h>
+#include <TROOT.h>
 
 #include "ttbbDiffXsec.h"
 #include "runTUnfold.C"
 //#include "runSVDUnfold.C"
 
-void ttbbDiffXsec(string input_dir, string output_dir, string input){
+void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool runSystematics, bool useTUnfold){
   ssize_t pos;
   gErrorIgnoreLevel = kFatal; // kWarning
   gROOT->ProcessLine("setTDRStyle();");
 
-  auto syst_total = syst_list;
+  double lumi = 1.0;
+  lumi = m_lumi[year];
+  std::string ttbb = "TTLJ_PowhegPythia_ttbb";
+
+  const char *outname;
+  if(isData) outname = "data";
+  else outname = "ttbb";
+  std::string input_dir  = "../output/root"   + year;
+  std::string output_dir = "../output/unfold/" + year;
+ 
+  std::string tmp_str;
+  std::string tmp_name; double tmp_value;
+  
+  ifstream sample(Form("../samples/sample%s.txt", year.c_str()));
+  std::vector<std::string> v_sample_name;
+  while(getline(sample, tmp_str)){
+    if( (pos = tmp_str.find("ntuple",0)) != std::string::npos ) continue;
+    v_sample_name.push_back(tmp_str);
+  }
+  sample.close();
+  
+  ifstream xsec(Form("../samples/xsec%s.txt", year.c_str()));
+  std::map<std::string, double> m_xsec;
+  while(getline(xsec, tmp_str)){
+    if( (pos = tmp_str.find("Sample",0)) != std::string::npos ) continue;
+    std::stringstream ss;
+    ss.str(tmp_str);
+    ss >> tmp_name;
+    ss >> tmp_value;
+    m_xsec.insert(pair<std::string, double>(tmp_name, tmp_value));
+  }
+  xsec.close();
+
+  ifstream genevt(Form("../samples/genevt%s.txt", year.c_str()));
+  std::map<std::string, double> m_genevt;
+  while(getline(genevt, tmp_str)){
+    std::stringstream ss;
+    ss.str(tmp_str);
+    ss >> tmp_name;
+    ss >> tmp_value;
+    m_genevt.insert(pair<std::string, double>(tmp_name, tmp_value));
+  }
+  genevt.close();
+
+  ifstream sf(Form("../samples/scale%s.txt", year.c_str()));
+  std::map<std::string, double> m_sf;
+  while(getline(sf, tmp_str)){
+    std::stringstream ss;
+    ss.str(tmp_str);
+    ss >> tmp_name;
+    ss >> tmp_value;
+    if(year == "16") tmp_value = 1;
+    m_sf.insert(pair<std::string, double>(tmp_name, tmp_value));
+  }
+  sf.close();
+
+  std::vector<std::string> syst_total = syst_list;
   syst_total.insert(syst_total.end(), syst_ttbar.begin(), syst_ttbar.end());
   std::cout << "Load Files..." << std::endl;
-  TFile *f_out = TFile::Open(Form("%s/hist_unfolded_%s.root", output_dir.c_str(), input.c_str()),"recreate");
+  TFile *f_out = TFile::Open(Form("%s/hist_unfolded_%s.root", output_dir.c_str(), outname),"recreate");
 
-  TFile *f_matrix = TFile::Open(Form("../output/post/hist_ttbbFilterttbb.root"));
-  TFile *f_criteria = TFile::Open(Form("../output/post/hist_criteria_mindR.root"));
-  TFile *f_input = TFile::Open(Form("%s/%s.root", input_dir.c_str(), input.c_str()));
-  TFile *f_ttbb = TFile::Open(Form("%s/hist_ttbb.root", input_dir.c_str()));
+  TFile *f_input[2];
+  TFile *f_matrix = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), matrix_name));
+  TFile *f_accept = TFile::Open(Form("%s/hist_accept_mindR.root", input_dir.c_str()));
+  if(isData){
+    f_input[0] = TFile::Open(Form("%s/hist_DataSingleMu.root", input_dir.c_str()));
+    f_input[1] = TFile::Open(Form("%s/hist_DataSingleEG.root", input_dir.c_str()));
+  }
+  else{
+    f_input[0] = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), ttbb.c_str()));
+    f_input[1] = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), ttbb.c_str()));
+  }
+  TFile *f_ttbb = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), ttbb.c_str()));
+
   TH2 *h_resp_dR[nChannel], *h_resp_M[nChannel];
   TH1 *h_data_dR[nChannel], *h_data_M[nChannel];
   TH1 *h_gen_dR[nChannel],  *h_gen_M[nChannel];
@@ -32,22 +101,36 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
   for(int ich=0; ich<nChannel; ++ich){
     h_resp_dR[ich]   = (TH2 *)f_matrix->Get(Form("h_%s_%s_Ch%d_S3", genMode, MATRIX_DR_,   ich));
     h_resp_M[ich]    = (TH2 *)f_matrix->Get(Form("h_%s_%s_Ch%d_S3", genMode, MATRIX_M_,    ich));
-
-    h_data_dR[ich]   = (TH1 *)f_input->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_DR_,   ich));
-    h_data_M[ich]    = (TH1 *)f_input->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_M_,    ich)); 
-    
+   
     h_gen_dR[ich]   = (TH1 *)f_ttbb->Get(Form("h_%s_%s_Ch%d_S3", genMode, GEN_ADD_DR_,   ich));
     h_gen_M[ich]    = (TH1 *)f_ttbb->Get(Form("h_%s_%s_Ch%d_S3", genMode, GEN_ADD_M_,    ich));
 
     h_gen_nosel_dR[ich]   = (TH1 *)f_ttbb->Get(Form("h_%s_%s_Ch%d_nosel", genMode, GEN_ADD_DR_,   ich ));
     h_gen_nosel_M[ich]    = (TH1 *)f_ttbb->Get(Form("h_%s_%s_Ch%d_nosel", genMode, GEN_ADD_M_,    ich ));
   }
+    
+  h_data_dR[0]   = (TH1 *)f_input[0]->Get(Form("h_%s_%s_Ch0_S3", genMode, RECO_ADD_DR_));
+  h_data_M[0]    = (TH1 *)f_input[0]->Get(Form("h_%s_%s_Ch0_S3", genMode, RECO_ADD_M_ )); 
+  h_data_dR[1]   = (TH1 *)f_input[1]->Get(Form("h_%s_%s_Ch1_S3", genMode, RECO_ADD_DR_));
+  h_data_M[1]    = (TH1 *)f_input[1]->Get(Form("h_%s_%s_Ch1_S3", genMode, RECO_ADD_M_ )); 
+  if(isData){
+    TH1 *tmp_hist = (TH1 *)f_input[1]->Get(Form("h_%s_%s_Ch2_S3", genMode, RECO_ADD_DR_));
+    h_data_dR[2] = (TH1 *)f_input[0]->Get(Form("h_%s_%s_Ch2_S3", genMode, RECO_ADD_DR_));
+    h_data_dR[2]->Add(tmp_hist);
+    tmp_hist = (TH1 *)f_input[1]->Get(Form("h_%s_%s_Ch2_S3", genMode, RECO_ADD_M_));
+    h_data_M[2] = (TH1 *)f_input[0]->Get(Form("h_%s_%s_Ch2_S3", genMode, RECO_ADD_M_));
+    h_data_M[2]->Add(tmp_hist);
+  }
+  else{
+    h_data_dR[2] = (TH1 *)f_input[0]->Get(Form("h_%s_%s_Ch2_S3", genMode, RECO_ADD_DR_));
+    h_data_M[2] = (TH1 *)f_input[0]->Get(Form("h_%s_%s_Ch2_S3", genMode, RECO_ADD_M_));
+  }
 
+  std::cout << "Load Matrix..." << std::endl;
   std::map<const char *, TH2 *> m_sys_dR[nChannel], m_sys_M[nChannel];
   for(int ich=0; ich<nChannel; ++ich){
     TH1 *EventInfo = (TH1 *)f_matrix->Get("EventInfo");
-    double scale = LUMINOSITY_*31.06/EventInfo->GetBinContent(2);
-    //double scale = SF_ttbb*LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
+    double scale = m_sf[matrix_name]*lumi*m_xsec[matrix_name]/EventInfo->GetBinContent(2);
     h_resp_dR[ich]->Scale(scale);   h_resp_M[ich]->Scale(scale);
     
     if(runSystematics){
@@ -61,46 +144,49 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
       }
     }
   }
+  std::cout << "Save Backgrounds..." << std::endl;
   std::map<const char *, TH1 *> m_bkg_dR[nChannel], m_bkg_M[nChannel];
   std::map<const char *, double> m_scale;
   std::map<const char *, std::map<const char *, TH1 *>> m_bkgsys_dR[nChannel], m_bkgsys_M[nChannel];
   std::vector<TFile *>v_samples;
-  if( (pos = input.find("Data")) != std::string::npos ){
-    for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
-      TFile *f_sample = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), NAME_[i].c_str()));
-      TH1 *EventInfo = (TH1 *)f_sample->Get("EventInfo");
-      double scale = LUMINOSITY_*XSEC_[i]/EventInfo->GetBinContent(2);
-      if     (i == TTBB_) scale *= SF16_ttbb;
-      else if(i == TTBJ_) scale *= SF16_ttbj;
-      else if(i == TTCC_) scale *= SF16_ttcc;
-      else if(i == TTLF_) scale *= SF16_ttLF;
-      else                scale *= 1;
-      m_scale.insert(pair<const char *, double>(NAME_[i].c_str(), scale));
+  if(isData){
+    for(int i=0; i < v_sample_name.size(); ++i){
+      std::string sample_name = v_sample_name.at(i);
+      TFile *f_sample = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), sample_name.c_str()));
+      double scale = m_sf[sample_name]*lumi*m_xsec[sample_name]/m_genevt[sample_name];
+      m_scale.insert(pair<const char *, double>(sample_name.c_str(), scale));
       v_samples.push_back(f_sample);
     }
-    for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
+    for(int i=0; i<v_sample_name.size(); ++i){
       for(int ich=0; ich<nChannel; ++ich){
-	if(i == TTBB_) continue;
+        std::string sample_name = v_sample_name.at(i);
+	if((pos = sample_name.find("ttbb")) != std::string::npos) continue;
 	TH1 *h_bkg_dR, *h_bkg_M;
 	h_bkg_dR   = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_DR_,   ich));
         h_bkg_M    = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_M_,    ich));
-	m_bkg_dR[ich].insert(pair<const char *, TH1 *>(NAME_[i].c_str(), h_bkg_dR));
-	m_bkg_M[ich].insert(pair<const char *, TH1 *>(NAME_[i].c_str(), h_bkg_M));
+	m_bkg_dR[ich].insert(pair<const char *, TH1 *>(sample_name.c_str(), h_bkg_dR));
+	m_bkg_M[ich].insert(pair<const char *, TH1 *>(sample_name.c_str(), h_bkg_M));
       }
     }
+    std::cout << "Saved background samples" << std::endl;
+    for(auto m_itr = m_bkg_dR[0].begin(); m_itr != m_bkg_dR[0].end(); ++m_itr){
+      std::cout << m_itr->first << ": " << m_itr->second << ": " << m_scale[m_itr->first] << std::endl;
+    }
+    std::cout << "Save Systematic samples" << std::endl;
     if(runSystematics){
       std::map<const char *, TH1 *> m_tmp_dR, m_tmp_M;
       for(auto v_itr = syst_list.begin(); v_itr != syst_list.end(); ++v_itr){
 	for(int ich=0; ich<nChannel; ++ich){
-	  for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
-	    if(i == TTBB_) continue;
+	  for(int i=0; i<v_sample_name.size(); ++i){
+            std::string sample_name = v_sample_name.at(i);
+	    if((pos = sample_name.find("ttbb")) != std::string::npos) continue;
 
 	    TH1 *tmp_dR, *tmp_M, *tmp_dEta, *tmp_dPhi;
 	    tmp_dR   = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_DR_,   ich, (*v_itr).c_str()));
 	    tmp_M    = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_M_,    ich, (*v_itr).c_str()));
 
-	    m_tmp_dR.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_dR));
-	    m_tmp_M.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_M));
+	    m_tmp_dR.insert(std::pair<const char *, TH1 *>(sample_name.c_str(), tmp_dR));
+	    m_tmp_M.insert(std::pair<const char *, TH1 *>(sample_name.c_str(), tmp_M));
 	  }
 	  m_bkgsys_dR[ich].insert(pair<const char *,   std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_dR));
 	  m_bkgsys_M[ich].insert(pair<const char *,    std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_M));
@@ -111,12 +197,13 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
       }
       for(auto v_itr = syst_ttbar.begin(); v_itr != syst_ttbar.end(); ++v_itr){
         for(int ich=0; ich<nChannel; ++ich){
-	  for(int i=0; i<static_cast<int>(Sample_List_::LAST); ++i){
-	    if(i == TTBB_) continue;
+	  for(int i=0; i<v_sample_name.size(); ++i){
+            std::string sample_name = v_sample_name.at(i);
+	    if((pos = sample_name.find("ttbb")) != std::string::npos) continue;
 	    
 	    TH1 *tmp_dR, *tmp_M, *tmp_dEta, *tmp_dPhi;
 	    
-	    if(i <= TTOTHER_){
+	    if((pos = sample_name.find("PowhegPythia_tt")) != std::string::npos){
 	      tmp_dR   = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_DR_,   ich, (*v_itr).c_str()));
 	      tmp_M    = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3%s", genMode, RECO_ADD_M_,    ich, (*v_itr).c_str()));
 	    }
@@ -124,8 +211,8 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
 	      tmp_dR   = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_DR_,   ich));
 	      tmp_M    = (TH1 *)v_samples[i]->Get(Form("h_%s_%s_Ch%d_S3", genMode, RECO_ADD_M_,    ich));
 	    }
-	    m_tmp_dR.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_dR));
-	    m_tmp_M.insert(std::pair<const char *, TH1 *>(NAME_[i].c_str(), tmp_M));
+	    m_tmp_dR.insert(std::pair<const char *, TH1 *>(sample_name.c_str(), tmp_dR));
+	    m_tmp_M.insert(std::pair<const char *, TH1 *>(sample_name.c_str(), tmp_M));
 	  }
 	  m_bkgsys_dR[ich].insert(pair<const char *,   std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_dR));
 	  m_bkgsys_M[ich].insert(pair<const char *,    std::map<const char *, TH1 *>>((*v_itr).c_str(), m_tmp_M));
@@ -137,16 +224,15 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
     }
   }
   else{
-    TH1 *EventInfo = (TH1 *)f_ttbb->Get("EventInfo");
-    double scale = SF16_ttbb*LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
+    std::cout << "Normalize ttbb MC" << std::endl;
+    double scale = m_sf[ttbb]*lumi*m_xsec[ttbb]/m_genevt[ttbb];
     for(int ich=0; ich < nChannel; ++ich){
       h_data_dR[ich]->Scale(scale);   h_data_M[ich]->Scale(scale);
     }
   }
 
-  TH1 *EventInfo = (TH1 *)f_ttbb->Get("EventInfo");
-  double scale = SF16_ttbb*LUMINOSITY_*XSEC_[TTBB_]/EventInfo->GetBinContent(2);
-  EventInfo->~TH1();
+  std::cout << "Normalize gen distributions" << std::endl;
+  double scale = m_sf[ttbb]*lumi*m_xsec[ttbb]/m_genevt[ttbb];
   for(int ich=0; ich < nChannel; ++ich){
     h_gen_dR[ich]->Scale(scale);         h_gen_M[ich]->Scale(scale);
     h_gen_nosel_dR[ich]->Scale(scale);   h_gen_nosel_M[ich]->Scale(scale);
@@ -155,10 +241,11 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
   f_out->cd();
   cout << "Start unfolding..." << endl;
 
-  TH1 *h_unfolded_dR_lep, *h_unfolded_M_lep;
-
   for(int ich=0; ich<nChannel; ++ich){
     cout << "Channel: " << ich << endl;
+    std::string input;
+    if(isData) input = "Data";
+    else input = "ttbb";
     std::vector<TH1 *> v_unfolded_dR, v_unfolded_M;
     std::map<const char *, TH1 *> m_unbkgsys_dR, m_unbkgsys_M;
     if(useTUnfold){
@@ -247,44 +334,38 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
     TH1 *h_unfolded_dR, *h_unfolded_M;
     h_unfolded_dR   = v_unfolded_dR[0];
     h_unfolded_M    = v_unfolded_M[0];
-    
-    if(ich == 0){
-      h_unfolded_dR_lep = (TH1 *)h_unfolded_dR->Clone();
-      h_unfolded_M_lep  = (TH1 *)h_unfolded_M->Clone();
-    }
-    else if(ich == 1){
-      h_unfolded_dR_lep->Add(h_unfolded_dR);
-      h_unfolded_M_lep->Add(h_unfolded_M);
-    }
+    TH1 *h_input_dR, *h_input_M;
+    h_input_dR = v_unfolded_dR[1];
+    h_input_M  = v_unfolded_M[1];
 
-    TH1 *h_acc_dR   = (TH1 *)f_criteria->Get(Form("h_%s_Ch%d", ACC_DR_,   ich));
-    TH1 *h_acc_M    = (TH1 *)f_criteria->Get(Form("h_%s_Ch%d", ACC_M_,    ich));
+    TH1 *h_acc_dR   = (TH1 *)f_accept->Get(Form("h_%s_Ch%d", ACC_DR_,   ich));
+    TH1 *h_acc_M    = (TH1 *)f_accept->Get(Form("h_%s_Ch%d", ACC_M_,    ich));
 
-    TH1 *h_MC_diffXsec_nosel_dR   = calculateDiffXsec(h_gen_nosel_dR[2],   NULL, true);
-    TH1 *h_MC_diffXsec_nosel_M    = calculateDiffXsec(h_gen_nosel_M[2],    NULL, true);
-    TH1 *h_diffXsec_dR    = calculateDiffXsec(h_unfolded_dR,    h_acc_dR);
-    TH1 *h_diffXsec_M     = calculateDiffXsec(h_unfolded_M,     h_acc_M);
+    TH1 *h_MC_diffXsec_nosel_dR   = calculateDiffXsec(year, h_gen_nosel_dR[2],   NULL, true);
+    TH1 *h_MC_diffXsec_nosel_M    = calculateDiffXsec(year ,h_gen_nosel_M[2],    NULL, true);
+    TH1 *h_diffXsec_dR    = calculateDiffXsec(year, h_unfolded_dR,    h_acc_dR);
+    TH1 *h_diffXsec_M     = calculateDiffXsec(year, h_unfolded_M,     h_acc_M);
 
     std::vector<TH1 *>v_dR_sys, v_M_sys;
     if( runSystematics ){
       // Acceptance uncertainties
       for(auto v_itr=syst_total.begin(); v_itr != syst_total.end(); ++v_itr){
 	std::cout << *v_itr << std::endl;
-        TH1 *h_dR1 = (TH1 *)f_criteria->Get(Form("h_%s_Ch%d%s", ACC_DR_, ich, (*v_itr).c_str()));
-	TH1 *h_dR2 = (TH1 *)calculateDiffXsec(h_unfolded_dR, h_dR1);
+        TH1 *h_dR1 = (TH1 *)f_accept->Get(Form("h_%s_Ch%d%s", ACC_DR_, ich, (*v_itr).c_str()));
+	TH1 *h_dR2 = (TH1 *)calculateDiffXsec(year, h_unfolded_dR, h_dR1);
 	h_dR2->SetName(Form("%s_Acceptance%s", h_dR2->GetName(), (*v_itr).c_str()));
         v_dR_sys.push_back(h_dR2);
 
-        TH1 *h_M1 = (TH1 *)f_criteria->Get(Form("h_%s_Ch%d%s", ACC_M_, ich, (*v_itr).c_str()));
-	TH1 *h_M2 = (TH1 *)calculateDiffXsec(h_unfolded_M, h_M1);
+        TH1 *h_M1 = (TH1 *)f_accept->Get(Form("h_%s_Ch%d%s", ACC_M_, ich, (*v_itr).c_str()));
+	TH1 *h_M2 = (TH1 *)calculateDiffXsec(year, h_unfolded_M, h_M1);
 	h_M2->SetName(Form("%s_Acceptance%s", h_M2->GetName(), (*v_itr).c_str()));
         v_M_sys.push_back(h_M2);
       }
 
       // Matrix uncertainties
-      for(int i=4; i<v_unfolded_dR.size(); ++i){
-        TH1 *h_dR   = calculateDiffXsec(v_unfolded_dR.at(i),   h_acc_dR);
-        TH1 *h_M    = calculateDiffXsec(v_unfolded_M.at(i),    h_acc_M);
+      for(int i=5; i<v_unfolded_dR.size(); ++i){
+        TH1 *h_dR   = calculateDiffXsec(year, v_unfolded_dR.at(i),   h_acc_dR);
+        TH1 *h_M    = calculateDiffXsec(year, v_unfolded_M.at(i),    h_acc_M);
 	h_dR->SetTitle("");
 	h_M->SetTitle("");
 	v_dR_sys.push_back(h_dR);
@@ -293,9 +374,9 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
 
       // Background uncertainties
       for(auto m_itr = m_unbkgsys_dR.begin(); m_itr != m_unbkgsys_dR.end(); ++m_itr){
-        TH1 *h_dR   = (TH1 *)calculateDiffXsec(m_unbkgsys_dR[m_itr->first], h_acc_dR);
+        TH1 *h_dR   = (TH1 *)calculateDiffXsec(year, m_unbkgsys_dR[m_itr->first], h_acc_dR);
 	h_dR->SetName(Form("%s_Background%s", h_dR->GetName(), m_itr->first)); 
-        TH1 *h_M    = (TH1 *)calculateDiffXsec(m_unbkgsys_M[m_itr->first], h_acc_M); 
+        TH1 *h_M    = (TH1 *)calculateDiffXsec(year, m_unbkgsys_M[m_itr->first], h_acc_M); 
 	h_M->SetName(Form("%s_Background%s", h_M->GetName(), m_itr->first)); 
 	v_dR_sys.push_back(h_dR);
 	v_M_sys.push_back(h_M);
@@ -304,85 +385,15 @@ void ttbbDiffXsec(string input_dir, string output_dir, string input){
 
     //Save histograms
     std::cout << "SAVE THE HISTOGRAMS" << std::endl;
-    h_diffXsec_dR->Write();   h_diffXsec_M->Write();
+    h_unfolded_dR->Write(); h_unfolded_M->Write();
+    h_input_dR->Write(); h_input_M->Write();
+    h_resp_dR[ich]->Write(); h_resp_M[ich]->Write();
+    h_gen_dR[ich]->Write(); h_gen_M[ich]->Write();
+    h_diffXsec_dR->Write(); h_diffXsec_M->Write();
     for(auto v_itr=v_dR_sys.begin();  v_itr != v_dR_sys.end();  ++v_itr) (*v_itr)->Write();
     for(auto v_itr=v_M_sys.begin();   v_itr != v_M_sys.end();   ++v_itr) (*v_itr)->Write();
-
-    //Draw histogram to validation
-    //1. Unfolded reco distribution vs. Gen distribution
-    //2. Data diffXsec vs. Gen diffXsec
-    drawHist(input, h_unfolded_dR,   h_gen_dR[ich]);
-    drawHist(input, h_unfolded_M,    h_gen_M[ich]);
-    drawHist(input, h_diffXsec_dR,   h_MC_diffXsec_nosel_dR);
-    drawHist(input, h_diffXsec_M,    h_MC_diffXsec_nosel_M);
   }
+  
   std::cout << "Finish unfolding" << endl;
-  
-  TCanvas *c = new TCanvas("","",800,800);
-  TLegend *leg = new TLegend(0.6,0.7,0.88,0.88);
-  leg->SetTextSize(0.02);
-
-  TPaveText *label_cms = tdrCMSlabel();
-  TPaveText *label_sim = tdrCMSSimlabel();
-
-  TH1 *h_gen_dR_lep, *h_gen_M_lep;
-  h_gen_dR_lep = (TH1 *)h_gen_dR[0]->Clone();
-  h_gen_dR_lep->Add(h_gen_dR[1]);
-  h_gen_M_lep = (TH1 *)h_gen_M[0]->Clone();
-  h_gen_M_lep->Add(h_gen_M[1]);
-
-  c->cd();
-  h_gen_dR_lep->SetLineColor(kRed);
-  h_gen_dR_lep->SetLineWidth(2);
-  h_gen_dR_lep->SetMaximum(h_unfolded_dR_lep->GetMaximum()*1.5);
-  h_gen_dR_lep->SetMinimum(0);
-  h_unfolded_dR_lep->SetMarkerColor(kBlack);
-  h_unfolded_dR_lep->SetMarkerSize(2);
-  h_unfolded_dR_lep->SetMarkerStyle(20);
-     
-  if(useTUnfold) leg->SetHeader(Form("tau scanning range: %.3f to %.3f", taumin_dR, taumax_dR));
-  else leg->SetHeader(Form("Regularization k = %d", reg_dR));
-  leg->AddEntry(h_unfolded_dR_lep, "unfold output", "p");
-  leg->AddEntry(h_gen_dR_lep, "Powheg + Pythia", "l");
-
-  h_gen_dR_lep->Draw("hist");
-  h_unfolded_dR_lep->Draw("p e same");
-  label_sim->Draw("same");
-  leg->Draw("same");
-   
-  if(useTUnfold) 
-    c->Print(Form("%s/%s_h_output_gen_dR_lep_tau%.3fto%.3f.pdf", output_dir.c_str(), input.c_str(), taumin_dR, taumax_dR), "pdf");
-  else
-    c->Print(Form("%s/%s_h_output_gen_dR_lep_k%d.pdf", output_dir.c_str(), input.c_str(), reg_dR), "pdf");
-  leg->Clear();
-  c->Clear();
-  
-  c->cd();
-  h_gen_M_lep->SetLineColor(kRed);
-  h_gen_M_lep->SetLineWidth(2);
-  h_gen_M_lep->SetMaximum(h_unfolded_M_lep->GetMaximum()*1.5);
-  h_gen_M_lep->SetMinimum(0);
-  h_unfolded_M_lep->SetMarkerColor(kBlack);
-  h_unfolded_M_lep->SetMarkerSize(2);
-  h_unfolded_M_lep->SetMarkerStyle(20);
-     
-  if(useTUnfold) leg->SetHeader(Form("tau scanning range: %.3f to %.3f", taumin_M, taumax_M));
-  else leg->SetHeader(Form("Regularization k = %d", reg_M));
-  leg->AddEntry(h_unfolded_M_lep, "unfold output", "p");
-  leg->AddEntry(h_gen_M_lep, "Powheg + Pythia", "l");
-
-  h_gen_M_lep->Draw("hist");
-  h_unfolded_M_lep->Draw("p e same");
-  label_sim->Draw("same");
-  leg->Draw("same");
-   
-  if(useTUnfold) 
-    c->Print(Form("%s/%s_h_output_gen_M_lep_tau%.3fto%.3f.pdf", output_dir.c_str(), input.c_str(), taumin_M, taumax_M), "pdf");
-  else
-    c->Print(Form("%s/%s_h_output_gen_M_lep_k%d.pdf", output_dir.c_str(), input.c_str(), reg_M), "pdf");
-  leg->Clear();
-  c->Clear();
- 
-  //f_out->Write();
   f_out->Close();
 }

@@ -8,6 +8,11 @@ hist_list = [x.GetName() for x in f_data.GetListOfKeys()]
 f_hist = open("../plotIt/configs/histos_ttlj.yml", 'w')
 
 for hist in hist_list:
+    if "Disc" in hist: continue
+    if "Gen"  in hist: continue
+    if "Resp" in hist: continue
+    if "EventInfo" in hist: continue
+    if "ScaleWeights" in hist: continue
     f_hist.write("'"+hist+"':\n")
     f_hist.write('  y-axis: "Events"\n')
     f_hist.write('  y-axis-format: "%1% / %2$.2f"\n')

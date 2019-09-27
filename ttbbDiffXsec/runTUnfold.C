@@ -5,11 +5,59 @@
 #include "TUnfold.h"
 #include "TUnfoldDensity.h"
 
-//#include "../include/tdrstyle.C"
+void drawRegHist(const char *data_name_, const char *h_name_,
+    TSpline *spl_logTauscanX_, TGraph *grp_BestLcurveX_, TGraph *grp_BestTau_, TGraph *grp_Lcurve_,
+    bool scanLcurve_=true, TSpline *spl_Tauscan_=NULL){
+  auto data_name = data_name_;
+  auto h_name = h_name_;
+  auto grp_Lcurve = grp_Lcurve_;
+  auto spl_logTauscanX = spl_logTauscanX_;
+  auto grp_BestTau = grp_BestTau_;
+  auto grp_BestLcurveX = grp_BestLcurveX_;
+  auto spl_Tauscan = spl_Tauscan_;
 
-void drawRegHist(const char *data_name, const char *h_name, 
-    TSpline *spl_logTauscanX, TGraph *grp_BestLCurveX, TGraph *grp_BestTau, TGraph *grp_Lcurve,
-    bool scanLcurve = true, TSpline *spl_Tauscan = NULL);
+  gROOT->ProcessLine("setTDRStyle();");
+
+  TCanvas *c = new TCanvas("","",800,800);
+  c->cd();
+  spl_logTauscanX->SetTitle(/*log(chi^2)log(tau)*/"; log_{10}(#tau); log_{10}(#chi^{2})");
+  spl_logTauscanX->Draw();
+  //spl_logTauscanX->GetXaxis()->SetLabelSize(0.1);
+  //spl_logTauscanX->GetYaxis()->SetLabelSize(0.1);
+  grp_BestLcurveX->SetMarkerSize(2.3);
+  grp_BestLcurveX->SetMarkerColor(kBlue);
+  grp_BestLcurveX->SetMarkerStyle(kFullStar);
+  grp_BestLcurveX->Draw("p");
+  //grp_BestLcurveX->SetEditable(false);
+
+  c->Print(Form("../output/unfold/%s_TUnfold_regular_logTaulogChi2_%s.pdf", data_name, h_name),"pdf");
+  c->Clear();
+  c->cd();
+  if(scanLcurve_){
+    grp_Lcurve->SetTitle("; L^{curve}_{x}; L^{curve}_{y}");
+    //grp_Lcurve->GetXaxis()->SetTitle("log(#tau)");
+    grp_Lcurve->GetXaxis()->SetLabelSize(0.025);
+    grp_Lcurve->GetYaxis()->SetLabelSize(0.03);
+    grp_BestTau->SetMarkerSize(2.3);
+    grp_BestTau->SetMarkerColor(kBlue);
+    grp_BestTau->SetMarkerStyle(kFullStar);
+    grp_Lcurve->Draw();
+    grp_BestTau->Draw("p");
+    //grp_BestTau->SetEditable(false);
+    c->Print(Form("../output/unfold/%s_TUnfold_regular_Lcurve_%s.pdf", data_name, h_name), "pdf");
+  }
+  else{
+    spl_Tauscan->SetTitle(/*Tau scan*/"; log_{10}(#tau); avg #rho");
+    spl_Tauscan->SetMarkerSize(0.7);
+    grp_BestTau->SetMarkerSize(2.3);
+    grp_BestTau->SetMarkerColor(kBlue);
+    grp_BestTau->SetMarkerStyle(kFullStar);
+    spl_Tauscan->Draw("lp");
+    grp_BestTau->Draw("p");
+    //grp_BestTau->SetEditable(false);
+    c->Print(Form("../output/unfold/%s_TUnfold_regular_minRho_%s.pdf", data_name, h_name), "pdf");
+  } 
+}
 
 std::vector<TH1 *> runTUnfold(const char *data_name_, TH1 *h_in_, TH2 *h_resp_,
     std::map<const char *, TH1 *> m_bkgs_, std::map<const char *, double> m_scale_,
@@ -106,6 +154,7 @@ std::vector<TH1 *> runTUnfold(const char *data_name_, TH1 *h_in_, TH2 *h_resp_,
   std::cout << "Get Unfolding output distribution" << std::endl;
   const double unfoldResult = unfold->DoUnfold(bestTau, h_in);
   auto h_output = unfold->GetOutput(Form("Unfolded_%s",h_in->GetName()),"",0,"*[UO]",true);
+  auto h_input = unfold->GetInput(Form("Input_%s", h_in->GetName()),"",0,"*[UO]",true);
   std::cout << "Get Unfolding Error matrix" << std::endl;
   //TH2 *h2_ematrix;
   //unfold->GetEmatrix(h2_ematrix);
@@ -124,6 +173,7 @@ std::vector<TH1 *> runTUnfold(const char *data_name_, TH1 *h_in_, TH2 *h_resp_,
   //[74]~[105]: Correlated shifts of the input matrix. These shifts are taken as 1-sigma effects when switching on a given error source.
   vector<TH1 *> v_output;
   v_output.push_back(h_output);
+  v_output.push_back(h_input);
   v_output.push_back(unfold->GetEmatrixTotal(Form("%s_EmatrixTot", h_in->GetName())));
   v_output.push_back(unfold->GetEmatrixInput(Form("%s_EmatrixInput",h_in->GetName())));
   v_output.push_back(unfold->GetEmatrixSysUncorr(Form("%s_EmatrixSysUncorr", h_in->GetName())));
@@ -145,59 +195,5 @@ std::vector<TH1 *> runTUnfold(const char *data_name_, TH1 *h_in_, TH2 *h_resp_,
 
   std::cout << "Return vector" << endl;
   return v_output;
-}
-
-void drawRegHist(const char *data_name_, const char *h_name_,
-    TSpline *spl_logTauscanX_, TGraph *grp_BestLcurveX_, TGraph *grp_BestTau_, TGraph *grp_Lcurve_,
-    bool scanLcurve_=true, TSpline *spl_Tauscan_=NULL){
-  auto data_name = data_name_;
-  auto h_name = h_name_;
-  auto grp_Lcurve = grp_Lcurve_;
-  auto spl_logTauscanX = spl_logTauscanX_;
-  auto grp_BestTau = grp_BestTau_;
-  auto grp_BestLcurveX = grp_BestLcurveX_;
-  auto spl_Tauscan = spl_Tauscan_;
-
-  gROOT->ProcessLine("setTDRStyle();");
-
-  TCanvas *c = new TCanvas("","",800,800);
-  c->cd();
-  spl_logTauscanX->SetTitle(/*log(chi^2)log(tau)*/"; log_{10}(#tau); log_{10}(#chi^{2})");
-  spl_logTauscanX->Draw();
-  //spl_logTauscanX->GetXaxis()->SetLabelSize(0.1);
-  //spl_logTauscanX->GetYaxis()->SetLabelSize(0.1);
-  grp_BestLcurveX->SetMarkerSize(2.3);
-  grp_BestLcurveX->SetMarkerColor(kBlue);
-  grp_BestLcurveX->SetMarkerStyle(kFullStar);
-  grp_BestLcurveX->Draw("p");
-  //grp_BestLcurveX->SetEditable(false);
-
-  c->Print(Form("../output/unfold/%s_TUnfold_regular_logTaulogChi2_%s.pdf", data_name, h_name),"pdf");
-  c->Clear();
-  c->cd();
-  if(scanLcurve_){
-    grp_Lcurve->SetTitle("; L^{curve}_{x}; L^{curve}_{y}");
-    //grp_Lcurve->GetXaxis()->SetTitle("log(#tau)");
-    grp_Lcurve->GetXaxis()->SetLabelSize(0.025);
-    grp_Lcurve->GetYaxis()->SetLabelSize(0.03);
-    grp_BestTau->SetMarkerSize(2.3);
-    grp_BestTau->SetMarkerColor(kBlue);
-    grp_BestTau->SetMarkerStyle(kFullStar);
-    grp_Lcurve->Draw();
-    grp_BestTau->Draw("p");
-    //grp_BestTau->SetEditable(false);
-    c->Print(Form("../output/unfold/%s_TUnfold_regular_Lcurve_%s.pdf", data_name, h_name), "pdf");
-  }
-  else{
-    spl_Tauscan->SetTitle(/*Tau scan*/"; log_{10}(#tau); avg #rho");
-    spl_Tauscan->SetMarkerSize(0.7);
-    grp_BestTau->SetMarkerSize(2.3);
-    grp_BestTau->SetMarkerColor(kBlue);
-    grp_BestTau->SetMarkerStyle(kFullStar);
-    spl_Tauscan->Draw("lp");
-    grp_BestTau->Draw("p");
-    //grp_BestTau->SetEditable(false);
-    c->Print(Form("../output/unfold/%s_TUnfold_regular_minRho_%s.pdf", data_name, h_name), "pdf");
-  } 
 }
 

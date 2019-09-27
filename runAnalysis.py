@@ -1,7 +1,7 @@
 #!/usr/bin/python
-run16  = False 
+run16  = True 
 run17  = True
-run18  = False
+run18  = True
 test   = False 
 do_sys = False
 
