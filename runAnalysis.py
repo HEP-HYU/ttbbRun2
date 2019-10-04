@@ -1,8 +1,8 @@
 #!/usr/bin/python
-run16  = True 
-run17  = True
+run16  = False 
+run17  = False 
 run18  = True
-test   = False 
+test   = True 
 do_sys = False
 
 import os
@@ -93,11 +93,13 @@ for year in range(16,19):
 	    n += 1
 
     if test:
-	runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbb_test")
+        runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
     else:
 	runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
 	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
 
+        if year != 16:
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
 	for sample in samples:
 	    if "part" in sample: continue
 	    if "SYS" in sample: continue
@@ -117,6 +119,15 @@ for year in range(16,19):
 		runAna(inputDir, "TTLJ_PowhegPythia_ttother.root", "TTLJ_PowhegPythia_ttother"+value)
 		if "Run2016" in inputDir:
 		    runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "TTLJ_PowhegPythia_ttbbFilter_ttbb"+value)
+            # pdf
+	    for i in range(0,104):
+	        if year == 16 and i == 103: continue
+	        runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "TTLJ_PowhegPythia_ttbb__pdf"+str(i))
+		runAna(inputDir, "TTLJ_PowhegPythia_ttbj.root", "TTLJ_PowhegPythia_ttbj__pdf"+str(i))
+		runAna(inputDir, "TTLJ_PowhegPythia_ttcc.root", "TTLJ_PowhegPythia_ttcc__pdf"+str(i))
+		runAna(inputDir, "TTLJ_PowhegPythia_ttLF.root", "TTLJ_PowhegPythia_ttLF__pdf"+str(i))
+		runAna(inputDir, "TTLJ_PowhegPythia_ttother.root", "TTLJ_PowhegPythia_ttother__pdf"+str(i))
+
 
             # hdamp, Tune
 	    for sample in samples:
@@ -159,16 +170,16 @@ for year in range(16,19):
 	        runAna(inputDir, "TT_PowhegPythia_SYS_FSRdown_ttother.root", "ttother__fsrdown")
 		runAna(inputDir, "TT_PowhegPythiaBkg_SYS_FSRdown.root",      "ttbkg__fsrdown")
 
-    outdir = 'output/root'+str(year)
-    if os.path.exists(outdir):
-        os.system('rm -rf'+outdir)
-    os.system('mv output/root '+outdir)
+    #outdir = 'output/root'+str(year)
+    #if os.path.exists(outdir):
+    #    os.system('rm -rf'+outdir)
+    #os.system('mv output/root '+outdir)
 
     p.Close()
 
-    os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
-    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
-    os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
+    #os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
+    #os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
+    #os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
 
-    if do_sys:
-        macro.runPostProcess(os.getcwd(), samples, year)
+    #if do_sys:
+    #    macro.runPostProcess(os.getcwd(), samples, year)

@@ -14,14 +14,19 @@
 #include "runTUnfold.C"
 //#include "runSVDUnfold.C"
 
-void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool runSystematics, bool useTUnfold){
+void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool runSystematics, bool useTUnfold
+    bool fixtau=false){
   ssize_t pos;
-  gErrorIgnoreLevel = kFatal; // kWarning
+  //gErrorIgnoreLevel = kFatal; // kWarning
   gROOT->ProcessLine("setTDRStyle();");
 
   double lumi = 1.0;
   lumi = m_lumi[year];
   std::string ttbb = "TTLJ_PowhegPythia_ttbb";
+
+  std::string test = "";
+  if(year == "16") test = "TTLJ_PowhegPythia_ttbb";
+  else test = "ttbbClosureTest";
 
   const char *outname;
   if(isData) outname = "data";
@@ -75,6 +80,23 @@ void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool 
   }
   sf.close();
 
+  ifstream tau(Form("tau/tau%s.txt", year.c_str()));
+  std::map<std::string, double> v_tau;
+  while(getline(tau, tmp_str)){
+    std::stringstream ss;
+    ss.str(tmp_str);
+    ss >> tmp_name;
+    ss >> tmp_value;
+    v_tau.insert(pair<std::string, double>((tmp_name, tmp_value));
+  }
+  double fixedtau_dR = v_tau["fixedtau_dR"];
+  double taumin_dR = v_tau["taumin_dR"];
+  double taumax_dR = v_tau["taumax_dR"];
+
+  double fixedtau_M = v_tau["fixedtau_M"];
+  double taumin_M = v_tau["taumin_M"];
+  double taumax_dR = v_tau["taumax_M"];
+
   std::vector<std::string> syst_total = syst_list;
   syst_total.insert(syst_total.end(), syst_ttbar.begin(), syst_ttbar.end());
   std::cout << "Load Files..." << std::endl;
@@ -88,8 +110,8 @@ void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool 
     f_input[1] = TFile::Open(Form("%s/hist_DataSingleEG.root", input_dir.c_str()));
   }
   else{
-    f_input[0] = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), ttbb.c_str()));
-    f_input[1] = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), ttbb.c_str()));
+    f_input[0] = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), test.c_str()));
+    f_input[1] = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), test.c_str()));
   }
   TFile *f_ttbb = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), ttbb.c_str()));
 
@@ -131,7 +153,7 @@ void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool 
   for(int ich=0; ich<nChannel; ++ich){
     TH1 *EventInfo = (TH1 *)f_matrix->Get("EventInfo");
     double scale = m_sf[matrix_name]*lumi*m_xsec[matrix_name]/EventInfo->GetBinContent(2);
-    h_resp_dR[ich]->Scale(scale);   h_resp_M[ich]->Scale(scale);
+   // h_resp_dR[ich]->Scale(scale);   h_resp_M[ich]->Scale(scale);
     
     if(runSystematics){
       for(auto v_itr = syst_list.begin(); v_itr != syst_list.end(); ++v_itr){
@@ -226,6 +248,7 @@ void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool 
   else{
     std::cout << "Normalize ttbb MC" << std::endl;
     double scale = m_sf[ttbb]*lumi*m_xsec[ttbb]/m_genevt[ttbb];
+    if( year != 16 ) scale *= 2;
     for(int ich=0; ich < nChannel; ++ich){
       h_data_dR[ich]->Scale(scale);   h_data_M[ich]->Scale(scale);
     }
@@ -252,11 +275,11 @@ void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool 
       v_unfolded_dR = runTUnfold(
           input.c_str(), h_data_dR[ich], h_resp_dR[ich], 
           m_bkg_dR[ich], m_scale, m_sys_dR[ich],
-          scanLcurve, taumin_dR, taumax_dR, fixtau_dR, fixedtau_dR);
+          scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
       v_unfolded_M = runTUnfold(
           input.c_str(), h_data_M[ich], h_resp_M[ich],
           m_bkg_M[ich], m_scale, m_sys_M[ich],
-          scanLcurve, taumin_M, taumax_M, fixtau_M, fixedtau_M);
+          scanLcurve, taumin_M, taumax_M, fixtau, fixedtau_M);
 
       if(runSystematics){
         std::vector<TH1 *> v_tmp_dR, v_tmp_M;
@@ -264,14 +287,14 @@ void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool 
 	  v_tmp_dR = runTUnfold(
               input.c_str(), h_data_dR[ich], h_resp_dR[ich], 
               m_itr->second, m_scale, m_sys_dR[ich],
-              scanLcurve, taumin_dR, taumax_dR, fixtau_dR, fixedtau_dR);
+              scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
 	  m_unbkgsys_dR.insert(std::pair<const char *, TH1 *>(m_itr->first, v_tmp_dR[0]));
 	}
         for(auto m_itr = m_bkgsys_M[ich].begin(); m_itr != m_bkgsys_M[ich].end(); ++m_itr){
 	  v_tmp_M = runTUnfold(
               input.c_str(), h_data_M[ich], h_resp_M[ich],
               m_itr->second, m_scale, m_sys_M[ich],
-              scanLcurve, taumin_M, taumax_M, fixtau_M, fixedtau_M);
+              scanLcurve, taumin_M, taumax_M, fixtau, fixedtau_M);
 	  m_unbkgsys_M.insert(std::pair<const char *, TH1 *>(m_itr->first ,v_tmp_M[0]));
 	}
       }
@@ -390,6 +413,7 @@ void ttbbDiffXsec(std::string year, const char * matrix_name, bool isData, bool 
     h_resp_dR[ich]->Write(); h_resp_M[ich]->Write();
     h_gen_dR[ich]->Write(); h_gen_M[ich]->Write();
     h_diffXsec_dR->Write(); h_diffXsec_M->Write();
+    h_MC_diffXsec_nosel_dR->Write(); h_MC_diffXsec_nosel_M->Write();
     for(auto v_itr=v_dR_sys.begin();  v_itr != v_dR_sys.end();  ++v_itr) (*v_itr)->Write();
     for(auto v_itr=v_M_sys.begin();   v_itr != v_M_sys.end();   ++v_itr) (*v_itr)->Write();
   }

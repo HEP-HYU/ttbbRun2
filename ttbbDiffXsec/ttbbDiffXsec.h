@@ -16,22 +16,6 @@ const char *genMode = "mindR";
 
 const bool   scanLcurve = true;
 
-const bool   fixtau_dR = false; 
-const float  fixedtau_dR = 0.01;
-const double taumin_dR = 0.1, taumax_dR = 1.0;
-
-const bool   fixtau_M = false; 
-const float  fixedtau_M = 0.0;
-const double taumin_M = 0.8, taumax_M = 0.9;
-
-const bool   fixtau_dEta = false;
-const float  fixedtau_dEta = 0.0;
-const double taumin_dEta = 0.8, taumax_dEta = 0.9;
-
-const bool   fixtau_dPhi = false;
-const float  fixedtau_dPhi = 0.0;
-const double taumin_dPhi = 0.8, taumax_dPhi = 0.9;
-
 const bool findBestK = false;
 const int reg_dR = 3, reg_M = 3, reg_dEta = 3, reg_dPhi = 3;
 
@@ -76,6 +60,8 @@ TH1 *calculateDiffXsec(std::string year, TH1 *h_in, TH1 *h_acceptance, bool gen 
   
   std::cout << "--------------------------------------------------------"<< std::endl;
   std::cout << h_in->GetName() << endl;
+  std::string name = h_in->GetName();
+  ssize_t pos;
   
   for(int ibin=1; ibin <= h_in->GetNbinsX(); ++ibin){
     double bin_width, diffXsec, diffXsec_err;

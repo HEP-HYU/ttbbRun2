@@ -119,6 +119,7 @@ public :
 
    bool dosyst = false;
    string syst_ext = "";
+   int nevt = 0;
 };
 
 #endif

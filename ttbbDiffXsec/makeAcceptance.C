@@ -273,12 +273,12 @@ void DrawHist(std::string year, TH1* h_in_, bool drawError = false){
   h_in->SetMaximum(h_in->GetMaximum()*1.05);
   if((pos = histname.find("AcceptanceDeltaR")) != string::npos){
     h_in->GetYaxis()->SetTitle("Acceptance(%)");
-    h_in->SetMaximum(2.0);
+    h_in->SetMaximum(4.0);
     h_in->SetMinimum(0.0);
   }
   if((pos = histname.find("AcceptanceInvMass")) != string::npos){
     h_in->GetYaxis()->SetTitle("Acceptance(%)");
-    h_in->SetMaximum(2.5);
+    h_in->SetMaximum(4.5);
     h_in->SetMinimum(0.0);
   }
   if((pos = histname.find("Purity")) != string::npos){

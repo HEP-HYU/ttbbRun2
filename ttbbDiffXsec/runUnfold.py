@@ -14,6 +14,7 @@ parser.add_argument('-y', '--year', required=False, type=int, default=9999, help
 parser.add_argument('-s', '--sys', required=False, default="False", help='Run systematics')
 parser.add_argument('-t', '--tunfold', required=False, default="True", help='Unfold by TUnfold')
 parser.add_argument('-m', '--matrix', required=False, default="", help='Set input matrix')
+parser.add_argument('-f', '--fixtau', required=False, default="False", help='Fix tau')
 
 args = parser.parse_args()
 
@@ -22,9 +23,11 @@ def runAcceptance(year, ttbb, runSys):
     with open('../output/unfold/'+str(year)+'/acceptance.txt','w') as f_out:
         subprocess.call(cmd, stdout=f_out)
 
-def runUnfold(year, matrix_name, isData, runSys, useTUnfold):
-    cmd = ['root', '-l', '-b', '-q', 'ttbbDiffXsec.C+("'+str(year)+'", "'+matrix_name+'", '+isData+', '+runSys+', '+useTUnfold+')']
-    with open('../output/unfold/'+str(year)+'/result.txt','w') as f_out:
+def runUnfold(year, matrix_name, isData, runSys, useTUnfold, fixtau):
+    out = "mc"
+    if isData == 'true': out = "data" 
+    cmd = ['root', '-l', '-b', '-q', 'ttbbDiffXsec.C+("'+str(year)+'", "'+matrix_name+'", '+isData+', '+runSys+', '+useTUnfold+', '+fixtau+')']
+    with open('../output/unfold/'+str(year)+'/result_'+out+'.txt','w') as f_out:
         subprocess.call(cmd, stdout=f_out)
 
 for year in range(16,19):
@@ -56,9 +59,14 @@ for year in range(16,19):
     # matrix
     if args.matrix == "":
         if year == 16: matrix_name = "TTLJ_PowhegPythia_ttbbFilter_ttbb"
-        else: matrix_name = "TTLJ_PowhegPythia_ttbb"
+        #else: matrix_name = "TTLJ_PowhegPythia_ttbb"
+        if year > 16: matrix_name = "ttbbClosureTest"
     else:
         matrix_name = args.matrix
+    
+    fixtau= 'false'
+    arg.fixtau = (arg.fixtau).lower()
+    if arg.fixtau: fixtau= 'true'
 
     if not os.path.exists('../output/unfold'):
         os.mkdir('../output/unfold')
@@ -66,5 +74,7 @@ for year in range(16,19):
     if not os.path.exists('../output/unfold/'+str(year)):
         os.mkdir('../output/unfold/'+str(year))
 
-    runUnfold(year, matrix_name, isData, runSys, useTUnfold)
+    print(year)
+    print(matrix_name)
+    runUnfold(year, matrix_name, isData, runSys, useTUnfold, fixtau)
 
