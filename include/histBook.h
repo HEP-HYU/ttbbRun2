@@ -209,6 +209,7 @@ class HistoBook{
 
 HistoBook::HistoBook(const int _mode, const char *_process){
   if(_mode == 1){   
+    std::cout << "Make mode1" << std::endl;
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
 	h_lepton_pt[iChannel][iStep] = new TH1D(
