@@ -42,22 +42,26 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
   if( process.Contains("Data") ){
     v_syst.push_back("");
   }
-  else if( process.Contains("SYS") ){
+  else if( process.Contains("__") ){
     //Pythia Tune, ME & PS Matching
-    if( process.Contains("TuneCP5Up")   || process.Contains("TuneUp")   ) v_syst.push_back("__tuneup");
-    if( process.Contains("TuneCP5Down") || process.Contains("TuneDown") ) v_syst.push_back("__tunedown");
+    if( process.Contains("tuneup")    ) v_syst.push_back("__tuneup");
+    if( process.Contains("tunedown")  ) v_syst.push_back("__tunedown");
     
-    if( process.Contains("hdampUp")   ) v_syst.push_back("__hdampup");
-    if( process.Contains("hdampDown") ) v_syst.push_back("__hdampdown");
+    if( process.Contains("hdampup")   ) v_syst.push_back("__hdampup");
+    if( process.Contains("hdampdown") ) v_syst.push_back("__hdampdown");
     
-    if( process.Contains("ISRup")   ) v_syst.push_back("__isrup");
-    if( process.Contains("ISRdown") ) v_syst.push_back("__isrdown");
-    if( process.Contains("FSRup")   ) v_syst.push_back("__fsrup");
-    if( process.Contains("FSRdown") ) v_syst.push_back("__fsrdown");
+    if( process.Contains("isrup")   ) v_syst.push_back("__isrup");
+    if( process.Contains("isrdown") ) v_syst.push_back("__isrdown");
+    if( process.Contains("fsrup")   ) v_syst.push_back("__fsrup");
+    if( process.Contains("fsrdown") ) v_syst.push_back("__fsrdown");
+
+    if( process.Contains("jerup") )   v_syst.push_back("__jerup");
+    if( process.Contains("jerdown") ) v_syst.push_back("__jerdown");
+    if( process.Contains("jecup") )   v_syst.push_back("__jecup");
+    if( process.Contains("jecdown") ) v_syst.push_back("__jecdown");
   }
   else{
     v_syst = {"",
-      "__jerup", "__jerdown", "__jecup", "__jecdown",
       "__puup", "__pudown",
       "__lfup", "__lfdown", "__hfup", "__hfdown",
       "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
@@ -267,9 +271,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   const bool passelectron = (mode == ELECTRON_) && (lepton.Pt() > ELECTRON_PT_) && (abs(lepton.Eta()) < ELECTRON_ETA_);
   if ( !passmuon and !passelectron ) return kTRUE;
 
-  for(int iSys = 0; iSys < v_syst.size(); ++iSys){
-    std::string syst_ext = v_syst[iSys];
-
+    std::string syst_ext = v_syst[0];
+    
     double jet_pt_sum = 0.0;
     multimap<float /*jet_Pt*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets;
     vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
@@ -371,6 +374,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       }
     }
 
+  for(int iSys = 0; iSys < v_syst.size(); ++iSys){
+    syst_ext = v_syst[iSys];
     //Event Weight
     double EventWeight = 1;
     if( !option.Contains("Data") ){
@@ -859,50 +864,6 @@ void MyAnalysis::Terminate(){
     std::string str(name);
     if(str.find("h_") != std::string::npos ) obj->Write();
   }
-
-  /*
-  for(int iSys = 0; iSys < v_syst.size(); ++iSys) {
-    for(int iChannel = 0; iChannel < nChannel; ++iChannel){
-      for(int iStep = 0; iStep < nStep; ++iStep){
-        std::string syst_ext = v_syst[iSys];
-
-	fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",     RECO_LEP_PT_,  iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",     RECO_LEP_ETA_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",     RECO_N_JETS_,  iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",     RECO_N_BJETS_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_%s_Ch%d_S%d%s",     RECO_TRANS_M_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_%s_sum_Ch%d_S%d%s", RECO_JET_PT_,  iChannel, iStep, syst_ext.c_str()))->Write();
-	for(int iJet=0; iJet<nJet; ++iJet){
-	  fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d%s", RECO_JET_PT_,  iJet, iChannel, iStep, syst_ext.c_str()))->Write();
-	  fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d%s", RECO_JET_ETA_, iJet, iChannel, iStep, syst_ext.c_str()))->Write();
-	  fOutput->FindObject(Form("h_%s_%d_Ch%d_S%d%s", RECO_CSV_,     iJet, iChannel, iStep, syst_ext.c_str()))->Write();
-	}
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s", RECO_ADD_DR_,   iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s", RECO_ADD_M_,    iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s", RECO_ADD_DETA_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s", RECO_ADD_DPHI_, iChannel, iStep, syst_ext.c_str()))->Write();
-
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", GEN_ADD_DR_,   iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", GEN_ADD_M_,    iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", GEN_ADD_DETA_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", GEN_ADD_DPHI_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  GEN_ADD_DR_,   iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  GEN_ADD_M_,    iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  GEN_ADD_DETA_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  GEN_ADD_DPHI_, iChannel, iStep, syst_ext.c_str()))->Write();
-
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", MATRIX_DR_,   iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", MATRIX_M_,    iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", MATRIX_DETA_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_gentop_%s_Ch%d_S%d%s", MATRIX_DPHI_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  MATRIX_DR_,   iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  MATRIX_M_,    iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  MATRIX_DETA_, iChannel, iStep, syst_ext.c_str()))->Write();
-	fOutput->FindObject(Form("h_mindR_%s_Ch%d_S%d%s",  MATRIX_DPHI_, iChannel, iStep, syst_ext.c_str()))->Write();
-      }//step
-    }//channel
-  }//sys
-  */
   out->Write();
   out->Close();
 }

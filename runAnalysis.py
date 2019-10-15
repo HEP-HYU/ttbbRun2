@@ -88,6 +88,10 @@ for year in range(16,19):
 	    if "part" in sample: continue
 	    if "SYS" in sample: continue
 	    runAna(inputDir, str(sample)+".root", str(sample))
+	    runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
+	    runAna(inputDir, str(sample)+".root", str(sample)+"__jerdown")
+	    runAna(inputDir, str(sample)+".root", str(sample)+"__jecup")
+	    runAna(inputDir, str(sample)+".root", str(sample)+"__jecdown")
 
 	# hdamp, Tune
 	if not year == 16:
