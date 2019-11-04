@@ -503,8 +503,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       //PDF Uncertainties
       ssize_t pos;
       if( (pos = syst_ext.find("pdf",0)) != std::string::npos ){
-	int maxpdf = 104;
-	if( option.Contains("2016") ) maxpdf = 103;
+	int maxpdf = 103;
+	if( option.Contains("2016") ) maxpdf = 104;
 	for( int i = 0; i < maxpdf; ++i){
 	  std::string str_tmp = "pdf" + to_string(i);
 	  if( (pos = syst_ext.find(str_tmp)) != std::string::npos ){
