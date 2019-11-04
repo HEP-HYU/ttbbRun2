@@ -49,8 +49,8 @@ def runAna(dir, file, name):
     hsw = f.Get("ttbbLepJets/ScaleWeights")
     hpdf = f.Get("ttbbLepJets/PDFWeights")
     hevt.Write()
-    hsw.Write()
-    hpdf.Write()
+    if not hpdf == None: hpdf.Write()
+    if not hsw == None: hsw.Write()
     out.Write()
     out.Close()
 
@@ -63,7 +63,7 @@ for year in range(16,19):
     if year == 17 and run17 == False: continue
     if year == 18 and run18 == False: continue
 
-    p = TProof.Open("", "workers=8")
+    p = TProof.Open("", "workers=16")
     samples = []
     with open('samples/sample'+str(year)+'.txt','r') as f:
 	n = 1
@@ -77,7 +77,8 @@ for year in range(16,19):
 	    n += 1
     
     if test:
-        runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "TTLJ_PowhegPythia_ttbbClosureTest")
+        post.runPostProcess(os.getcwd(), samples, year)
+        #runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "TTLJ_PowhegPythia_ttbb")	
     else:
 	runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
 	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
@@ -96,7 +97,7 @@ for year in range(16,19):
 	# hdamp, Tune
 	if not year == 16:
 	    tmp_dic = {"TuneCP5Up":"tuneup", "TuneCP5Down":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
-	    for key, value in enumerate(tmp_dic):
+	    for key, value in tmp_dic.items():
 		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbb.root", "TTLJ_PowhegPythia_ttbb__"+value)
 		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbj.root", "TTLJ_PowhegPythia_ttbj__"+value)
 		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttcc.root", "TTLJ_PowhegPythia_ttcc__"+value)
@@ -107,12 +108,14 @@ for year in range(16,19):
 		runAna(inputDir, "TTLL_PowhegPythiaBkg_SYS_"+key+".root", "TTLL_PowhegPythiaBkg__"+value)
 	else:
 	    tmp_dic = {"TuneUp":"tuneup", "TuneDown":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
-	    for key, value in enumerate(tmp_dic):
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbb.root", "TTLJ_PowhegPythia_ttbb__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbj.root", "TTLJ_PowhegPythia_ttbj__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttcc.root", "TTLJ_PowhegPythia_ttcc__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttLF.root", "TTLJ_PowhegPythia_ttLF__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttother.root", "TTLJ_PowhegPythia_ttother__"+value)
+	    for key, value in tmp_dic.items():
+		if "tune" in value: tmp_name = "TT_PowhegPythia"
+		else: tmp_name = "TTLJ_PowhegPythia"
+		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttbb.root", tmp_name+"_ttbb__"+value)
+		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttbj.root", tmp_name+"_ttbj__"+value)
+		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttcc.root", tmp_name+"_ttcc__"+value)
+		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttLF.root", tmp_name+"_ttLF__"+value)
+		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttother.root", tmp_name+"_ttother__"+value)
 		if not hdamp in value:
 		    runAna(inputDir, "TT_PowhegPythiaBkg_SYS_"+key+".root", "TT_PowhegPythiaBkg__"+value)
 	
@@ -146,14 +149,14 @@ for year in range(16,19):
 	    runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
 	    runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
 
-    outdir = 'output/root'+str(year)
-    if os.path.exists(outdir): os.system('rm -rf '+outdir)
-    os.system('mv output/root '+outdir)
+#    outdir = 'output/root'+str(year)
+#    if os.path.exists(outdir): os.system('rm -rf '+outdir)
+#    os.system('mv output/root '+outdir)
 
     p.Close()
 
-    os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
-    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
-    os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
+#    os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
+#    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
+#    os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
     
     #if args.syst: post.runPostProcess(os.getcwd(), samples, year)
