@@ -9,7 +9,7 @@ def rescale(f_sys, h_eventinfo):
     h_eventinfo_sys = f_sys.Get("EventInfo")
 
     bratio = 1.0
-    if "TT_" in f_sys.GetName(): bratio = 356.4/831.76
+    if "TT_" in f_sys.GetName() and not "Bkg" in f_sys.GetName(): bratio = 356.4/831.76
 
     h_out =[]
     for hist in hist_list:
@@ -22,7 +22,7 @@ def rescale(f_sys, h_eventinfo):
 
 def write_envelope(sys_name, f_name, h_central, h_sys_list, h_eventinfo, h_weights):
     bratio = 1.0
-    if "TT_" in f_name: bratio = 356.4/831.76
+    if "TT_" in f_name and not "Bkg" in f_name: bratio = 356.4/831.76
 
     #Find maximum, minimum bin errors
     h_sys_weighted_list = []
@@ -56,12 +56,14 @@ def write_envelope(sys_name, f_name, h_central, h_sys_list, h_eventinfo, h_weigh
 def runPostProcess(base_path, sample_list, year):
     input_path = base_path+'/output/root'+str(year)+'/'
     print("Year: "+str(year))
+    
     print("Rescaling...")
     
     sys_rescale = ['tune', 'hdamp']
-
+    
     for proc in sample_list:
         if not 'TT' in proc: continue
+	if 'Filter' in proc: continue
         print("Process: "+proc)
 	
 	f_central = TFile.Open(os.path.join(input_path, "hist_"+proc+".root"),"UPDATE")
@@ -69,10 +71,15 @@ def runPostProcess(base_path, sample_list, year):
 	
 	for sys in sys_rescale:
 	    for i in range(2):
-	        if i == 0: sys = sys+'up'
-		else: sys = sys+'down'
+	        if year == 16 and 'Bkg' in proc and 'hdamp' in sys: continue
+	        tmp = ""
+	        if i == 0: tmp = sys+'up'
+		else: tmp = sys+'down'
+		print("Sys. sample: "+tmp)
+		if year == 16 and 'tune' in sys and not 'Bkg' in proc: tmp2 = 'TT'+proc[4:]
+		else: tmp2 = proc
 
-                f_in = TFile.Open(os.path.join(input_path, "hist_"+proc+"__"+sys+".root"))
+                f_in = TFile.Open(os.path.join(input_path, "hist_"+tmp2+"__"+tmp+".root"))
 
                 h_out = []
                 h_out = rescale(f_in, h_eventinfo)
@@ -93,16 +100,22 @@ def runPostProcess(base_path, sample_list, year):
 	filename = f_central.GetName()
 
 	hist_list = []
-	hist_list = [x.GetName() for x in f_central.GetListOfKeys()]
+	for x in f_central.GetListOfKeys():
+	    if "__" in x.GetName(): continue
+	    hist_list.append(x.GetName())
 
 	h_eventinfo = f_central.Get("EventInfo")
 	h_scaleweights = f_central.Get("ScaleWeights")
 	h_pdfweights = f_central.Get("PDFWeights")
 
         if year == 16:
+	    if 'Filter' in proc: continue
+	    ps_list = ["isrup", "fsrup", "isrdown", "fsrdown"]
+	    if not 'Bkg' in proc: tmp = "TT"+proc[4:]
+	    else: tmp = proc
 	    f_ps_list = []
 	    for ps in ps_list:
-		f_ps_list.append(TFile.Open(os.path.join(input_path, "hist_"+proc+"__"+ps+".root")))
+		f_ps_list.append(TFile.Open(os.path.join(input_path, "hist_"+tmp+"__"+ps+".root")))
 		
 	    h_psweights = ROOT.TH1D("PSweights","",4,0,4)
 	    for index, value in enumerate(ps_list):
@@ -111,28 +124,36 @@ def runPostProcess(base_path, sample_list, year):
 		h_psweights.SetBinContent(index+1,tmp)
 
 	else:
-	    h_psweights = f_central.Get("PSWeights")
-	
+	    ntuple_loc = "/data/users/seohyun/ntuple/Run20"+str(year)
+	    if year == 17: ntuple_loc += "/V9_6/nosplit/"
+	    if year == 18: ntuple_loc += "/V10_2/nosplit/"
+	    f_ntuple = TFile.Open(os.path.join(ntuple_loc, proc+".root"))
+	    h_psweights = f_ntuple.Get("ttbbLepJets/PSWeights")
+	    #h_psweights = f_central.Get("PSWeights")
+
+        print("Nhist: "+str(len(hist_list)))
 	for hist in hist_list:
 	    if hist == "EventInfo" or "Weights" in hist: continue
+	    print(hist)
 	    h_central = f_central.Get(hist)
 	    h_sw_list = []
 	    for i in range(6):
 	        h_sw_list.append(f_central.Get(hist+"__scale"+str(i)))
 	    h_pdf_list = []
-	    if year == 16: maxpdf = 103
-	    else: maxpdf = 104
+	    if year == 16: maxpdf = 102
+	    else: maxpdf = 103
 	    for i in range(maxpdf):
 	        h_pdf_list.append(f_central.Get(hist+"__pdf"+str(i)))
 	    h_ps_list = []
-	    ps_list = ["isrup", "isrdown", "fsrup", "fsrdown"]
+	    ps_list = ["isrup", "fsrup", "isrdown", "fsrdown"]
 	    if year == 16:
+	        if 'Filter' in proc: continue
 	        for index, f_ps in enumerate(f_ps_list):
 	            h_ps_list.append(f_ps.Get(hist+"__"+ps_list[index]))
 	    else:
 	        for ps in ps_list:
-		    h_ps_list.append(f_central.Get(hist+"__"+ps_list))
-	    
+		    h_ps_list.append(f_central.Get(hist+"__"+ps))
+	   
 	    h_sw_new = []
 	    h_sw_new = write_envelope("sw", filename, h_central, h_sw_list, h_eventinfo, h_scaleweights)
 	    f_central.cd()
@@ -144,17 +165,19 @@ def runPostProcess(base_path, sample_list, year):
 	    f_central.cd()
 	    h_pdf_new[0].Write()
 	    h_pdf_new[1].Write()    
-	    
-	    h_ps_new = []
-	    h_ps_new = write_envelope("ps", filename, h_central, h_ps_list, h_eventinfo, h_psweights)
-	    f_central.cd()
-	    h_ps_new[0].Write()
-	    h_ps_new[1].Write()
+	   
+	    if not 'Filter' in proc:
+	        h_ps_new = []
+	        h_ps_new = write_envelope("ps", filename, h_central, h_ps_list, h_eventinfo, h_psweights)
+	        f_central.cd()
+	        h_ps_new[0].Write()
+	        h_ps_new[1].Write()
         
 	f_central.Close()
-
+    
     # Add JER, JEC
     for proc in sample_list:
+        print("Process: "+proc)
 	f_central = TFile.Open(os.path.join(input_path, "hist_"+proc+".root"),"UPDATE")
 	jets = ["jerup", "jerdown", "jecup", "jecdown"]
 	f_list = []
@@ -166,6 +189,8 @@ def runPostProcess(base_path, sample_list, year):
 
 	f_central.cd()
 	for hist in hist_list:
+	    if "__" in hist: continue
+	    if "Info" in hist or "Weights" in hist: continue
 	    for index, value in enumerate(f_list):
 	        tmp = value.Get(hist+"__"+jets[index])
 		tmp.Write()
