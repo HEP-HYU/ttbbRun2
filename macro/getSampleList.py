@@ -26,6 +26,7 @@ def getSampleList(save_path):
     for item in os.listdir(path17):
 	if "Data" in item: continue
 	if "part" in item: continue
+	if "SYS"  in item: continue
 
 	f_list17.write(item[:-5]+'\n')
     f_list17.close()
@@ -37,6 +38,7 @@ def getSampleList(save_path):
     for item in os.listdir(path18):
 	if "Data" in item: continue
 	if "part" in item: continue
+	if "SYS"  in item: continue
 
 	f_list18.write(item[:-5]+'\n')
     f_list18.close()
