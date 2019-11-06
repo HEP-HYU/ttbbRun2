@@ -39,7 +39,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
  *   __tuneup, __tunedown
  */
 
-  if( process.Contains("Data") ){
+  if( process.Contains("Data") || process.Contains("QCD") ){
     v_syst.push_back("");
   }
   else if( process.Contains("__") ){

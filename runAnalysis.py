@@ -77,8 +77,9 @@ for year in range(16,19):
 	    n += 1
     
     if test:
-        post.runPostProcess(os.getcwd(), samples, year)
-        #runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "TTLJ_PowhegPythia_ttbb")	
+        #runAna('/data/users/minerva1993/ntuple/V10_2/190702/', 'TT_powheg_ttbb.root', 'ttbb')
+	#runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
+        runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "TTLJ_PowhegPythia_ttbb")	
     else:
 	runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
 	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
@@ -89,10 +90,11 @@ for year in range(16,19):
 	    if "part" in sample: continue
 	    if "SYS" in sample: continue
 	    runAna(inputDir, str(sample)+".root", str(sample))
-	    runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
-	    runAna(inputDir, str(sample)+".root", str(sample)+"__jerdown")
-	    runAna(inputDir, str(sample)+".root", str(sample)+"__jecup")
-	    runAna(inputDir, str(sample)+".root", str(sample)+"__jecdown")
+	    if "QCD" in sample:
+	        runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
+	        runAna(inputDir, str(sample)+".root", str(sample)+"__jerdown")
+	        runAna(inputDir, str(sample)+".root", str(sample)+"__jecup")
+	        runAna(inputDir, str(sample)+".root", str(sample)+"__jecdown")
 
 	# hdamp, Tune
 	if not year == 16:
