@@ -187,7 +187,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
   }
 
   std::cout << "Make HistoBook" << std::endl;
-  for(int i = 0; i < v_syst.size(); i++){
+  for(unsigned int i = 0; i < v_syst.size(); i++){
     HistoBook *h_tmp1 = new HistoBook(1, v_syst[i].c_str());
     HistoBook *h_tmp2 = new HistoBook(2, v_syst[i].c_str());
     h_control.push_back(h_tmp1);
@@ -195,7 +195,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
   }
    
   std::cout << "Get Hist list" << std::endl;
-  for(int i = 0; i < v_syst.size(); i++){
+  for(unsigned int i = 0; i < v_syst.size(); i++){
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
 	  fOutput->Add(h_control[i]->h_lepton_pt[iChannel][iStep]);
@@ -373,7 +373,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       }
     }
 
-  for(int iSys = 0; iSys < v_syst.size(); ++iSys){
+  for(unsigned int iSys = 0; iSys < v_syst.size(); ++iSys){
     syst_ext = v_syst[iSys];
     //Event Weight
     double EventWeight = 1;
@@ -500,7 +500,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       }
 
       //PDF Uncertainties
-      ssize_t pos;
+      size_t pos;
       if( (pos = syst_ext.find("pdf",0)) != std::string::npos ){
 	int maxpdf = 103;
 	if( option.Contains("2016") ) maxpdf = 104;
