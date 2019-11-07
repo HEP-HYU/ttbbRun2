@@ -84,11 +84,11 @@ for year in range(16,19):
 	runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
 	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
 
-        if year != 16:
+        if year == 16:
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb")
+	else: 
 	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
 	for sample in samples:
-	    if "part" in sample: continue
-	    if "SYS" in sample: continue
 	    runAna(inputDir, str(sample)+".root", str(sample))
 	    if not "QCD" in sample:
 	        runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
