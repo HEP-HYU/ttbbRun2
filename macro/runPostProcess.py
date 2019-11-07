@@ -63,7 +63,6 @@ def runPostProcess(base_path, sample_list, year):
     
     for proc in sample_list:
         if not 'TT' in proc: continue
-	if 'Filter' in proc: continue
         print("Process: "+proc)
 	
 	f_central = TFile.Open(os.path.join(input_path, "hist_"+proc+".root"),"UPDATE")
@@ -147,7 +146,6 @@ def runPostProcess(base_path, sample_list, year):
 	    h_ps_list = []
 	    ps_list = ["isrup", "fsrup", "isrdown", "fsrdown"]
 	    if year == 16:
-	        if 'Filter' in proc: continue
 	        for index, f_ps in enumerate(f_ps_list):
 	            h_ps_list.append(f_ps.Get(hist+"__"+ps_list[index]))
 	    else:
@@ -166,12 +164,11 @@ def runPostProcess(base_path, sample_list, year):
 	    h_pdf_new[0].Write()
 	    h_pdf_new[1].Write()    
 	   
-	    if not 'Filter' in proc:
-	        h_ps_new = []
-	        h_ps_new = write_envelope("ps", filename, h_central, h_ps_list, h_eventinfo, h_psweights)
-	        f_central.cd()
-	        h_ps_new[0].Write()
-	        h_ps_new[1].Write()
+	    h_ps_new = []
+	    h_ps_new = write_envelope("ps", filename, h_central, h_ps_list, h_eventinfo, h_psweights)
+	    f_central.cd()
+	    h_ps_new[0].Write()
+	    h_ps_new[1].Write()
         
 	f_central.Close()
     
@@ -196,5 +193,25 @@ def runPostProcess(base_path, sample_list, year):
 		tmp.Write()
 
         f_central.Close()
-	    
+
+    # For Response matrix, Add external ttbb sample`s histograms
+    if year == 16:
+      f_matrix = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbbFilter_ttbb.root"), "UPDATE")
+      f_ttbb = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbb.root"))
+    else:
+      f_matrix = TFile.Open(os.path.join(input_path, "hist_ResponseMatrix_ttbb.root"), "UPDATE")
+      f_ttbb = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbb.root"))
+    sys_list = ["sw", "ps", "hdamp", "tune", "pdf"]
+    hist_list = [x.GetName() for x in f_matrix.GetListOfKeys()]
+    f_matrix.cd()
+    for hist in hist_list:
+        if "__" in hist or "Info" in hist or "Weights" in hist: continue
+	for item in sys_list:
+	    tmpup = f_ttbb.Get(hist+"__"+item+"up")
+	    tmpdown = f_ttbb.Get(hist+"__"+item+"down")
+	    tmpup.Write()
+	    tmpdown.Write()
+    f_matrix.Close()
+    f_ttbb.Close()
+
     print("All post processes are completed")
