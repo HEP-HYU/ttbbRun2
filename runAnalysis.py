@@ -118,7 +118,7 @@ for year in range(16,19):
 		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttcc.root", tmp_name+"_ttcc__"+value)
 		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttLF.root", tmp_name+"_ttLF__"+value)
 		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttother.root", tmp_name+"_ttother__"+value)
-		if not hdamp in value:
+		if not "hdamp" in value:
 		    runAna(inputDir, "TT_PowhegPythiaBkg_SYS_"+key+".root", "TT_PowhegPythiaBkg__"+value)
 	
 	# 2016 only (Isr, Fsr)
