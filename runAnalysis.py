@@ -85,7 +85,7 @@ for year in range(16,19):
 	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
 
         if year != 16:
-	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
 	for sample in samples:
 	    if "part" in sample: continue
 	    if "SYS" in sample: continue
@@ -151,9 +151,9 @@ for year in range(16,19):
 	    runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
 	    runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
 
-#    outdir = 'output/root'+str(year)
-#    if os.path.exists(outdir): os.system('rm -rf '+outdir)
-#    os.system('mv output/root '+outdir)
+    outdir = 'output/root'+str(year)
+    if os.path.exists(outdir): os.system('rm -rf '+outdir)
+    os.system('mv output/root '+outdir)
 
     p.Close()
 
@@ -161,4 +161,4 @@ for year in range(16,19):
 #    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
 #    os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
     
-    #if args.syst: post.runPostProcess(os.getcwd(), samples, year)
+    if args.syst: post.runPostProcess(os.getcwd(), samples, year)
