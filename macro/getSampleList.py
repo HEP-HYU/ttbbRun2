@@ -15,6 +15,7 @@ def getSampleList(save_path):
 	if "Evtgen" in item: continue
 	if "TT_aMC" in item: continue
 	if "SYS"    in item: continue
+	if "Filter" in item: continue
 
 	f_list16.write(item[:-5]+'\n')
     f_list16.close()
