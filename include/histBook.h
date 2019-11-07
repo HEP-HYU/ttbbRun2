@@ -99,7 +99,7 @@ const double wmass_min=0; const double wmass_max=200;
 const int nbins_csv=20;
 const double csv_min=0; const double csv_max=1;
 
-const int nbins_njets=4;
+const int nbins_njets=10;
 const double njets_min=6; const double njets_max=10;
 //const double njets_width[xNbins_njets+1] = {};
 const int nbins_nbjets=5;
@@ -236,16 +236,16 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	  h_njets[iChannel][iStep] = new TH1D(
 	    Form("h_%s_Ch%d_S%d%s", RECO_N_JETS_, iChannel, iStep, _process), "",
 	    10, 0, 10);
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "4");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(6, "5");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(7, "6");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(8, "7");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(9, "8");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(10, "#geq 9");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "4");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(6, "5");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(7, "6");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(8, "7");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(9, "8");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(10, "#geq 9");
 	}
 	else{
 	  h_njets[iChannel][iStep] = new TH1D(
@@ -254,10 +254,10 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	      njets_min,njets_max
 	      //njets_width
 	      );
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "6");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "7");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "8");
-	  h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "#geq 9");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "6");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "7");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "8");
+	  //h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "#geq 9");
 
 	}
 	h_njets[iChannel][iStep]->SetXTitle("Jet multiplicity");
@@ -272,11 +272,11 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	    );
 	h_nbjets[iChannel][iStep]->SetXTitle("bJet multiplicity");
 	h_nbjets[iChannel][iStep]->SetYTitle("Entries");
-	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
-	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
-	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
-	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
-	h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "#geq 4");
+	//h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
+	//h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
+	//h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
+	//h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
+	//h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "#geq 4");
 	h_nbjets[iChannel][iStep]->Sumw2();
 	
 	h_jet_pt_sum[iChannel][iStep] = new TH1D(
