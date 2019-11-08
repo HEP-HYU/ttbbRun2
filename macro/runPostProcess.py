@@ -60,7 +60,7 @@ def runPostProcess(base_path, sample_list, year):
     print("Rescaling...")
     
     sys_rescale = ['tune', 'hdamp']
-    
+    """
     for proc in sample_list:
         if not 'TT' in proc: continue
         print("Process: "+proc)
@@ -171,9 +171,10 @@ def runPostProcess(base_path, sample_list, year):
 	    h_ps_new[1].Write()
         
 	f_central.Close()
-    
+    """ 
     # Add JER, JEC
     for proc in sample_list:
+        if 'QCD' in proc: continue
         print("Process: "+proc)
 	f_central = TFile.Open(os.path.join(input_path, "hist_"+proc+".root"),"UPDATE")
 	jets = ["jerup", "jerdown", "jecup", "jecdown"]
@@ -195,12 +196,8 @@ def runPostProcess(base_path, sample_list, year):
         f_central.Close()
 
     # For Response matrix, Add external ttbb sample`s histograms
-    if year == 16:
-      f_matrix = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbbFilter_ttbb.root"), "UPDATE")
-      f_ttbb = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbb.root"))
-    else:
-      f_matrix = TFile.Open(os.path.join(input_path, "hist_ResponseMatrix_ttbb.root"), "UPDATE")
-      f_ttbb = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbb.root"))
+    f_matrix = TFile.Open(os.path.join(input_path, "hist_ResponseMatrix_ttbb.root"), "UPDATE")
+    f_ttbb = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbb.root"))
     sys_list = ["sw", "ps", "hdamp", "tune", "pdf"]
     hist_list = [x.GetName() for x in f_matrix.GetListOfKeys()]
     f_matrix.cd()
