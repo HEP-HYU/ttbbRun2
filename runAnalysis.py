@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os
 import sys
+import time
 
 import argparse
 
@@ -8,6 +9,8 @@ from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
 
 import macro.getSampleList
 import macro.runPostProcess as post
+
+start_time = time.time()
 
 parser = argparse.ArgumentParser(description='Analyze ntuples')
 
@@ -77,23 +80,7 @@ for year in range(16,19):
 	    n += 1
     
     if test:
-        tmp_name = "TT_PowhegPythia_"
-	tmp_name2 = "TT_PowhegPythiaBkg_"
-
-        runAna(inputDir, tmp_name2+"SYS_ISRdown.root",       tmp_name2+"_isrdown")
-        runAna(inputDir, tmp_name+"SYS_FSRup_ttbb.root",      tmp_name+"ttbb__fsrup")
-	runAna(inputDir, tmp_name+"SYS_FSRup_ttbj.root",      tmp_name+"ttbj__fsrup")
-	runAna(inputDir, tmp_name+"SYS_FSRup_ttcc.root",      tmp_name+"ttcc__fsrup")
-	runAna(inputDir, tmp_name+"SYS_FSRup_ttLF.root",      tmp_name+"ttLF__fsrup")
-	runAna(inputDir, tmp_name+"SYS_FSRup_ttother.root",   tmp_name+"ttother__fsrup")
-	runAna(inputDir, tmp_name2+"SYS_FSRup.root",          tmp_name2+"_fsrup")
-	runAna(inputDir, tmp_name+"SYS_FSRdown_ttbb.root",    tmp_name+"ttbb__fsrdown")
-	runAna(inputDir, tmp_name+"SYS_FSRdown_ttbj.root",    tmp_name+"ttbj__fsrdown")
-	runAna(inputDir, tmp_name+"SYS_FSRdown_ttcc.root",    tmp_name+"ttcc__fsrdown")
-	runAna(inputDir, tmp_name+"SYS_FSRdown_ttLF.root",    tmp_name+"ttLF__fsrdown")
-	runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
-	runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
-
+        print("test")
         #runAna('/data/users/minerva1993/ntuple/V10_2/190702/', 'TT_powheg_ttbb.root', 'ttbb')
 	#runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
         #runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "TTLJ_PowhegPythia_ttbbFilter_ttbb")	
@@ -169,7 +156,9 @@ for year in range(16,19):
 	    runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
 
     outdir = 'output/root'+str(year)
-    if os.path.exists(outdir): os.system('rm -rf '+outdir)
+    if os.path.exists(outdir): 
+        os.system('mv -r '+outdir+' '+outdir+'_backup')
+        os.system('rm -rf '+outdir)
     os.system('mv output/root '+outdir)
 
     p.Close()
@@ -178,4 +167,5 @@ for year in range(16,19):
 #    os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
 #    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
 #    os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
-    
+
+print("Total running time: %s" %(time.time() - start_time))
