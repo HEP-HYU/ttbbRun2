@@ -60,7 +60,7 @@ def runPostProcess(base_path, sample_list, year):
     print("Rescaling...")
     
     sys_rescale = ['tune', 'hdamp']
-    """
+    
     for proc in sample_list:
         if not 'TT' in proc: continue
         print("Process: "+proc)
@@ -171,7 +171,7 @@ def runPostProcess(base_path, sample_list, year):
 	    h_ps_new[1].Write()
         
 	f_central.Close()
-    """ 
+     
     # Add JER, JEC
     for proc in sample_list:
         if 'QCD' in proc: continue
