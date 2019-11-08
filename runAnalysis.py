@@ -77,9 +77,26 @@ for year in range(16,19):
 	    n += 1
     
     if test:
+        tmp_name = "TT_PowhegPythia_"
+	tmp_name2 = "TT_PowhegPythiaBkg_"
+
+        runAna(inputDir, tmp_name2+"SYS_ISRdown.root",       tmp_name2+"_isrdown")
+        runAna(inputDir, tmp_name+"SYS_FSRup_ttbb.root",      tmp_name+"ttbb__fsrup")
+	runAna(inputDir, tmp_name+"SYS_FSRup_ttbj.root",      tmp_name+"ttbj__fsrup")
+	runAna(inputDir, tmp_name+"SYS_FSRup_ttcc.root",      tmp_name+"ttcc__fsrup")
+	runAna(inputDir, tmp_name+"SYS_FSRup_ttLF.root",      tmp_name+"ttLF__fsrup")
+	runAna(inputDir, tmp_name+"SYS_FSRup_ttother.root",   tmp_name+"ttother__fsrup")
+	runAna(inputDir, tmp_name2+"SYS_FSRup.root",          tmp_name2+"_fsrup")
+	runAna(inputDir, tmp_name+"SYS_FSRdown_ttbb.root",    tmp_name+"ttbb__fsrdown")
+	runAna(inputDir, tmp_name+"SYS_FSRdown_ttbj.root",    tmp_name+"ttbj__fsrdown")
+	runAna(inputDir, tmp_name+"SYS_FSRdown_ttcc.root",    tmp_name+"ttcc__fsrdown")
+	runAna(inputDir, tmp_name+"SYS_FSRdown_ttLF.root",    tmp_name+"ttLF__fsrdown")
+	runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
+	runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
+
         #runAna('/data/users/minerva1993/ntuple/V10_2/190702/', 'TT_powheg_ttbb.root', 'ttbb')
 	#runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
-        runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "TTLJ_PowhegPythia_ttbbFilter_ttbb")	
+        #runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "TTLJ_PowhegPythia_ttbbFilter_ttbb")	
     else:
 	runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
 	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
@@ -136,7 +153,7 @@ for year in range(16,19):
 	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttcc.root",    tmp_name+"ttcc__isrdown")
 	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttLF.root",    tmp_name+"ttLF__isrdown")
 	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttother.root", tmp_name+"ttother__isrdown")
-	    runAna(inputDir, tmp_name2+"_SYS_ISRdown.root",       tmp_name2+"_isrdown")
+	    runAna(inputDir, tmp_name2+"SYS_ISRdown.root",       tmp_name2+"_isrdown")
 
 	    runAna(inputDir, tmp_name+"SYS_FSRup_ttbb.root",      tmp_name+"ttbb__fsrup")
 	    runAna(inputDir, tmp_name+"SYS_FSRup_ttbj.root",      tmp_name+"ttbj__fsrup")
@@ -156,9 +173,9 @@ for year in range(16,19):
     os.system('mv output/root '+outdir)
 
     p.Close()
+    if args.syst: post.runPostProcess(os.getcwd(), samples, year)
 
 #    os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
 #    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
 #    os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
     
-    if args.syst: post.runPostProcess(os.getcwd(), samples, year)
