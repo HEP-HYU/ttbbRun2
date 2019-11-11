@@ -184,40 +184,6 @@ void runGentree(std::string input_path, std::string output_path){
     }
   }
 
-  for(int ich=0; ich<nChannel; ++ich){
-    h_gen_gentop_deltaR_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_dR, h_gen_gentop_deltaR_nosel[ich]->GetBinContent(nbins_gen_addbjets_dR+1));
-    h_gen_gentop_deltaR_nosel[ich]->ClearUnderflowAndOverflow();
- 
-    h_gen_gentop_invMass_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_M, h_gen_gentop_invMass_nosel[ich]->GetBinContent(nbins_gen_addbjets_M+1));
-    h_gen_gentop_invMass_nosel[ich]->ClearUnderflowAndOverflow();
-
-    h_gen_gentop_deltaEta_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_dEta, h_gen_gentop_deltaEta_nosel[ich]->GetBinContent(nbins_gen_addbjets_dEta+1));
-    h_gen_gentop_deltaEta_nosel[ich]->ClearUnderflowAndOverflow();
-
-    h_gen_gentop_deltaPhi_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_dPhi, h_gen_gentop_deltaPhi_nosel[ich]->GetBinContent(nbins_gen_addbjets_dPhi+1));
-    h_gen_gentop_deltaPhi_nosel[ich]->ClearUnderflowAndOverflow();
-
-    h_gen_mindR_deltaR_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_dR, h_gen_mindR_deltaR_nosel[ich]->GetBinContent(nbins_gen_addbjets_dR+1));
-    h_gen_mindR_deltaR_nosel[ich]->ClearUnderflowAndOverflow();
- 
-    h_gen_mindR_invMass_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_M, h_gen_mindR_invMass_nosel[ich]->GetBinContent(nbins_gen_addbjets_M+1));
-    h_gen_mindR_invMass_nosel[ich]->ClearUnderflowAndOverflow();
-
-    h_gen_mindR_deltaEta_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_dEta, h_gen_mindR_deltaEta_nosel[ich]->GetBinContent(nbins_gen_addbjets_dEta+1));
-    h_gen_mindR_deltaEta_nosel[ich]->ClearUnderflowAndOverflow();
-
-    h_gen_mindR_deltaPhi_nosel[ich]->AddBinContent(
-        nbins_gen_addbjets_dPhi, h_gen_mindR_deltaPhi_nosel[ich]->GetBinContent(nbins_gen_addbjets_dPhi+1));
-    h_gen_mindR_deltaPhi_nosel[ich]->ClearUnderflowAndOverflow();
-  }
-
   f_out->cd(); 
   for(int ich=0; ich<nChannel; ++ich){
     h_gen_gentop_deltaR_nosel[ich]->Write();
@@ -229,6 +195,5 @@ void runGentree(std::string input_path, std::string output_path){
     h_gen_mindR_deltaEta_nosel[ich]->Write();
     h_gen_mindR_deltaPhi_nosel[ich]->Write();
   }
-  //f_out->Write();
   f_out->Close();
 }
