@@ -61,7 +61,6 @@ def runAna(dir, file, name):
 macro.getSampleList.getSampleList(os.getcwd()+'/samples')
 
 for year in range(16,19):
-    
     if year == 16 and run16 == False: continue
     if year == 17 and run17 == False: continue
     if year == 18 and run18 == False: continue
@@ -69,98 +68,95 @@ for year in range(16,19):
     p = TProof.Open("", "workers=16")
     samples = []
     with open('samples/sample'+str(year)+'.txt','r') as f:
-	n = 1
-	while True:
-	    line = f.readline()
-	    if not line: break
-	    if n == 1:
-		inputDir = line[:-1]
-	    else:
-		samples.append(line[:-1])
-	    n += 1
+        n = 1
+        while True:
+            line = f.readline()
+            if not line: break
+            if n == 1:
+            inputDir = line[:-1]
+            else:
+            samples.append(line[:-1])
+            n += 1
     
     if test:
-        print("test")
-        #runAna('/data/users/minerva1993/ntuple/V10_2/190702/', 'TT_powheg_ttbb.root', 'ttbb')
-	#runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
-        #runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "TTLJ_PowhegPythia_ttbbFilter_ttbb")	
+	    #runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
     else:
-	runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
-	runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
+        runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
+        runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
 
         if year == 16:
-	    runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb")
-	else: 
-	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
-	for sample in samples:
-	    runAna(inputDir, str(sample)+".root", str(sample))
-	    if not "QCD" in sample:
-	        runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
-	        runAna(inputDir, str(sample)+".root", str(sample)+"__jerdown")
-	        runAna(inputDir, str(sample)+".root", str(sample)+"__jecup")
-	        runAna(inputDir, str(sample)+".root", str(sample)+"__jecdown")
+	        runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb")
+        else: 
+	        runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
+	        for sample in samples:
+	            runAna(inputDir, str(sample)+".root", str(sample))
+	            if not "QCD" in sample:
+	                runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
+	                runAna(inputDir, str(sample)+".root", str(sample)+"__jerdown")
+	                runAna(inputDir, str(sample)+".root", str(sample)+"__jecup")
+	                runAna(inputDir, str(sample)+".root", str(sample)+"__jecdown")
 
-	# hdamp, Tune
-	if not year == 16:
-	    tmp_dic = {"TuneCP5Up":"tuneup", "TuneCP5Down":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
-	    for key, value in tmp_dic.items():
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbb.root", "TTLJ_PowhegPythia_ttbb__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbj.root", "TTLJ_PowhegPythia_ttbj__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttcc.root", "TTLJ_PowhegPythia_ttcc__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttLF.root", "TTLJ_PowhegPythia_ttLF__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttother.root", "TTLJ_PowhegPythia_ttother__"+value)
-		runAna(inputDir, "TTJJ_PowhegPythiaBkg_SYS_"+key+".root", "TTJJ_PowhegPythiaBkg__"+value)
-		runAna(inputDir, "TTLJ_PowhegPythiaBkg_SYS_"+key+".root", "TTLJ_PowhegPythiaBkg__"+value)
-		runAna(inputDir, "TTLL_PowhegPythiaBkg_SYS_"+key+".root", "TTLL_PowhegPythiaBkg__"+value)
-	else:
-	    tmp_dic = {"TuneUp":"tuneup", "TuneDown":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
-	    for key, value in tmp_dic.items():
-		if "tune" in value: tmp_name = "TT_PowhegPythia"
-		else: tmp_name = "TTLJ_PowhegPythia"
-		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttbb.root", tmp_name+"_ttbb__"+value)
-		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttbj.root", tmp_name+"_ttbj__"+value)
-		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttcc.root", tmp_name+"_ttcc__"+value)
-		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttLF.root", tmp_name+"_ttLF__"+value)
-		runAna(inputDir, tmp_name+"_SYS_"+key+"_ttother.root", tmp_name+"_ttother__"+value)
-		if not "hdamp" in value:
-		    runAna(inputDir, "TT_PowhegPythiaBkg_SYS_"+key+".root", "TT_PowhegPythiaBkg__"+value)
+	    # hdamp, Tune
+	    if not year == 16:
+	        tmp_dic = {"TuneCP5Up":"tuneup", "TuneCP5Down":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
+            for key, value in tmp_dic.items():
+                runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbb.root", "TTLJ_PowhegPythia_ttbb__"+value)
+                runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbj.root", "TTLJ_PowhegPythia_ttbj__"+value)
+                runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttcc.root", "TTLJ_PowhegPythia_ttcc__"+value)
+                runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttLF.root", "TTLJ_PowhegPythia_ttLF__"+value)
+                runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttother.root", "TTLJ_PowhegPythia_ttother__"+value)
+                runAna(inputDir, "TTJJ_PowhegPythiaBkg_SYS_"+key+".root", "TTJJ_PowhegPythiaBkg__"+value)
+                runAna(inputDir, "TTLJ_PowhegPythiaBkg_SYS_"+key+".root", "TTLJ_PowhegPythiaBkg__"+value)
+                runAna(inputDir, "TTLL_PowhegPythiaBkg_SYS_"+key+".root", "TTLL_PowhegPythiaBkg__"+value)
+        else:
+            tmp_dic = {"TuneUp":"tuneup", "TuneDown":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
+            for key, value in tmp_dic.items():
+                if "tune" in value: tmp_name = "TT_PowhegPythia"
+                else: tmp_name = "TTLJ_PowhegPythia"
+                runAna(inputDir, tmp_name+"_SYS_"+key+"_ttbb.root", tmp_name+"_ttbb__"+value)
+                runAna(inputDir, tmp_name+"_SYS_"+key+"_ttbj.root", tmp_name+"_ttbj__"+value)
+                runAna(inputDir, tmp_name+"_SYS_"+key+"_ttcc.root", tmp_name+"_ttcc__"+value)
+                runAna(inputDir, tmp_name+"_SYS_"+key+"_ttLF.root", tmp_name+"_ttLF__"+value)
+                runAna(inputDir, tmp_name+"_SYS_"+key+"_ttother.root", tmp_name+"_ttother__"+value)
+                if not "hdamp" in value:
+                    runAna(inputDir, "TT_PowhegPythiaBkg_SYS_"+key+".root", "TT_PowhegPythiaBkg__"+value)
 	
-	# 2016 only (Isr, Fsr)
-	if year == 16:
-	    tmp_name = "TT_PowhegPythia_"
-	    tmp_name2 = "TT_PowhegPythiaBkg_"
-	    runAna(inputDir, tmp_name+"SYS_ISRup_ttbb.root",      tmp_name+"ttbb__isrup")
-	    runAna(inputDir, tmp_name+"SYS_ISRup_ttbj.root",      tmp_name+"ttbj__isrup")
-	    runAna(inputDir, tmp_name+"SYS_ISRup_ttcc.root",      tmp_name+"ttcc__isrup")
-	    runAna(inputDir, tmp_name+"SYS_ISRup_ttLF.root",      tmp_name+"ttLF__isrup")
-	    runAna(inputDir, tmp_name+"SYS_ISRup_ttother.root",   tmp_name+"ttother__isrup")
-	    runAna(inputDir, tmp_name2+"SYS_ISRup.root",          tmp_name2+"_isrup")
-	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttbb.root",    tmp_name+"ttbb__isrdown")
-	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttbj.root",    tmp_name+"ttbj__isrdown")
-	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttcc.root",    tmp_name+"ttcc__isrdown")
-	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttLF.root",    tmp_name+"ttLF__isrdown")
-	    runAna(inputDir, tmp_name+"SYS_ISRdown_ttother.root", tmp_name+"ttother__isrdown")
-	    runAna(inputDir, tmp_name2+"SYS_ISRdown.root",       tmp_name2+"_isrdown")
+        # 2016 only (Isr, Fsr)
+        if year == 16:
+            tmp_name = "TT_PowhegPythia_"
+            tmp_name2 = "TT_PowhegPythiaBkg_"
+            runAna(inputDir, tmp_name+"SYS_ISRup_ttbb.root",      tmp_name+"ttbb__isrup")
+            runAna(inputDir, tmp_name+"SYS_ISRup_ttbj.root",      tmp_name+"ttbj__isrup")
+            runAna(inputDir, tmp_name+"SYS_ISRup_ttcc.root",      tmp_name+"ttcc__isrup")
+            runAna(inputDir, tmp_name+"SYS_ISRup_ttLF.root",      tmp_name+"ttLF__isrup")
+            runAna(inputDir, tmp_name+"SYS_ISRup_ttother.root",   tmp_name+"ttother__isrup")
+            runAna(inputDir, tmp_name2+"SYS_ISRup.root",          tmp_name2+"_isrup")
+            runAna(inputDir, tmp_name+"SYS_ISRdown_ttbb.root",    tmp_name+"ttbb__isrdown")
+            runAna(inputDir, tmp_name+"SYS_ISRdown_ttbj.root",    tmp_name+"ttbj__isrdown")
+            runAna(inputDir, tmp_name+"SYS_ISRdown_ttcc.root",    tmp_name+"ttcc__isrdown")
+            runAna(inputDir, tmp_name+"SYS_ISRdown_ttLF.root",    tmp_name+"ttLF__isrdown")
+            runAna(inputDir, tmp_name+"SYS_ISRdown_ttother.root", tmp_name+"ttother__isrdown")
+            runAna(inputDir, tmp_name2+"SYS_ISRdown.root",       tmp_name2+"_isrdown")
 
-	    runAna(inputDir, tmp_name+"SYS_FSRup_ttbb.root",      tmp_name+"ttbb__fsrup")
-	    runAna(inputDir, tmp_name+"SYS_FSRup_ttbj.root",      tmp_name+"ttbj__fsrup")
-	    runAna(inputDir, tmp_name+"SYS_FSRup_ttcc.root",      tmp_name+"ttcc__fsrup")
-	    runAna(inputDir, tmp_name+"SYS_FSRup_ttLF.root",      tmp_name+"ttLF__fsrup")
-	    runAna(inputDir, tmp_name+"SYS_FSRup_ttother.root",   tmp_name+"ttother__fsrup")
-	    runAna(inputDir, tmp_name2+"SYS_FSRup.root",          tmp_name2+"_fsrup")
-	    runAna(inputDir, tmp_name+"SYS_FSRdown_ttbb.root",    tmp_name+"ttbb__fsrdown")
-	    runAna(inputDir, tmp_name+"SYS_FSRdown_ttbj.root",    tmp_name+"ttbj__fsrdown")
-	    runAna(inputDir, tmp_name+"SYS_FSRdown_ttcc.root",    tmp_name+"ttcc__fsrdown")
-	    runAna(inputDir, tmp_name+"SYS_FSRdown_ttLF.root",    tmp_name+"ttLF__fsrdown")
-	    runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
-        runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
+            runAna(inputDir, tmp_name+"SYS_FSRup_ttbb.root",      tmp_name+"ttbb__fsrup")
+            runAna(inputDir, tmp_name+"SYS_FSRup_ttbj.root",      tmp_name+"ttbj__fsrup")
+            runAna(inputDir, tmp_name+"SYS_FSRup_ttcc.root",      tmp_name+"ttcc__fsrup")
+            runAna(inputDir, tmp_name+"SYS_FSRup_ttLF.root",      tmp_name+"ttLF__fsrup")
+            runAna(inputDir, tmp_name+"SYS_FSRup_ttother.root",   tmp_name+"ttother__fsrup")
+            runAna(inputDir, tmp_name2+"SYS_FSRup.root",          tmp_name2+"_fsrup")
+            runAna(inputDir, tmp_name+"SYS_FSRdown_ttbb.root",    tmp_name+"ttbb__fsrdown")
+            runAna(inputDir, tmp_name+"SYS_FSRdown_ttbj.root",    tmp_name+"ttbj__fsrdown")
+            runAna(inputDir, tmp_name+"SYS_FSRdown_ttcc.root",    tmp_name+"ttcc__fsrdown")
+            runAna(inputDir, tmp_name+"SYS_FSRdown_ttLF.root",    tmp_name+"ttLF__fsrdown")
+            runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
+            runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
 
     outdir = 'output/root'+str(year)
     if os.path.exists(outdir): 
         os.system('mv -r '+outdir+' '+outdir+'_backup')
         os.system('rm -rf '+outdir)
     os.system('mv output/root '+outdir)
-
+    
     p.Close()
     if args.syst: post.runPostProcess(os.getcwd(), samples, year)
 
