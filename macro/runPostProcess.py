@@ -39,8 +39,8 @@ def write_envelope(sys_name, f_name, h_central, h_sys_list, h_eventinfo, h_weigh
         maximum = float("-inf")
 
         for hist in h_sys_weighted_list:
-                minimum = min(minimum, hist.GetBinContent(ibin))
-                maximum = max(maximum, hist.GetBinContent(ibin))
+            minimum = min(minimum, hist.GetBinContent(ibin))
+            maximum = max(maximum, hist.GetBinContent(ibin))
 
         h_up.SetBinContent(ibin, maximum)
         h_down.SetBinContent(ibin, minimum)
