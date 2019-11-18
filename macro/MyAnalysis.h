@@ -26,7 +26,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "/home/seohyun/work/ttbb/ttbbRun2_dev/include/histBook.h"
+#include "/home/sarakm0704/WORK/ttbb/mktool/ttbbRun2/include/histBook.h"
 
 class MyAnalysis : public TSelector {
 public :
@@ -61,6 +61,8 @@ public :
    TTreeReaderArray<int>      jet_index         = {fReader, "jet_index"};
    TTreeReaderArray<float>    jet_CSV           = {fReader, NULL};
    TTreeReaderArray<float>    jet_SF_CSV_30     = {fReader, NULL};
+   TTreeReaderArray<float>    jet_deepJet       = {fReader, NULL};
+   TTreeReaderArray<float>    jet_SF_deepJet_30 = {fReader, NULL};
    TTreeReaderArray<float>    jet_JES_Up        = {fReader, "jet_JES_Up"};
    TTreeReaderArray<float>    jet_JES_Down      = {fReader, "jet_JES_Down"};
    TTreeReaderArray<float>    jet_JER_Up        = {fReader, "jet_JER_Up"};

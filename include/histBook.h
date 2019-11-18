@@ -5,14 +5,16 @@
 const double TTBAR_XSEC_ = 831.76;
 //OBJECT SELECTION for 2016
 const int MUON_        = 0;
-double MUON_PT_  = 30.0;
-double MUON_ETA_ = 2.1;
+//double MUON_PT_  = 30.0;
+double MUON_PT_  = 26.0;
+//double MUON_ETA_ = 2.1;
+double MUON_ETA_ = 2.4;
 const double MUON_PHI_ = 0.0;
 const double MUON_E_   = 0.0;
 
-const int ELECTRON_        = 1;
-double ELECTRON_PT_  = 35.0;
-double ELECTRON_ETA_ = 2.1;
+const int ELECTRON_  = 1;
+double ELECTRON_PT_  = 34.0;
+double ELECTRON_ETA_ = 2.4;
 const double ELECTRON_PHI_ = 0.0;
 const double ELECTRON_E_   = 0.0;
 
@@ -21,9 +23,19 @@ const double JET_ETA_ = 2.4;
 const double JET_PHI_ = 0.0;
 const double JET_E_   = 0.0;
 
-double JET_CSV_TIGHT_  = 0.9535;
-const double JET_CSV_MEDIUM_ = 0.8484;
-const double JET_CSV_LOOSE_  = 0.0;
+//for 2016
+//double JET_CSV_TIGHT_  = 0.9535;
+//const double JET_CSV_MEDIUM_ = 0.8484;
+//const double JET_CSV_LOOSE_  = 0.0;
+
+//for 2018
+double JET_CSV_TIGHT_  = 0.7527;
+const double JET_CSV_MEDIUM_ = 0.4184;
+const double JET_CSV_LOOSE_  = 0.1241;
+
+double DEEP_JET_TIGHT_ = 0.7264;
+const double DEEP_JET_MEDIUM_ = 0.2770;
+const double DEEP_JET_LOOSE_ = 0.0494;
 
 const double JET_CvsL_TIGHT_  = 0.0;
 const double JET_CvsL_MEDIUM_ = 0.0;
@@ -31,7 +43,8 @@ const double JET_CvsL_LOOSE_  = 0.0;
 
 //EVENT SELECTION
 const int NUMBER_OF_LEPTONS_ = 1;
-const int NUMBER_OF_JETS_    = 6;
+//const int NUMBER_OF_JETS_    = 6;
+const int NUMBER_OF_JETS_    = 4;
 const int NUMBER_OF_BJETS_   = 2;
 const int NUMBER_OF_CJETS_   = 0;
 
@@ -81,23 +94,30 @@ const char * ACC_DPHI_ = "BinAcceptanceDeltaPhi";
 const int nChannel=3; const int nStep=4; const int nJet = 6;
 
 //Bin width
-const int nbins_lep_pt=20;
-const double lep_pt_min=0; const double lep_pt_max=400;
+const int nbins_lep_pt=60;   //sync before b-tagging
+//const int nbins_lep_pt=30; //after b-tagging
+const double lep_pt_min=30; const double lep_pt_max=530;
 //const double lep_pt_width[xNbins_lepton_pt+1] = {};
-const int nbins_lep_eta=20;
-const double lep_eta_min=0; const double lep_eta_max=2.5;
+const int nbins_lep_eta=50;
+//const int nbins_lep_eta=25;
+const double lep_eta_min=-2.4; const double lep_eta_max=2.4;
 //const double lep_eta_width[xNbins_lepton_eta+1] = {};
 
-const int nbins_jet_pt=20;
-const double jet_pt_min=0; const double jet_pt_max=400;
-const int nbins_jet_eta=20;
-const double jet_eta_min=0; const double jet_eta_max=2.5;
+const int nbins_jet_pt=60;
+//const int nbins_jet_pt=30;
+const double jet_pt_min=30; const double jet_pt_max=730;
+const int nbins_jet_eta=50;
+//const int nbins_jet_eta=25;
+const double jet_eta_min=-2.4; const double jet_eta_max=2.4;
 
 const int nbins_wmass=20;
 const double wmass_min=0; const double wmass_max=200;
 
 const int nbins_csv=20;
 const double csv_min=0; const double csv_max=1;
+
+const int nbins_deepjet=20;
+const double deepjet_min=0; const double deepjet_max=1;
 
 const int nbins_njets=4;
 const double njets_min=6; const double njets_max=10;
@@ -171,6 +191,7 @@ class HistoBook{
     TH1D *h_jet_eta[nChannel][nStep][nJet];
     TH1D *h_trans_mass[nChannel][nStep];
     TH1D *h_csv[nChannel][nStep][nJet];
+    TH1D *h_deepjet[nChannel][nStep][nJet];
     TH1D *h_reco_addbjets_deltaR[nChannel][nStep];
     TH1D *h_reco_addbjets_invMass[nChannel][nStep];
     TH1D *h_reco_addbjets_deltaEta[nChannel][nStep];
@@ -315,6 +336,15 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	  h_csv[iChannel][iStep][iJet]->SetXTitle("b discriminator");
 	  h_csv[iChannel][iStep][iJet]->SetYTitle("Entries");
 	  h_csv[iChannel][iStep][iJet]->Sumw2();
+
+	  h_deepjet[iChannel][iStep][iJet] = new TH1D(
+	      Form("h_%s_%d_Ch%d_S%d%s",RECO_CSV_,iJet,iChannel,iStep,_process),"",
+	      nbins_deepjet,
+	      deepjet_min,deepjet_max
+	      );
+	  h_deepjet[iChannel][iStep][iJet]->SetXTitle("b discriminator");
+	  h_deepjet[iChannel][iStep][iJet]->SetYTitle("Entries");
+	  h_deepjet[iChannel][iStep][iJet]->Sumw2();
 	}
 
 	h_trans_mass[iChannel][iStep] = new TH1D(

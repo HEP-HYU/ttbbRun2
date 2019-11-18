@@ -3,6 +3,7 @@ import sys
 
 def getSampleList(save_path):
     base_path = '/data/users/seohyun/ntuple/'
+#    base_path = '/data/users/sarakm0704/ntuple/ttbb/'
 
     f_list16 = open(save_path+'/sample16.txt', 'w')
     path16 = base_path + 'Run2016/v808/nosplit'
@@ -32,7 +33,7 @@ def getSampleList(save_path):
     f_list17.close()
 
     f_list18 = open(save_path+'/sample18.txt', 'w')
-    path18 = base_path + 'Run2018/V10_2/nosplit'
+    path18 = '/data/users/sarakm0704/ntuple/sync/2018/V10_2_sync/merged/' #for synchronization with UZH
     f_list18.write(path18+'\n')
 
     for item in os.listdir(path18):

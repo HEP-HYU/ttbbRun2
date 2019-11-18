@@ -14,6 +14,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
   std::cout << "Start SlaveBegin" << std::endl;
   option = GetOption();
   process = option.Data();
+  cout << "what's the process: " << process << endl;
 
 /*
  * Systematics 
@@ -122,7 +123,6 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     jet_E         = {fReader, "jet_E"};
     jet_CSV       = {fReader, "jet_CSV"};
     jet_SF_CSV_30 = {fReader, "jet_SF_CSV_30"};
-
     if( process.Contains("ttbb") ){
       addbjet1_pt    = {fReader, "addbjet1_pt"};
       addbjet1_eta   = {fReader, "addbjet1_eta"};
@@ -150,7 +150,8 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     jet_E         = {fReader, "jet_e"};
     jet_CSV       = {fReader, "jet_deepCSV"};
     jet_SF_CSV_30 = {fReader, "jet_SF_deepCSV_30"};
-    
+    jet_deepJet   = {fReader, "jet_deepJet"}; 
+    jet_SF_deepJet_30   = {fReader, "jet_SF_deepJet_30"}; 
     if( process.Contains("ttbb") ){
       addbjet1_pt    = {fReader, "addbjet1_pt"};
       addbjet1_eta   = {fReader, "addbjet1_eta"};
@@ -178,12 +179,13 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       JET_CSV_TIGHT_ = 0.8001;
       prefireweight = {fReader, "prefireweight"};
     }
-    if( process.Contains("2018") ){
-      MUON_ETA_      = 2.4;
-      ELECTRON_PT_   = 30.0;
-      ELECTRON_ETA_  = 2.4;
-      JET_CSV_TIGHT_ = 0.7527;
-    }
+//to check the process
+//    if( process.Contains("2018") ){
+//      MUON_ETA_      = 2.4;
+//      ELECTRON_PT_   = 30.0;
+//      ELECTRON_ETA_  = 2.1;
+//      JET_CSV_TIGHT_ = 0.7527;
+//    }
   }
 
   std::cout << "Make HistoBook" << std::endl;
@@ -248,9 +250,6 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   //const double relIso = *lepton_relIso;
   
   //Object selection
-  int njets = 0;
-  int nbjets = 0;
-
   TLorentzVector p4met;
   const double met = *MET;
   const double met_phi = *MET_phi;
@@ -268,12 +267,17 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
   //Object selection
   const bool passmuon = (mode == MUON_) && (lepton.Pt() > MUON_PT_) && (abs(lepton.Eta()) < MUON_ETA_);
-  const bool passelectron = (mode == ELECTRON_) && (lepton.Pt() > ELECTRON_PT_) && (abs(lepton.Eta()) < ELECTRON_ETA_);
+//  const bool passelectron = (mode == ELECTRON_) && (lepton.Pt() > ELECTRON_PT_) && (abs(lepton.Eta()) < ELECTRON_ETA);
+  const bool passelectron = (mode == ELECTRON_) 
+                         && ( (abs(lepton.Eta()) < 2.1 && lepton.Pt() > 30) || (abs(lepton.Eta()) > 2.1 && abs(lepton.Eta()) < 2.4 && lepton.Pt() > 34));
   if ( !passmuon and !passelectron ) return kTRUE;
 
     std::string syst_ext = v_syst[0];
-    
+
+    int njets = 0;
+    int nbjets = 0;    
     double jet_pt_sum = 0.0;
+
     multimap<float /*jet_Pt*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets;
     vector<TLorentzVector /*jet_4-momentum*/> v_reco_bjets;
     for (unsigned int iJet = 0; iJet < jet_pT.GetSize() ; ++iJet) {
@@ -297,13 +301,15 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
       jet_pt_sum += jet.Pt();
       ++njets;
-      if( jet_CSV[iJet] > JET_CSV_TIGHT_ ){
+//      if( jet_CSV[iJet] > JET_CSV_TIGHT_ ){
+      if( jet_deepJet[iJet] > DEEP_JET_MEDIUM_ ){ //for synchronization with ETH
 	++nbjets;
 	v_reco_bjets.push_back(jet);
       }
     }
 
     double a_jetCSV[6] = {-999,-999,-999,-999,-999,-999};
+    double a_deepjet[6] = {-999,-999,-999,-999,-999,-999};
     double a_jetPt[6] = {-999,-999,-999,-999,-999,-999};
     double a_jetEta[6] = {-999,-999,-999,-999,-999,-999};
     int tmp_idx = 0;
@@ -517,7 +523,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
    
     for(int iCut=0; iCut <= passcut; ++iCut){
       h_control[iSys]->h_lepton_pt[passchannel][iCut] ->Fill(lepton.Pt(),                  EventWeight);
-      h_control[iSys]->h_lepton_eta[passchannel][iCut]->Fill(abs(lepton.Eta()),            EventWeight);
+      h_control[iSys]->h_lepton_eta[passchannel][iCut]->Fill(lepton.Eta(),            EventWeight);
       h_control[iSys]->h_njets[passchannel][iCut]     ->Fill(njets,                        EventWeight);
       h_control[iSys]->h_nbjets[passchannel][iCut]    ->Fill(nbjets,                       EventWeight);
       h_control[iSys]->h_trans_mass[passchannel][iCut]->Fill(transverseMass(lepton,p4met), EventWeight);
@@ -526,6 +532,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 	h_control[iSys]->h_jet_pt[passchannel][iCut][iJet] ->Fill(a_jetPt[iJet],  EventWeight);
 	h_control[iSys]->h_jet_eta[passchannel][iCut][iJet]->Fill(a_jetEta[iJet], EventWeight);
 	h_control[iSys]->h_csv[passchannel][iCut][iJet]    ->Fill(a_jetCSV[iJet], EventWeight);
+	h_control[iSys]->h_deepjet[passchannel][iCut][iJet]    ->Fill(a_deepjet[iJet], EventWeight);
       }
       if( process.Contains("2016") || !process.Contains("Test") ){
 	h_control[iSys]->h_reco_addbjets_deltaR[passchannel][iCut]  ->Fill(reco_addbjet_deltaR,   EventWeight);
@@ -573,7 +580,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     if(passlepton){
       for(int iCut=0; iCut <= passcut; ++iCut){
 	h_control[iSys]->h_lepton_pt[2][iCut] ->Fill(lepton.Pt(),                  EventWeight);
-	h_control[iSys]->h_lepton_eta[2][iCut]->Fill(abs(lepton.Eta()),            EventWeight);
+	h_control[iSys]->h_lepton_eta[2][iCut]->Fill(lepton.Eta(),            EventWeight);
 	h_control[iSys]->h_njets[2][iCut]     ->Fill(njets,                        EventWeight);
 	h_control[iSys]->h_nbjets[2][iCut]    ->Fill(nbjets,                       EventWeight);
 	h_control[iSys]->h_trans_mass[2][iCut]->Fill(transverseMass(lepton,p4met), EventWeight);
@@ -582,6 +589,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 	  h_control[iSys]->h_jet_pt[2][iCut][iJet] ->Fill(a_jetPt[iJet],  EventWeight);
 	  h_control[iSys]->h_jet_eta[2][iCut][iJet]->Fill(a_jetEta[iJet], EventWeight);
 	  h_control[iSys]->h_csv[2][iCut][iJet]    ->Fill(a_jetCSV[iJet], EventWeight);
+	  h_control[iSys]->h_deepjet[2][iCut][iJet]->Fill(a_deepjet[iJet], EventWeight);
 	}
 	
 	if( process.Contains("2016") || !process.Contains("Test") ){
@@ -634,218 +642,6 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 void MyAnalysis::SlaveTerminate(){
   std::cout << "SlaveTerminate" << std::endl;
   option = GetOption();
- 
-  for(int iSys = 0; iSys < v_syst.size(); ++iSys){
-    for(int iChannel=0; iChannel < nChannel; ++iChannel){
-      for(int iStep=0; iStep < nStep; ++iStep){
-	h_control[iSys]->h_lepton_pt[iChannel][iStep]->AddBinContent(
-	    nbins_lep_pt, h_control[iSys]->h_lepton_pt[iChannel][iStep]->GetBinContent(nbins_lep_pt+1));
-	h_control[iSys]->h_lepton_pt[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_control[iSys]->h_lepton_eta[iChannel][iStep]->AddBinContent(
-	    nbins_lep_eta, h_control[iSys]->h_lepton_pt[iChannel][iStep]->GetBinContent(nbins_lep_eta+1));
-	h_control[iSys]->h_lepton_eta[iChannel][iStep]->ClearUnderflowAndOverflow();
-	
-	h_control[iSys]->h_njets[iChannel][iStep]->AddBinContent(
-	    nbins_njets, h_control[iSys]->h_njets[iChannel][iStep]->GetBinContent(nbins_njets+1));      
-	h_control[iSys]->h_njets[iChannel][iStep]->ClearUnderflowAndOverflow();
-	
-	h_control[iSys]->h_nbjets[iChannel][iStep]->AddBinContent(
-	    nbins_nbjets, h_control[iSys]->h_nbjets[iChannel][iStep]->GetBinContent(nbins_nbjets+1));
-	h_control[iSys]->h_nbjets[iChannel][iStep]->ClearUnderflowAndOverflow();
-	
-	h_control[iSys]->h_jet_pt_sum[iChannel][iStep]->AddBinContent(
-	    nbins_jet_pt, h_control[iSys]->h_jet_pt_sum[iChannel][iStep]->GetBinContent(nbins_jet_pt+1));
-	h_control[iSys]->h_jet_pt_sum[iChannel][iStep]->ClearUnderflowAndOverflow();
-      
-	h_control[iSys]->h_trans_mass[iChannel][iStep]->AddBinContent(
-	    nbins_wmass, h_control[iSys]->h_trans_mass[iChannel][iStep]->GetBinContent(nbins_wmass+1));
-	h_control[iSys]->h_trans_mass[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int iJet=0; iJet<nJet; ++iJet){
-	  h_control[iSys]->h_jet_pt[iChannel][iStep][iJet]->AddBinContent(
-	      nbins_jet_pt, h_control[iSys]->h_jet_pt[iChannel][iStep][iJet]->GetBinContent(nbins_jet_pt+1));
-	  h_control[iSys]->h_jet_pt[iChannel][iStep][iJet]->ClearUnderflowAndOverflow();
-
-	  h_control[iSys]->h_jet_eta[iChannel][iStep][iJet]->AddBinContent(
-	      nbins_jet_eta, h_control[iSys]->h_jet_eta[iChannel][iStep][iJet]->GetBinContent(nbins_jet_eta+1));
-	  h_control[iSys]->h_jet_eta[iChannel][iStep][iJet]->ClearUnderflowAndOverflow();
-
-	  h_control[iSys]->h_csv[iChannel][iStep][iJet]->AddBinContent(
-	      nbins_csv, h_control[iSys]->h_csv[iChannel][iStep][iJet]->GetBinContent(nbins_csv+1));
-	  h_control[iSys]->h_csv[iChannel][iStep][iJet]->ClearUnderflowAndOverflow();
-	}//jet
-	 
-	h_control[iSys]->h_reco_addbjets_deltaR[iChannel][iStep]->AddBinContent(
-	    nbins_reco_addbjets_dR, h_control[iSys]->h_reco_addbjets_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR+1));
-	h_control[iSys]->h_reco_addbjets_deltaR[iChannel][iStep]->ClearUnderflowAndOverflow();
-	
-	h_control[iSys]->h_reco_addbjets_invMass[iChannel][iStep]->AddBinContent(
-	    nbins_reco_addbjets_M, h_control[iSys]->h_reco_addbjets_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M+1));
-	h_control[iSys]->h_reco_addbjets_invMass[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_control[iSys]->h_reco_addbjets_deltaEta[iChannel][iStep]->AddBinContent(
-	    nbins_reco_addbjets_dEta, h_control[iSys]->h_reco_addbjets_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta+1));
-	h_control[iSys]->h_reco_addbjets_deltaEta[iChannel][iStep]->ClearUnderflowAndOverflow();
-	
-	h_control[iSys]->h_reco_addbjets_deltaPhi[iChannel][iStep]->AddBinContent(
-	    nbins_reco_addbjets_dPhi, h_control[iSys]->h_reco_addbjets_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi+1));
-	h_control[iSys]->h_reco_addbjets_deltaPhi[iChannel][iStep]->ClearUnderflowAndOverflow();
-	 
-	h_matrix[iSys]->h_gen_gentop_deltaR[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_dR, h_matrix[iSys]->h_gen_gentop_deltaR[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_dR+1));
-	h_matrix[iSys]->h_gen_gentop_deltaR[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_matrix[iSys]->h_gen_gentop_invMass[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_M, h_matrix[iSys]->h_gen_gentop_invMass[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_M+1));
-	h_matrix[iSys]->h_gen_gentop_invMass[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_matrix[iSys]->h_gen_gentop_deltaEta[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_dEta, h_matrix[iSys]->h_gen_gentop_deltaEta[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_dEta+1));
-	h_matrix[iSys]->h_gen_gentop_deltaEta[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_matrix[iSys]->h_gen_gentop_deltaPhi[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_dPhi, h_matrix[iSys]->h_gen_gentop_deltaPhi[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_dPhi+1));
-	h_matrix[iSys]->h_gen_gentop_deltaPhi[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_matrix[iSys]->h_gen_mindR_deltaR[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_dR, h_matrix[iSys]->h_gen_mindR_deltaR[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_dR+1));
-	h_matrix[iSys]->h_gen_mindR_deltaR[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_matrix[iSys]->h_gen_mindR_invMass[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_M, h_matrix[iSys]->h_gen_mindR_invMass[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_M+1));
-	h_matrix[iSys]->h_gen_mindR_invMass[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_matrix[iSys]->h_gen_mindR_deltaEta[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_dEta, h_matrix[iSys]->h_gen_mindR_deltaEta[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_dEta+1));
-	h_matrix[iSys]->h_gen_mindR_deltaEta[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	h_matrix[iSys]->h_gen_mindR_deltaPhi[iChannel][iStep]->AddBinContent(
-	    nbins_gen_addbjets_dPhi, h_matrix[iSys]->h_gen_mindR_deltaPhi[iChannel][iStep]->GetBinContent(nbins_gen_addbjets_dPhi+1));
-	h_matrix[iSys]->h_gen_mindR_deltaPhi[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_dR; ++ixaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dR)
-		   + h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dR+1);
-	  h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_dR, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_dR; ++iyaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR,   iyaxis)
-		   + h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dR, iyaxis, tmp);
-	}
-	double tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR,   nbins_gen_addbjets_dR)
-		   + h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR+1, nbins_gen_addbjets_dR+1);
-	h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dR, nbins_gen_addbjets_dR, tmp);
-	h_matrix[iSys]->h_respMatrix_gentop_deltaR[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_M; ++ixaxis){
-	  tmp = h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_M)
-	      + h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_M+1);
-	  h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_M, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_M; ++iyaxis){
-	  tmp = h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M,   iyaxis)
-	      + h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_M, iyaxis, tmp);
-	}
-	tmp = h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M,   nbins_gen_addbjets_M)
-	    + h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M+1, nbins_gen_addbjets_M+1);
-	h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_M, nbins_gen_addbjets_M, tmp);
-	h_matrix[iSys]->h_respMatrix_gentop_invMass[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_dEta; ++ixaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dEta)
-		   + h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dEta+1);
-	  h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_dEta, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_dEta; ++iyaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta,   iyaxis)
-		   + h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dEta, iyaxis, tmp);
-	}
-	tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta,   nbins_gen_addbjets_dEta)
-	    + h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta+1, nbins_gen_addbjets_dEta+1);
-	h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dEta, nbins_gen_addbjets_dEta, tmp);
-	h_matrix[iSys]->h_respMatrix_gentop_deltaEta[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_dPhi; ++ixaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dPhi)
-		   + h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dPhi+1);
-	  h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_dPhi, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_dPhi; ++iyaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi,   iyaxis)
-		   + h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dPhi, iyaxis, tmp);
-	}
-	tmp = h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi,   nbins_gen_addbjets_dPhi)
-	    + h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi+1, nbins_gen_addbjets_dPhi+1);
-	h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dPhi, nbins_gen_addbjets_dPhi, tmp);
-	h_matrix[iSys]->h_respMatrix_gentop_deltaPhi[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_dR; ++ixaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dR)
-		   + h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dR+1);
-	  h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_dR, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_dR; ++iyaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR,   iyaxis)
-		   + h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dR, iyaxis, tmp);
-	}
-	tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR,   nbins_gen_addbjets_dR)
-	    + h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dR+1, nbins_gen_addbjets_dR+1);
-	h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dR, nbins_gen_addbjets_dR, tmp);
-	h_matrix[iSys]->h_respMatrix_mindR_deltaR[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_M; ++ixaxis){
-	  tmp = h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_M)
-	      + h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_M+1);
-	  h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_M, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_M; ++iyaxis){
-	  tmp = h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M,   iyaxis)
-	      + h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_M, iyaxis, tmp);
-	}
-	tmp = h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M,   nbins_gen_addbjets_M)
-	    + h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_M+1, nbins_gen_addbjets_M+1);
-	h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_M, nbins_gen_addbjets_M, tmp);
-	h_matrix[iSys]->h_respMatrix_mindR_invMass[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_dEta; ++ixaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dEta)
-		   + h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dEta+1);
-	  h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_dEta, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_dEta; ++iyaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta,   iyaxis)
-		   + h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dEta, iyaxis, tmp);
-	}
-	tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta,   nbins_gen_addbjets_dEta)
-	    + h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dEta+1, nbins_gen_addbjets_dEta+1);
-	h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dEta, nbins_gen_addbjets_dEta, tmp);
-	h_matrix[iSys]->h_respMatrix_mindR_deltaEta[iChannel][iStep]->ClearUnderflowAndOverflow();
-
-	for(int ixaxis=1; ixaxis <= nbins_reco_addbjets_dPhi; ++ixaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dPhi)
-		   + h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->GetBinContent(ixaxis, nbins_gen_addbjets_dPhi+1);
-	  h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->SetBinContent(ixaxis, nbins_gen_addbjets_dPhi, tmp);
-	}
-	for(int iyaxis=1; iyaxis <= nbins_gen_addbjets_dPhi; ++iyaxis){
-	  auto tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi,   iyaxis)
-		   + h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi+1, iyaxis);
-	  h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dPhi, iyaxis, tmp);
-	}
-	tmp = h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi,   nbins_gen_addbjets_dPhi)
-	    + h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->GetBinContent(nbins_reco_addbjets_dPhi+1, nbins_gen_addbjets_dPhi+1);
-	h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->SetBinContent(nbins_reco_addbjets_dPhi, nbins_gen_addbjets_dPhi, tmp);
-	h_matrix[iSys]->h_respMatrix_mindR_deltaPhi[iChannel][iStep]->ClearUnderflowAndOverflow();
-      }//step
-    }//channel
-  }//sys
 }
 
 void MyAnalysis::Terminate(){
