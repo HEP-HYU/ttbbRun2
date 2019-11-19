@@ -73,12 +73,14 @@ for year in range(16,19):
             line = f.readline()
             if not line: break
             if n == 1:
-            inputDir = line[:-1]
+                inputDir = line[:-1]
             else:
-            samples.append(line[:-1])
+                samples.append(line[:-1])
             n += 1
     
     if test:
+	    #runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb")
+	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
 	    #runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
     else:
         runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
@@ -88,17 +90,17 @@ for year in range(16,19):
 	        runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb")
         else: 
 	        runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
-	        for sample in samples:
-	            runAna(inputDir, str(sample)+".root", str(sample))
-	            if not "QCD" in sample:
-	                runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
-	                runAna(inputDir, str(sample)+".root", str(sample)+"__jerdown")
-	                runAna(inputDir, str(sample)+".root", str(sample)+"__jecup")
-	                runAna(inputDir, str(sample)+".root", str(sample)+"__jecdown")
+	    for sample in samples:
+	        runAna(inputDir, str(sample)+".root", str(sample))
+	        if not "QCD" in sample:
+	            runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
+	            runAna(inputDir, str(sample)+".root", str(sample)+"__jerdown")
+	            runAna(inputDir, str(sample)+".root", str(sample)+"__jecup")
+	            runAna(inputDir, str(sample)+".root", str(sample)+"__jecdown")
 
 	    # hdamp, Tune
-	    if not year == 16:
-	        tmp_dic = {"TuneCP5Up":"tuneup", "TuneCP5Down":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
+        if not year == 16:
+            tmp_dic = {"TuneCP5Up":"tuneup", "TuneCP5Down":"tunedown", "hdampUp":"hdampup", "hdampDown":"hdampdown"}
             for key, value in tmp_dic.items():
                 runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbb.root", "TTLJ_PowhegPythia_ttbb__"+value)
                 runAna(inputDir, "TTLJ_PowhegPythia_SYS_"+key+"_ttbj.root", "TTLJ_PowhegPythia_ttbj__"+value)
@@ -151,14 +153,15 @@ for year in range(16,19):
             runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
             runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
 
+    p.Close()
+
     outdir = 'output/root'+str(year)
     if os.path.exists(outdir): 
         os.system('mv -r '+outdir+' '+outdir+'_backup')
         os.system('rm -rf '+outdir)
     os.system('mv output/root '+outdir)
     
-    p.Close()
-    if args.syst: post.runPostProcess(os.getcwd(), samples, year)
+#    if args.syst: post.runPostProcess(os.getcwd(), samples, year)
 
 #    os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
 #    os.system('hadd hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/hist_gen.root')
