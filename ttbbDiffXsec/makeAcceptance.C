@@ -1,10 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
 
-#include "../include/histBook.h"
-#include "../include/tdrstyle.C"
-
-const char *genMode = "mindR";
+#include "ttbbDiffXsec.h"
 
 HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst);
 void DrawHist(std::string year, TH1 *h_in, bool drawError = false);
@@ -14,22 +12,42 @@ void makeAcceptance(std::string year, std::string ttbb, bool runSystematics){
   TFile *f_in = TFile::Open(Form("%s/hist_%s.root", input_dir.c_str(), ttbb.c_str()));
   TFile *f_out = TFile::Open(Form("%s/hist_accept_%s.root", input_dir.c_str(), genMode),"recreate");
 
-  std::vector<std::string> v_syst_list = {"",
-    "__jerup", "__jerdown", "__jecup", "__jecdown",
-  "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
-  "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
-  "__lfup", "__lfdown", "__hfup", "__hfdown",
-  "__hfstat1up","__hfstat1down", "__hfstat2up", "__hfstat2down",
-  "__lfstat1up","__lfstat1down", "__lfstat2up", "__lfstat2down",
-  "__cferr1up", "__cferr1down",  "__cferr2up",  "__cferr2down",
-  "__puup", "__pudown",
-    "__psup", "__psdown", "__swup", "__swdown",
-  "__hdampup", "__hdampdown", "__tuneup", "__tunedown"
-};
-
+  std::vector<std::string> v_syst_list = syst_total;
+  std::vector<std::string> v_syst_lep;
+  if( year == "16" ){
+    v_syst_lep = {
+      "__musfup", "__musfdown", "__elsfup", "__elsfdown"
+    };
+  }
+  else{
+    v_syst_lep = {
+    "__muidup",   "__muiddown", "__muisoup",  "__muisodown",
+    "__elidup",   "__eliddown", "__elrecoup", "__elrecodown",
+    "__elzvtxup", "__elzvtxdown",
+    };
+  }
+  
+  auto h_tmp = MakeHist(genMode, f_in, "");
+  
   f_out->cd();
+  for(int ich=0; ich<nChannel; ++ich){
+    h_tmp->h_stability_deltaR[ich]->Write();
+    h_tmp->h_stability_invMass[ich]->Write();
+    h_tmp->h_purity_deltaR[ich]->Write();
+    h_tmp->h_purity_invMass[ich]->Write();
+    h_tmp->h_acceptance_deltaR[ich]->Write();
+    h_tmp->h_acceptance_invMass[ich]->Write();
+
+    DrawHist(year, h_tmp->h_stability_deltaR[ich]);
+    DrawHist(year, h_tmp->h_stability_invMass[ich]);
+    DrawHist(year, h_tmp->h_purity_deltaR[ich]);
+    DrawHist(year, h_tmp->h_purity_invMass[ich]);
+    DrawHist(year, h_tmp->h_acceptance_deltaR[ich], true);
+    DrawHist(year, h_tmp->h_acceptance_invMass[ich], true);
+  }
+  h_tmp->~HistoBook();
+
   for(auto v_itr = v_syst_list.begin(); v_itr != v_syst_list.end(); ++v_itr){
-    if(!(runSystematics || *v_itr == "")) continue;
     std::cout << "systematics:" << *v_itr << std::endl;
     auto h_tmp = MakeHist(genMode, f_in, *v_itr);
     
@@ -40,15 +58,21 @@ void makeAcceptance(std::string year, std::string ttbb, bool runSystematics){
       h_tmp->h_purity_invMass[ich]->Write();
       h_tmp->h_acceptance_deltaR[ich]->Write();
       h_tmp->h_acceptance_invMass[ich]->Write();
+    }
+    h_tmp->~HistoBook();
+  }
 
-      if(*v_itr == ""){
-        DrawHist(year, h_tmp->h_stability_deltaR[ich]);
-        DrawHist(year, h_tmp->h_stability_invMass[ich]);
-        DrawHist(year, h_tmp->h_purity_deltaR[ich]);
-        DrawHist(year, h_tmp->h_purity_invMass[ich]);
-        DrawHist(year, h_tmp->h_acceptance_deltaR[ich], true);
-        DrawHist(year, h_tmp->h_acceptance_invMass[ich], true);
-      }
+  for(auto v_itr = v_syst_lep.begin(); v_itr != v_syst_lep.end(); ++v_itr){
+    std::cout << "systematics:" << *v_itr << std::endl;
+    auto h_tmp = MakeHist(genMode, f_in, *v_itr);
+    
+    for(int ich=0; ich<nChannel; ++ich){
+      h_tmp->h_stability_deltaR[ich]->Write();
+      h_tmp->h_stability_invMass[ich]->Write();
+      h_tmp->h_purity_deltaR[ich]->Write();
+      h_tmp->h_purity_invMass[ich]->Write();
+      h_tmp->h_acceptance_deltaR[ich]->Write();
+      h_tmp->h_acceptance_invMass[ich]->Write();
     }
     h_tmp->~HistoBook();
   }
@@ -57,7 +81,7 @@ void makeAcceptance(std::string year, std::string ttbb, bool runSystematics){
 }
 
 HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
-  std::ofstream fout(Form("BinCriteria_%s.txt", syst.c_str()));
+  std::ofstream fout(Form("BinCriteria%s.txt", syst.c_str()));
   fout << "Systematic sample: " << syst << std::endl;
   //NORMALIZATION
   //double xsec = 0.0;
@@ -109,15 +133,15 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "------" << ibin << "th Bin ------" << std::endl;
       double purity_dR = 0.0;
       if(h_reco_deltaR[ich]->GetBinContent(ibin) != 0.0){
-	auto xlow = h_matrix_deltaR[ich]->GetXaxis()->GetBinLowEdge(ibin);
-	auto ybin = h_matrix_deltaR[ich]->GetYaxis()->FindBin(xlow);
-	purity_dR = h_matrix_deltaR[ich]->GetBinContent(ibin,ybin)/h_reco_deltaR[ich]->GetBinContent(ibin);
-	 
-	fout << "x low : " << xlow << std::endl;
-	fout << "y bin number : " << ybin << std::endl;
-	fout << "xBinContent : " << h_reco_deltaR[ich]->GetBinContent(ibin) << std::endl;
-	fout << "yBinContent : " << h_matrix_deltaR[ich]->GetBinContent(ibin,ybin) << std::endl;
-	fout << "value : " << purity_dR << std::endl;
+        auto xlow = h_matrix_deltaR[ich]->GetXaxis()->GetBinLowEdge(ibin);
+        auto ybin = h_matrix_deltaR[ich]->GetYaxis()->FindBin(xlow);
+        purity_dR = h_matrix_deltaR[ich]->GetBinContent(ibin,ybin)/h_reco_deltaR[ich]->GetBinContent(ibin);
+         
+        fout << "x low : " << xlow << std::endl;
+        fout << "y bin number : " << ybin << std::endl;
+        fout << "xBinContent : " << h_reco_deltaR[ich]->GetBinContent(ibin) << std::endl;
+        fout << "yBinContent : " << h_matrix_deltaR[ich]->GetBinContent(ibin,ybin) << std::endl;
+        fout << "value : " << purity_dR << std::endl;
       }
       h_stb->h_purity_deltaR[ich]->SetBinContent(ibin, purity_dR);
       fout << "----------------------------------------" << std::endl;
@@ -130,15 +154,15 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "------" << ibin << "th Bin ------" << std::endl;
       double purity_M = 0.0;
       if(h_reco_invMass[ich]->GetBinContent(ibin) != 0.0){
-	auto xlow = h_matrix_invMass[ich]->GetXaxis()->GetBinLowEdge(ibin);
-	auto ybin = h_matrix_invMass[ich]->GetYaxis()->FindBin(xlow);
-	purity_M = h_matrix_invMass[ich]->GetBinContent(ibin,ybin)/h_reco_invMass[ich]->GetBinContent(ibin);
-	 
-	fout << "x low : " << xlow << std::endl;
-	fout << "y bin number : " << ybin << std::endl;
-	fout << "xBinContent : " << h_reco_invMass[ich]->GetBinContent(ibin) << std::endl;
-	fout << "yBinContent : " << h_matrix_invMass[ich]->GetBinContent(ibin,ybin) << std::endl;
-	fout << "value : " << purity_M << std::endl;
+        auto xlow = h_matrix_invMass[ich]->GetXaxis()->GetBinLowEdge(ibin);
+        auto ybin = h_matrix_invMass[ich]->GetYaxis()->FindBin(xlow);
+        purity_M = h_matrix_invMass[ich]->GetBinContent(ibin,ybin)/h_reco_invMass[ich]->GetBinContent(ibin);
+         
+        fout << "x low : " << xlow << std::endl;
+        fout << "y bin number : " << ybin << std::endl;
+        fout << "xBinContent : " << h_reco_invMass[ich]->GetBinContent(ibin) << std::endl;
+        fout << "yBinContent : " << h_matrix_invMass[ich]->GetBinContent(ibin,ybin) << std::endl;
+        fout << "value : " << purity_M << std::endl;
       }
       h_stb->h_purity_invMass[ich]->SetBinContent(ibin, purity_M);
       fout << "----------------------------------------" << std::endl;
@@ -151,20 +175,20 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "------" << ibin << "th Bin ------" << std::endl;
       double stability_dR = 0.0;
       if(h_gen_deltaR[ich]->GetBinContent(ibin) != 0.0){
-	auto ylow = h_matrix_deltaR[ich]->GetYaxis()->GetBinLowEdge(ibin);
-	auto ymax = h_matrix_deltaR[ich]->GetYaxis()->GetBinLowEdge(ibin+1);
-	auto xlow = h_matrix_deltaR[ich]->GetXaxis()->FindBin(ylow);
-	auto xmax = h_matrix_deltaR[ich]->GetXaxis()->FindBin(ymax);
-	if(xlow == xmax && xmax == h_matrix_deltaR[ich]->GetNbinsX()) ++xmax;
-	double xbincontent = 0.;
-	for(int ixbin = xlow; ixbin < xmax; ++ixbin)
-	  xbincontent += h_matrix_deltaR[ich]->GetBinContent(ixbin,ibin);
-	stability_dR = xbincontent/h_gen_deltaR[ich]->GetBinContent(ibin);
-	fout << "y low : " << ylow << ", max : " << ymax << std::endl;
-	fout << "x low : " << xlow << ", max : " << xmax << std::endl;
-	fout << "xBinContent : " << xbincontent << std::endl;
-	fout << "yBinContent : " << h_gen_deltaR[ich]->GetBinContent(ibin) << std::endl;
-	fout << "value :" << stability_dR << std::endl;
+        auto ylow = h_matrix_deltaR[ich]->GetYaxis()->GetBinLowEdge(ibin);
+        auto ymax = h_matrix_deltaR[ich]->GetYaxis()->GetBinLowEdge(ibin+1);
+        auto xlow = h_matrix_deltaR[ich]->GetXaxis()->FindBin(ylow);
+        auto xmax = h_matrix_deltaR[ich]->GetXaxis()->FindBin(ymax);
+        if(xlow == xmax && xmax == h_matrix_deltaR[ich]->GetNbinsX()) ++xmax;
+        double xbincontent = 0.;
+        for(int ixbin = xlow; ixbin < xmax; ++ixbin)
+          xbincontent += h_matrix_deltaR[ich]->GetBinContent(ixbin,ibin);
+        stability_dR = xbincontent/h_gen_deltaR[ich]->GetBinContent(ibin);
+        fout << "y low : " << ylow << ", max : " << ymax << std::endl;
+        fout << "x low : " << xlow << ", max : " << xmax << std::endl;
+        fout << "xBinContent : " << xbincontent << std::endl;
+        fout << "yBinContent : " << h_gen_deltaR[ich]->GetBinContent(ibin) << std::endl;
+        fout << "value :" << stability_dR << std::endl;
       }
       h_stb->h_stability_deltaR[ich]->SetBinContent(ibin, stability_dR);
       fout << "----------------------------------------" << std::endl;
@@ -176,20 +200,20 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       fout << "------" << ibin << "th Bin ------" << std::endl;
       double stability_M = 0.0;
       if(h_gen_invMass[ich]->GetBinContent(ibin) != 0.0){
-	auto ylow = h_matrix_invMass[ich]->GetYaxis()->GetBinLowEdge(ibin);
-	auto ymax = h_matrix_invMass[ich]->GetYaxis()->GetBinLowEdge(ibin+1);
-	auto xlow = h_matrix_invMass[ich]->GetXaxis()->FindBin(ylow);
-	auto xmax = h_matrix_invMass[ich]->GetXaxis()->FindBin(ymax);
-	if(xlow == xmax && xmax == h_matrix_invMass[ich]->GetNbinsX()) ++xmax;
-	double xbincontent = 0.;
-	for(int ixbin = xlow; ixbin < xmax; ++ixbin)
-	  xbincontent += h_matrix_invMass[ich]->GetBinContent(ixbin,ibin);
-	stability_M = xbincontent/h_gen_invMass[ich]->GetBinContent(ibin);
-	fout << "y low : " << ylow << ", max : " << ymax << std::endl;
-	fout << "x low : " << xlow << ", max : " << xmax << std::endl;
-	fout << "xBinContent : " << xbincontent << std::endl;
-	fout << "yBinContent : " << h_gen_invMass[ich]->GetBinContent(ibin) << std::endl;
-	fout << "value :" << stability_M << std::endl;
+        auto ylow = h_matrix_invMass[ich]->GetYaxis()->GetBinLowEdge(ibin);
+        auto ymax = h_matrix_invMass[ich]->GetYaxis()->GetBinLowEdge(ibin+1);
+        auto xlow = h_matrix_invMass[ich]->GetXaxis()->FindBin(ylow);
+        auto xmax = h_matrix_invMass[ich]->GetXaxis()->FindBin(ymax);
+        if(xlow == xmax && xmax == h_matrix_invMass[ich]->GetNbinsX()) ++xmax;
+        double xbincontent = 0.;
+        for(int ixbin = xlow; ixbin < xmax; ++ixbin)
+          xbincontent += h_matrix_invMass[ich]->GetBinContent(ixbin,ibin);
+        stability_M = xbincontent/h_gen_invMass[ich]->GetBinContent(ibin);
+        fout << "y low : " << ylow << ", max : " << ymax << std::endl;
+        fout << "x low : " << xlow << ", max : " << xmax << std::endl;
+        fout << "xBinContent : " << xbincontent << std::endl;
+        fout << "yBinContent : " << h_gen_invMass[ich]->GetBinContent(ibin) << std::endl;
+        fout << "value :" << stability_M << std::endl;
       }
       h_stb->h_stability_invMass[ich]->SetBinContent(ibin, stability_M);
       fout << "----------------------------------------" << std::endl;
@@ -203,14 +227,14 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       double acceptance_dR = 0.0;
       double dR_err = 0.0;
       if( h_gen_deltaR_nosel[0]->GetBinContent(ibin) > 0.0 && h_gen_deltaR_nosel[1]->GetBinContent(ibin) > 0.0 ){
-	acceptance_dR = h_gen_deltaR[ich]->GetBinContent(ibin)
-	              / (h_gen_deltaR_nosel[0]->GetBinContent(ibin) + h_gen_deltaR_nosel[1]->GetBinContent(ibin));
-	if( h_gen_deltaR[ich]->GetBinContent(ibin) > 0.0 ){
-	  dR_err = abs(acceptance_dR)
-	         * sqrt(pow(h_gen_deltaR[ich]->GetBinError(ibin)/h_gen_deltaR[ich]->GetBinContent(ibin),2) 
-	              + pow(h_gen_deltaR_nosel[0]->GetBinError(ibin)/h_gen_deltaR_nosel[0]->GetBinContent(ibin),2)
-		      + pow(h_gen_deltaR_nosel[1]->GetBinError(ibin)/h_gen_deltaR_nosel[1]->GetBinContent(ibin),2));
-	}
+        acceptance_dR = h_gen_deltaR[ich]->GetBinContent(ibin)
+          / (h_gen_deltaR_nosel[0]->GetBinContent(ibin) + h_gen_deltaR_nosel[1]->GetBinContent(ibin));
+        if( h_gen_deltaR[ich]->GetBinContent(ibin) > 0.0 ){
+          dR_err = abs(acceptance_dR)
+             * sqrt(pow(h_gen_deltaR[ich]->GetBinError(ibin)/h_gen_deltaR[ich]->GetBinContent(ibin),2) 
+             + pow(h_gen_deltaR_nosel[0]->GetBinError(ibin)/h_gen_deltaR_nosel[0]->GetBinContent(ibin),2)
+             + pow(h_gen_deltaR_nosel[1]->GetBinError(ibin)/h_gen_deltaR_nosel[1]->GetBinContent(ibin),2));
+        }
       }
       h_stb->h_acceptance_deltaR[ich]->SetBinContent(ibin, acceptance_dR);
       h_stb->h_acceptance_deltaR[ich]->SetBinError(ibin, dR_err);
@@ -226,14 +250,14 @@ HistoBook *MakeHist(const char *genmode, TFile *f_in, std::string syst){
       double acceptance_M = 0.0;
       double M_err = 0.0;
       if( h_gen_invMass_nosel[0]->GetBinContent(ibin) > 0.0 && h_gen_invMass_nosel[1]->GetBinContent(ibin) > 0.0 ){
-	acceptance_M = h_gen_invMass[ich]->GetBinContent(ibin)
-	              / (h_gen_invMass_nosel[0]->GetBinContent(ibin) + h_gen_invMass_nosel[1]->GetBinContent(ibin));
-	if( h_gen_invMass[ich]->GetBinContent(ibin) > 0.0 ){
-	  M_err = abs(acceptance_M)
-	         * sqrt(pow(h_gen_invMass[ich]->GetBinError(ibin)/h_gen_invMass[ich]->GetBinContent(ibin),2) 
-	              + pow(h_gen_invMass_nosel[0]->GetBinError(ibin)/h_gen_invMass_nosel[0]->GetBinContent(ibin),2)
-		      + pow(h_gen_invMass_nosel[1]->GetBinError(ibin)/h_gen_invMass_nosel[1]->GetBinContent(ibin),2));
-	}
+	      acceptance_M = h_gen_invMass[ich]->GetBinContent(ibin)
+	        / (h_gen_invMass_nosel[0]->GetBinContent(ibin) + h_gen_invMass_nosel[1]->GetBinContent(ibin));
+	      if( h_gen_invMass[ich]->GetBinContent(ibin) > 0.0 ){
+	        M_err = abs(acceptance_M)
+	          * sqrt(pow(h_gen_invMass[ich]->GetBinError(ibin)/h_gen_invMass[ich]->GetBinContent(ibin),2) 
+	          + pow(h_gen_invMass_nosel[0]->GetBinError(ibin)/h_gen_invMass_nosel[0]->GetBinContent(ibin),2)
+		        + pow(h_gen_invMass_nosel[1]->GetBinError(ibin)/h_gen_invMass_nosel[1]->GetBinContent(ibin),2));
+        }
       }
       h_stb->h_acceptance_invMass[ich]->SetBinContent(ibin, acceptance_M);
       h_stb->h_acceptance_invMass[ich]->SetBinError(ibin, M_err);

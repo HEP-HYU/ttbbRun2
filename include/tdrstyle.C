@@ -56,7 +56,7 @@ void setTDRStyle() {
   // tdrStyle->SetErrorMarker(20);
   //tdrStyle->SetErrorX(0.);
   
-  tdrStyle->SetMarkerStyle(20);
+  tdrStyle->SetMarkerStyle(8);
   
 //For the fit/function:
   tdrStyle->SetOptFit(1);
@@ -152,13 +152,13 @@ void setTDRStyle() {
   // tdrStyle->SetTimeOffset(Double_t toffset);
   // tdrStyle->SetHistMinimumZero(kTRUE);
 
-  tdrStyle->SetHatchesLineWidth(5);
-  tdrStyle->SetHatchesSpacing(0.05);
+  //tdrStyle->SetHatchesLineWidth(5);
+  //tdrStyle->SetHatchesSpacing(0.05);
 
   tdrStyle->cd();
 }
 
-TPaveText * tdrCMSlabel(){
+TPaveText * tdrCMSlabel16(){
   TPaveText *label = new TPaveText();
   label->SetX1NDC(0.48);
   label->SetX2NDC(0.90);
@@ -166,6 +166,51 @@ TPaveText * tdrCMSlabel(){
   label->SetY2NDC(0.98);
   label->SetTextFont(42);
   label->AddText("CMS, 35.9 fb^{-1} at #sqrt{s} = 13TeV");
+  label->SetFillStyle(0);
+  label->SetBorderSize(0);
+  label->SetTextSize(0.04);
+
+  return label;
+}
+
+TPaveText * tdrCMSlabel17(){
+  TPaveText *label = new TPaveText();
+  label->SetX1NDC(0.48);
+  label->SetX2NDC(0.90);
+  label->SetY1NDC(0.94);
+  label->SetY2NDC(0.98);
+  label->SetTextFont(42);
+  label->AddText("CMS, 41.5 fb^{-1} at #sqrt{s} = 13TeV");
+  label->SetFillStyle(0);
+  label->SetBorderSize(0);
+  label->SetTextSize(0.04);
+
+  return label;
+}
+
+TPaveText * tdrCMSlabel18(){
+  TPaveText *label = new TPaveText();
+  label->SetX1NDC(0.48);
+  label->SetX2NDC(0.90);
+  label->SetY1NDC(0.94);
+  label->SetY2NDC(0.98);
+  label->SetTextFont(42);
+  label->AddText("CMS, 59.7 fb^{-1} at #sqrt{s} = 13TeV");
+  label->SetFillStyle(0);
+  label->SetBorderSize(0);
+  label->SetTextSize(0.04);
+
+  return label;
+}
+
+TPaveText * tdrCMSlabel1718(){
+  TPaveText *label = new TPaveText();
+  label->SetX1NDC(0.48);
+  label->SetX2NDC(0.90);
+  label->SetY1NDC(0.94);
+  label->SetY2NDC(0.98);
+  label->SetTextFont(42);
+  label->AddText("CMS, 101.2 fb^{-1} at #sqrt{s} = 13TeV");
   label->SetFillStyle(0);
   label->SetBorderSize(0);
   label->SetTextSize(0.04);

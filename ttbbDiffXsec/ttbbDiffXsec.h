@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <fstream>
 
@@ -13,19 +15,17 @@ string outdir = "../output/unfold/";
 
 //Unfolding options
 const char *genMode = "mindR";
-
-const bool   scanLcurve = true;
-
+const bool scanLcurve = true;
 const bool findBestK = false;
 const int reg_dR = 3, reg_M = 3, reg_dEta = 3, reg_dPhi = 3;
 
 std::map<std::string, int> m_lumi = {{"16",35922}, {"17",41529}, {"18",59693}};
 double bratio = 0.436572; // 2*3*0.1086*0.67
 
-std::vector<std::string> syst_list = {
+std::vector<std::string> syst_basic = {
   "__jerup", "__jerdown", "__jecup", "__jecdown",
-  "__musfup", "__musfdown", "__mutrgup", "__mutrgdown",
-  "__elsfup", "__elsfdown", "__eltrgup", "__eltrgdown",
+  "__mutrgup", "__mutrgdown",
+  "__eltrgup", "__eltrgdown",
   "__lfup", "__lfdown", "__hfup", "__hfdown",
   "__hfstat1up","__hfstat1down", "__hfstat2up", "__hfstat2down",
   "__lfstat1up","__lfstat1down", "__lfstat2up", "__lfstat2down",
@@ -34,25 +34,24 @@ std::vector<std::string> syst_list = {
 };
 
 std::vector<std::string> syst_ttbar = {
-  "__psup", "__psdown", "__swup", "__swdown",
-  "__hdampup", "__hdampdown", "__tuneup", "__tunedown"
+  "__swup", "__swdown", "__psup", "__psdown",
+  "__tuneup", "__tunedown", "__hdampup", "__hdampdown",
+  "__pdfup", "__pdfdown"
 };
 
-TGraphErrors *buildGraphFromHist(TH1* h){
-  TGraphErrors *grp = new TGraphErrors();
-
-  for ( int i=1; i<=h->GetNbinsX(); ++i ) {
-    const double w = h->GetXaxis()->GetBinWidth(i);
-    const double y = h->GetBinContent(i);
-    const double err = h->GetBinError(i);
-    grp->SetPoint(i-1, h->GetBinCenter(i), y);
-    //grp->SetPointError(i-1, w/2, err);
-    grp->SetPointError(i-1, 0, err);
-  }
-  grp->SetEditable(false);
-
-  return grp;
-}
+std::vector<std::string> syst_total = {
+  "__swup", "__swdown", "__psup", "__psdown",
+  "__tuneup", "__tunedown", "__hdampup", "__hdampdown",
+  "__pdfup", "__pdfdown",
+  "__jerup", "__jerdown", "__jecup", "__jecdown",
+  "__mutrgup", "__mutrgdown",
+  "__eltrgup", "__eltrgdown",
+  "__lfup", "__lfdown", "__hfup", "__hfdown",
+  "__hfstat1up","__hfstat1down", "__hfstat2up", "__hfstat2down",
+  "__lfstat1up","__lfstat1down", "__lfstat2up", "__lfstat2down",
+  "__cferr1up", "__cferr1down",  "__cferr2up",  "__cferr2down",
+  "__puup", "__pudown"
+};
 
 TH1 *calculateDiffXsec(std::string year, TH1 *h_in, TH1 *h_acceptance, bool gen = false){
   TH1 *h_out = (TH1 *)h_in->Clone(); 
@@ -77,8 +76,8 @@ TH1 *calculateDiffXsec(std::string year, TH1 *h_in, TH1 *h_acceptance, bool gen 
       diffXsec_err = h_in->GetBinError(ibin) 
                    / (h_acceptance->GetBinContent(ibin)*bin_width*m_lumi[year]*bratio);
       if(h_acceptance->GetBinContent(ibin) == 0.0){
-	diffXsec = 0.0;
-	diffXsec_err = 0.0;
+        diffXsec = 0.0;
+        diffXsec_err = 0.0;
       }
     }
 
@@ -97,4 +96,3 @@ TH1 *calculateDiffXsec(std::string year, TH1 *h_in, TH1 *h_acceptance, bool gen 
   h_out->SetName(Form("diffXsec_%s",h_out->GetName()));
   return h_out;
 }
-

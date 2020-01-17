@@ -3,6 +3,8 @@ import ROOT
 import os
 import sys
 
+from array import array
+
 def rescale(f_sys, h_eventinfo):
     hist_list = []
     hist_list = [x.GetName() for x in f_sys.GetListOfKeys()]
@@ -86,7 +88,7 @@ def runPostProcess(base_path, sample_list, year):
                 f_central.cd()
                 for hist in h_out:
                     if 'EventInfo' in hist.GetName() or 'Weights' in hist.GetName(): continue
-                        hist.Write()
+                    hist.Write()
         f_central.Close()
 
     print("Writing envelope...")
@@ -152,7 +154,7 @@ def runPostProcess(base_path, sample_list, year):
                     h_ps_list.append(f_ps.Get(hist+"__"+ps_list[index]))
             else:
                 for ps in ps_list:
-                h_ps_list.append(f_central.Get(hist+"__"+ps))
+                    h_ps_list.append(f_central.Get(hist+"__"+ps))
            
             h_sw_new = []
             h_sw_new = write_envelope("sw", filename, h_central, h_sw_list, h_eventinfo, h_scaleweights)
@@ -175,6 +177,7 @@ def runPostProcess(base_path, sample_list, year):
         f_central.Close()
      
     # Add JER, JEC
+    print("Merge JER, JEC histograms...")
     for proc in sample_list:
         if 'QCD' in proc: continue
         print("Process: "+proc)
@@ -197,24 +200,87 @@ def runPostProcess(base_path, sample_list, year):
                 tmp.Write()
 
         f_central.Close()
+    
+    # Make fitting input histogram
+    print("Make fitting input histograms...")
+    entire_list = sample_list + ["DataSingleEG", "DataSingleMu"]
+    for proc in entire_list:
+        print("Process: " + proc)
 
-        # For Response matrix, Add external ttbb sample`s histograms
-        f_matrix = TFile.Open(os.path.join(input_path, "hist_ResponseMatrix_ttbb.root"), "UPDATE")
-        f_ttbb = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbb.root"))
+        f_input = TFile.Open(os.path.join(input_path, "hist_"+proc+".root"), "UPDATE")
+        hist_list = []
+        hist_list = [x.GetName() for x in f_input.GetListOfKeys()]
         
-        sys_list = ["sw", "ps", "hdamp", "tune", "pdf"]
-        hist_list = [x.GetName() for x in f_matrix.GetListOfKeys()]
-        
-        f_matrix.cd()
+        systematics = set()
+        import re
+        systematics_regex = re.compile('__(.*)(up|down)$', re.IGNORECASE)
         for hist in hist_list:
-            if "__" in hist or "Info" in hist or "Weights" in hist: continue
-            for item in sys_list:
-                tmpup = f_ttbb.Get(hist+"__"+item+"up")
-                tmpdown = f_ttbb.Get(hist+"__"+item+"down")
-                tmpup.Write()
-                tmpdown.Write()
-        
-        f_matrix.Close()
-        f_ttbb.Close()
+            m = systematics_regex.search(hist)
+            if m:
+                systematics.add(m.group(1))
+        systematics.add("")
+        systematics = list(systematics)
 
+        channel_list = []
+        'h_mindR_RecoAddbJetDeltaR_Ch2_S1'
+        hist_name = 'h_mindR_RecoAddbJet'
+        variables = ["DeltaR", "InvMass"]
+        hist_name2 = 'h_mindR_RecoAddbJetVariables'
+        bin_width = [0.4,0.6,1.0,1.5,2.0,3.0,4.0,4.3,4.6,4.8,5.0,5.35,5.7,6.85,8.0]
+        for ich in range(0,3):
+            for istep in range(0,4):
+                for syst in systematics:
+                    if not syst == "":
+                        channel_list.append("_Ch"+str(ich)+"_S"+str(istep)+"__"+str(syst)+"up")
+                        channel_list.append("_Ch"+str(ich)+"_S"+str(istep)+"__"+str(syst)+"down")
+                    else:
+                        channel_list.append("_Ch"+str(ich)+"_S"+str(istep))
+
+        f_input.cd()
+
+        for ch in channel_list:
+            h_tmp = ROOT.TH1D(str(hist_name2)+str(ch), "", int(14), array('d', bin_width))
+            h_tmp.GetXaxis().SetTitle("#DeltaR_{b#bar{b}} and m_{b#bar{b}} bin")
+            h_tmp.GetYaxis().SetTitle("Entries")
+            h_tmp.Sumw2()
+            
+            tmp = f_input.Get(hist_name+"DeltaR"+ch)
+            tmp2 = f_input.Get(hist_name+"InvMass"+ch)
+            for ibin in range(1,tmp.GetNbinsX()+1):
+                value = tmp.GetBinContent(ibin)
+                error = tmp.GetBinError(ibin)
+                h_tmp.SetBinContent(ibin, value)
+                h_tmp.SetBinError(ibin, error)
+
+            for ibin in range(1, tmp2.GetNbinsX()+1):
+                value = tmp2.GetBinContent(ibin)
+                error = tmp2.GetBinError(ibin)
+                bin_num = ibin + 6
+                h_tmp.SetBinContent(bin_num, value)
+                h_tmp.SetBinError(bin_num, error)
+           
+            h_tmp.Scale(0.5)
+            h_tmp.Write()
+
+        f_input.Close()
+    
+    # For Response matrix, Add external ttbb sample`s histograms
+    f_matrix = TFile.Open(os.path.join(input_path, "hist_ResponseMatrix_ttbb.root"), "UPDATE")
+    f_ttbb = TFile.Open(os.path.join(input_path, "hist_TTLJ_PowhegPythia_ttbb.root"))
+    
+    sys_list = ["sw", "ps", "hdamp", "tune", "pdf"]
+    hist_list = [x.GetName() for x in f_matrix.GetListOfKeys()]
+    
+    f_matrix.cd()
+    for hist in hist_list:
+        if "__" in hist or "Info" in hist or "Weights" in hist: continue
+        for item in sys_list:
+            tmpup = f_ttbb.Get(hist+"__"+item+"up")
+            tmpdown = f_ttbb.Get(hist+"__"+item+"down")
+            tmpup.Write()
+            tmpdown.Write()
+    
+    f_matrix.Close()
+    f_ttbb.Close()
+    
     print("All post processes are completed")

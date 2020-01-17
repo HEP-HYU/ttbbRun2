@@ -65,7 +65,6 @@ for year in range(16,19):
     if year == 17 and run17 == False: continue
     if year == 18 and run18 == False: continue
 
-    p = TProof.Open("", "workers=16")
     samples = []
     with open('samples/sample'+str(year)+'.txt','r') as f:
         n = 1
@@ -79,10 +78,15 @@ for year in range(16,19):
             n += 1
     
     if test:
-	    #runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb")
-	    runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
+        p = TProof.Open("", "workers=8")
+        post.runPostProcess(os.getcwd(), samples, year)
+        #runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "TTLJ_PowhegPythia_ttbb")
+	    #runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
 	    #runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ttbbClosureTest")
+        p.Close()
     else:
+        p = TProof.Open("", "workers=16")
+        
         runAna(inputDir, "DataSingleEG.root", "DataSingleEG")
         runAna(inputDir, "DataSingleMu.root", "DataSingleMu")
 
@@ -90,7 +94,8 @@ for year in range(16,19):
 	        runAna(inputDir, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb")
         else: 
 	        runAna(inputDir, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb")
-	    for sample in samples:
+	    
+        for sample in samples:
 	        runAna(inputDir, str(sample)+".root", str(sample))
 	        if not "QCD" in sample:
 	            runAna(inputDir, str(sample)+".root", str(sample)+"__jerup")
@@ -153,14 +158,14 @@ for year in range(16,19):
             runAna(inputDir, tmp_name+"SYS_FSRdown_ttother.root", tmp_name+"ttother__fsrdown")
             runAna(inputDir, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown")
 
-    p.Close()
+        outdir = 'output/root'+str(year)
+        if os.path.exists(outdir): 
+            os.system('mv '+outdir+' '+outdir+'_backup')
+            #os.system('rm -rf '+outdir)
+        os.system('mv output/root '+outdir)
 
-    outdir = 'output/root'+str(year)
-    if os.path.exists(outdir): 
-        os.system('mv -r '+outdir+' '+outdir+'_backup')
-        os.system('rm -rf '+outdir)
-    os.system('mv output/root '+outdir)
-    
+        p.Close()
+
 #    if args.syst: post.runPostProcess(os.getcwd(), samples, year)
 
 #    os.system('root -l -b -q macro/runGentree.C\'("'+inputDir+'/","'+os.getcwd()+'/output/root'+str(year)+'/")\'')
