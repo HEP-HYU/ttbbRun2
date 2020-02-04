@@ -200,6 +200,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       for(int iStep=0; iStep<nStep; ++iStep){
         fOutput->Add(h_control[i]->h_lepton_pt[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_lepton_eta[iChannel][iStep]);
+        fOutput->Add(h_control[i]->h_lepton_relIso[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_njets[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_nbjets[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_trans_mass[iChannel][iStep]);
@@ -258,7 +259,6 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   const int mode = *channel;
   if(mode>2) return kTRUE;
  
-  //const double relIso = *lepton_relIso;
   
   //Object selection
   TLorentzVector p4met;
@@ -274,6 +274,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
   //const bool isQCD = transverseM < 20;
   //const bool doQCDestimation = false; // change this flags if you want to do the QCD estimation
+  const double relIso = *lepton_relIso;
   //const bool isIso = doQCDestimation ? *lepton_isIso  : false ;
 
   //Object selection
@@ -281,6 +282,10 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   const bool passelectron = (mode == ELECTRON_) && (lepton.Pt() > ELECTRON_PT_) && (abs(lepton.Eta()) < ELECTRON_ETA_);
   if ( !passmuon and !passelectron ) return kTRUE;
   std::string syst_ext = v_syst[0];
+
+  bool invertIso = false;
+  if( passmuon )     invertIso = relIso > 0.2 ? true : false;
+  if( passelectron ) invertIso = relIso > 0.3 ? true : false;
   
   int njets = 0;
   int nbjets = 0;
@@ -411,12 +416,22 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   if( passchannel != -999 ) passlepton = true;
 
   int passcut = 0;
-  if(njets >= NUMBER_OF_JETS_){
-    ++passcut;
-    if(nbjets >= NUMBER_OF_BJETS_){
+  if( process.Contains("dataDriven") ){
+    if( invertIso ){
       ++passcut;
-      if(nbjets >= NUMBER_OF_BJETS_+1)
+      if( njets >= 2 ){
         ++passcut;
+      }
+    }
+  }
+  else{
+    if(njets >= NUMBER_OF_JETS_){
+      ++passcut;
+      if(nbjets >= NUMBER_OF_BJETS_){
+        ++passcut;
+        if(nbjets >= NUMBER_OF_BJETS_+1)
+          ++passcut;
+      }
     }
   }
 
@@ -562,12 +577,13 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     }// EventWeight 
    
     for(int iCut=0; iCut <= passcut; ++iCut){
-      h_control[iSys]->h_lepton_pt[passchannel][iCut] ->Fill(lepton.Pt(),                  EventWeight);
-      h_control[iSys]->h_lepton_eta[passchannel][iCut]->Fill(abs(lepton.Eta()),            EventWeight);
-      h_control[iSys]->h_njets[passchannel][iCut]     ->Fill(njets,                        EventWeight);
-      h_control[iSys]->h_nbjets[passchannel][iCut]    ->Fill(nbjets,                       EventWeight);
-      h_control[iSys]->h_trans_mass[passchannel][iCut]->Fill(transverseMass(lepton,p4met), EventWeight);
-      h_control[iSys]->h_jet_pt_sum[passchannel][iCut]->Fill(jet_pt_sum,                   EventWeight);
+      h_control[iSys]->h_lepton_pt[passchannel][iCut]    ->Fill(lepton.Pt(),                  EventWeight);
+      h_control[iSys]->h_lepton_eta[passchannel][iCut]   ->Fill(abs(lepton.Eta()),            EventWeight);
+      h_control[iSys]->h_lepton_relIso[passchannel][iCut]->Fill(relIso,                       EventWeight);
+      h_control[iSys]->h_njets[passchannel][iCut]        ->Fill(njets,                        EventWeight);
+      h_control[iSys]->h_nbjets[passchannel][iCut]       ->Fill(nbjets,                       EventWeight);
+      h_control[iSys]->h_trans_mass[passchannel][iCut]   ->Fill(transverseMass(lepton,p4met), EventWeight);
+      h_control[iSys]->h_jet_pt_sum[passchannel][iCut]   ->Fill(jet_pt_sum,                   EventWeight);
       for(int iJet=0; iJet<nJet; ++iJet){
         h_control[iSys]->h_jet_pt[passchannel][iCut][iJet] ->Fill(a_jetPt[iJet],  EventWeight);
         h_control[iSys]->h_jet_eta[passchannel][iCut][iJet]->Fill(a_jetEta[iJet], EventWeight);
@@ -646,12 +662,13 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
     if(passlepton){
       for(int iCut=0; iCut <= passcut; ++iCut){
-        h_control[iSys]->h_lepton_pt[2][iCut] ->Fill(lepton.Pt(),                  EventWeight);
-        h_control[iSys]->h_lepton_eta[2][iCut]->Fill(abs(lepton.Eta()),            EventWeight);
-        h_control[iSys]->h_njets[2][iCut]     ->Fill(njets,                        EventWeight);
-        h_control[iSys]->h_nbjets[2][iCut]    ->Fill(nbjets,                       EventWeight);
-        h_control[iSys]->h_trans_mass[2][iCut]->Fill(transverseMass(lepton,p4met), EventWeight);
-        h_control[iSys]->h_jet_pt_sum[2][iCut]->Fill(jet_pt_sum,                   EventWeight);
+        h_control[iSys]->h_lepton_pt[2][iCut]    ->Fill(lepton.Pt(),                  EventWeight);
+        h_control[iSys]->h_lepton_eta[2][iCut]   ->Fill(abs(lepton.Eta()),            EventWeight);
+        h_control[iSys]->h_lepton_relIso[2][iCut]->Fill(relIso,                       EventWeight);
+        h_control[iSys]->h_njets[2][iCut]        ->Fill(njets,                        EventWeight);
+        h_control[iSys]->h_nbjets[2][iCut]       ->Fill(nbjets,                       EventWeight);
+        h_control[iSys]->h_trans_mass[2][iCut]   ->Fill(transverseMass(lepton,p4met), EventWeight);
+        h_control[iSys]->h_jet_pt_sum[2][iCut]   ->Fill(jet_pt_sum,                   EventWeight);
         for(int iJet=0; iJet<nJet; ++iJet){
           h_control[iSys]->h_jet_pt[2][iCut][iJet] ->Fill(a_jetPt[iJet],  EventWeight);
           h_control[iSys]->h_jet_eta[2][iCut][iJet]->Fill(a_jetEta[iJet], EventWeight);
