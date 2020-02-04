@@ -7,6 +7,8 @@ import ROOT
 luminosities = {16:35922, 17:41529, 18:59693}
 
 for year in range(16,19):
+    tmp_tmp = 0.0
+    
     f_nevt = open('../output/nevt'+str(year)+'.tex', 'w')
     f_config = open('../plotIt/configs/files'+str(year)+'.yml','w')
 
@@ -49,7 +51,7 @@ for year in range(16,19):
 	f_nevt.write('    \\caption{'+str(year)+'cutflow table}\n')
 	f_nevt.write('    \\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}\n')
 	f_nevt.write('        \\hlline\\hline\n')
-	f_nevt.write('Sample & Ch0S0 & Ch0S1 & Ch0S2 & Ch0S3 & Ch1S0 & Ch1S0 & Ch1S1 &  Ch1S2 & Ch1S3\n')
+	f_nevt.write('            Sample & Ch0S0 & Ch0S1 & Ch0S2 & Ch0S3 & Ch1S0 & Ch1S0 & Ch1S1 &  Ch1S2 & Ch1S3\n')
 	f_nevt.write('            \\hline\n')
         n = 1
 	while True:
@@ -82,19 +84,21 @@ for year in range(16,19):
 		if not group == '': f_config.write("  group: "+group+"\n")
 		else: f_config.write("  legend: '"+legend+"'\n")
 		f_config.write("  order: "+str(order)+"\n")
-		f_config.write("  scale: "+str(sf[sample])+"\n")
+		#f_config.write("  scale: "+str(sf[sample])+"\n")
 		f_config.write("\n")
 
 		f_sample = ROOT.TFile('../output/root'+str(year)+'/hist_'+sample+'.root')
-		scale = (luminosities[year]*xsec/genevt[sample])*sf[sample]
+		scale = (luminosities[year]*xsec/genevt[sample])
 		print(sample+": "+str(scale))
-		nevt = sample
+		nevt = sample + " "
 		for ich in range(0,2):
                     for istep in range(0,4):
                         hist_tmp = f_sample.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
                         hist_tmp.Scale(scale)
-                        nevt += ' & %.3f'% hist_tmp.Integral()
-		nevt += '\n'
+                        tmp_evt = hist_tmp.Integral(0, hist_tmp.GetNbinsX()+1)
+                        tmp_stat = hist_tmp.IntegralAndError(0, hist_tmp.GetNbinsX()+1, ROOT.Double(tmp_tmp));
+                        nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_stat)
+		nevt += '\\ \n'
 		f_nevt.write(nevt)
             n += 1
 
@@ -106,11 +110,18 @@ for year in range(16,19):
         for istep in range(0,4):
             hist_muon = f_muon.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
             hist_elec = f_elec.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
-            if ich == 0: nevt += ' & %.3f' % hist_muon.Integral()
-            else: nevt += ' & %.3f' % hist_elec.Integral()
+            if ich == 0:
+                tmp_evt = hist_muon.Integral()+hist_muon.GetBinContent(hist_muon.GetNbinsX()+1)
+                tmp_stat = hist_muon.IntegralAndError(0, hist_muon.GetNbinsX()+1, ROOT.Double(tmp_tmp))
+            else: 
+                tmp_evt = hist_elec.Integral()+hist_elec.GetBinContent(hist_elec.GetNbinsX()+1)
+                tmp_stat = hist_elec.IntegralAndError(0, hist_elec.GetNbinsX()+1, ROOT.Double(tmp_tmp))
+
+            nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_stat)
     nevt += '\n'
     f_nevt.write(nevt)
-    f_nevt.write('        \\hline\\hline')
+    f_nevt.write('        \\hline\n')
+    f_nevt.write('        \\hline\\hline\n')
     f_nevt.write('    \\end{tabular}\n')
     f_nevt.write('\\end{table}\n')
 
