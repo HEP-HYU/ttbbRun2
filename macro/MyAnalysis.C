@@ -423,7 +423,9 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   if( process.Contains("dataDriven") ){
     if( invertIso ){
       ++passcut;
-      if( njets >= 2 ) ++passcut;
+      if( njets >= 2 ){
+        ++passcut;
+      }
     }
   }
   else{
@@ -431,7 +433,10 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       ++passcut;
       if(nbjets >= NUMBER_OF_BJETS_){
         ++passcut;
-        if(nbjets >= NUMBER_OF_BJETS_+1) ++passcut;
+        if(nbjets >= NUMBER_OF_BJETS_+1){
+          ++passcut;
+        }
+      }
     }
   }
 
@@ -738,10 +743,11 @@ Bool_t MyAnalysis::Process(Long64_t entry){
             h_matrix[iSys]->h_respMatrix_gentop_invMass2[2][iCut] ->Fill(reco_addbjet_invMass,  gen_addbjet_invMass,  EventWeight);
             h_matrix[iSys]->h_respMatrix_mindR_deltaR2[2][iCut]   ->Fill(reco_addbjet_deltaR,   gen_mindR_deltaR,     EventWeight);
             h_matrix[iSys]->h_respMatrix_mindR_invMass2[2][iCut]  ->Fill(reco_addbjet_invMass,  gen_mindR_invMass,    EventWeight);
-          }
-        }
-      }
+          }//passlepton
+        }//nevt%2
+      }// 2016 or matrix
     }//cut
+  }
   ++nevt;
   return kTRUE;
 }
