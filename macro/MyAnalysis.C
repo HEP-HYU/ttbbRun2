@@ -425,6 +425,9 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       ++passcut;
       if( njets >= 2 ){
         ++passcut;
+        if( njets < 6 ){
+          ++passcut;
+        }
       }
     }
   }
