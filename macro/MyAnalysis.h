@@ -44,7 +44,7 @@ public :
    TTreeReaderArray<float>    pdfweight         = {fReader, "PUWeight"};
    TTreeReaderArray<float>    scaleweight       = {fReader, "PUWeight"};
    TTreeReaderArray<float>    psweight          = {fReader, "PUWeight"};
-   TTreeReaderArray<Double_t> prefireweight     = {fReader, "lepton_eta"};
+   //TTreeReaderArray<double>   prefireweight     = {fReader, "lepton_eta"};
    TTreeReaderValue<Float_t>  MET               = {fReader, "MET"};
    TTreeReaderValue<Float_t>  MET_phi           = {fReader, "MET_phi"};
    TTreeReaderValue<Float_t>  lepton_pT         = {fReader, NULL};
@@ -112,6 +112,7 @@ public :
 
    std::vector<HistoBook *> h_control;
    std::vector<HistoBook *> h_matrix;
+   std::vector<HistoBook *> h_split;
 };
 
 #endif
@@ -136,6 +137,5 @@ Bool_t MyAnalysis::Notify()
    // user if needed. The return value is currently not used.
    return kTRUE;
 }
-
 
 #endif // #ifdef MyAnalysis_cxx

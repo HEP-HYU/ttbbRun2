@@ -39,6 +39,7 @@ const int NUMBER_OF_CJETS_   = 0;
 //HISTOGRAM NAME
 const char * RECO_LEP_PT_  = "LeptonPt";
 const char * RECO_LEP_ETA_ = "LeptonEta";
+const char * RECO_LEP_RELISO_ = "LeptonRelIso";
 const char * RECO_N_JETS_  = "nJets";
 const char * RECO_N_BJETS_ = "nbJets";
 const char * RECO_JET_PT_  = "JetPt";
@@ -153,6 +154,7 @@ public:
   //control plots : mode = 1
   TH1D *h_lepton_pt[nChannel][nStep];
   TH1D *h_lepton_eta[nChannel][nStep];
+  TH1D *h_lepton_relIso[nChannel][nStep];
   TH1D *h_njets[nChannel][nStep];
   TH1D *h_nbjets[nChannel][nStep];
   TH1D *h_jet_pt_sum[nChannel][nStep];
@@ -165,29 +167,26 @@ public:
   
   TH1D *h_reco_addbjets_deltaR[nChannel][nStep];
   TH1D *h_reco_addbjets_invMass[nChannel][nStep];
-  TH1D *h_reco_addbjets_deltaEta[nChannel][nStep];
-  TH1D *h_reco_addbjets_deltaPhi[nChannel][nStep];
-
   TH1D *h_reco_addbjets_deltaR2[nChannel][nStep];
   TH1D *h_reco_addbjets_invMass2[nChannel][nStep];
+  TH1D *h_reco_addbjets_deltaR3[nChannel][nStep];
+  TH1D *h_reco_addbjets_invMass3[nChannel][nStep];
 
   //response matrix : mode = 2
   TH1D *h_gen_gentop_deltaR[nChannel][nStep];
   TH1D *h_gen_gentop_invMass[nChannel][nStep];
-  TH1D *h_gen_gentop_deltaEta[nChannel][nStep];
-  TH1D *h_gen_gentop_deltaPhi[nChannel][nStep];
+  TH1D *h_gen_gentop_deltaR2[nChannel][nStep];
+  TH1D *h_gen_gentop_invMass2[nChannel][nStep];
+ 
   TH1D *h_gen_mindR_deltaR[nChannel][nStep];
   TH1D *h_gen_mindR_invMass[nChannel][nStep];
-  TH1D *h_gen_mindR_deltaEta[nChannel][nStep];
-  TH1D *h_gen_mindR_deltaPhi[nChannel][nStep];
+  TH1D *h_gen_mindR_deltaR2[nChannel][nStep];
+  TH1D *h_gen_mindR_invMass2[nChannel][nStep];
+  
   TH2D *h_respMatrix_gentop_deltaR[nChannel][nStep];
   TH2D *h_respMatrix_gentop_invMass[nChannel][nStep];
-  TH2D *h_respMatrix_gentop_deltaEta[nChannel][nStep];
-  TH2D *h_respMatrix_gentop_deltaPhi[nChannel][nStep];
   TH2D *h_respMatrix_mindR_deltaR[nChannel][nStep];
   TH2D *h_respMatrix_mindR_invMass[nChannel][nStep];
-  TH2D *h_respMatrix_mindR_deltaEta[nChannel][nStep];
-  TH2D *h_respMatrix_mindR_deltaPhi[nChannel][nStep];
 
   TH2D *h_respMatrix_mindR_deltaR2[nChannel][nStep];
   TH2D *h_respMatrix_mindR_invMass2[nChannel][nStep];
@@ -197,21 +196,15 @@ public:
   //etc : mode = 3
   TH1D *h_stability_deltaR[nChannel];
   TH1D *h_stability_invMass[nChannel];
-  TH1D *h_stability_deltaEta[nChannel];
-  TH1D *h_stability_deltaPhi[nChannel];
   TH1D *h_purity_deltaR[nChannel];
   TH1D *h_purity_invMass[nChannel];
-  TH1D *h_purity_deltaEta[nChannel];
-  TH1D *h_purity_deltaPhi[nChannel];
   TH1D *h_acceptance_deltaR[nChannel];
   TH1D *h_acceptance_invMass[nChannel];
-  TH1D *h_acceptance_deltaEta[nChannel];
-  TH1D *h_acceptance_deltaPhi[nChannel];
 };
 
 HistoBook::HistoBook(const int _mode, const char *_process){
   if(_mode == 1){   
-    std::cout << "Make mode1" << std::endl;
+    //std::cout << "Make mode1" << std::endl;
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
         h_lepton_pt[iChannel][iStep] = new TH1D(
@@ -227,6 +220,13 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	      h_lepton_eta[iChannel][iStep]->SetXTitle(Form("%s #eta",v_chName[iChannel].c_str()));
 	      h_lepton_eta[iChannel][iStep]->SetYTitle("Entries");
 	      h_lepton_eta[iChannel][iStep]->Sumw2();
+
+	      h_lepton_relIso[iChannel][iStep] = new TH1D(
+	          Form("h_%s_Ch%d_S%d%s",RECO_LEP_RELISO_,iChannel,iStep,_process),"",
+	          20, 0, 1);
+	      h_lepton_relIso[iChannel][iStep]->SetXTitle(Form("%s relIso",v_chName[iChannel].c_str()));
+	      h_lepton_relIso[iChannel][iStep]->SetYTitle("Entries");
+	      h_lepton_relIso[iChannel][iStep]->Sumw2();
 
         if(iStep == 0){
           h_njets[iChannel][iStep] = new TH1D(
@@ -334,39 +334,40 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_reco_addbjets_invMass[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
         h_reco_addbjets_invMass[iChannel][iStep]->SetYTitle("Entries");
         h_reco_addbjets_invMass[iChannel][iStep]->Sumw2();
-        
-        h_reco_addbjets_deltaEta[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s_Ch%d_S%d%s",RECO_ADD_DETA_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dEta, reco_addbjets_dEta_min, reco_addbjets_dEta_max);
-        h_reco_addbjets_deltaEta[iChannel][iStep]->SetXTitle(Form("#Delta#eta_{b#bar{b}}"));
-        h_reco_addbjets_deltaEta[iChannel][iStep]->SetYTitle("Entries");
-        h_reco_addbjets_deltaEta[iChannel][iStep]->Sumw2();
-
-        h_reco_addbjets_deltaPhi[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s_Ch%d_S%d%s",RECO_ADD_DPHI_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dPhi, reco_addbjets_dPhi_min, reco_addbjets_dPhi_max);
-        h_reco_addbjets_deltaPhi[iChannel][iStep]->SetXTitle(Form("#Delta#phi_{b#bar{b}}"));
-        h_reco_addbjets_deltaPhi[iChannel][iStep]->SetYTitle("Entries");
-        h_reco_addbjets_deltaPhi[iChannel][iStep]->Sumw2();
 
         h_reco_addbjets_deltaR2[iChannel][iStep] = new TH1D(
             Form("h_mindR_%s2_Ch%d_S%d%s",RECO_ADD_DR_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width);
         h_reco_addbjets_deltaR2[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
         h_reco_addbjets_deltaR2[iChannel][iStep]->SetYTitle("Entries");
         h_reco_addbjets_deltaR2[iChannel][iStep]->Sumw2();
 
         h_reco_addbjets_invMass2[iChannel][iStep] = new TH1D(
             Form("h_mindR_%s2_Ch%d_S%d%s",RECO_ADD_M_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
+            nbins_reco_addbjets_M, reco_addbjets_M_width);
         h_reco_addbjets_invMass2[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
         h_reco_addbjets_invMass2[iChannel][iStep]->SetYTitle("Entries");
         h_reco_addbjets_invMass2[iChannel][iStep]->Sumw2();
+
+        h_reco_addbjets_deltaR3[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s3_Ch%d_S%d%s",RECO_ADD_DR_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width);
+        h_reco_addbjets_deltaR3[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_reco_addbjets_deltaR3[iChannel][iStep]->SetYTitle("Entries");
+        h_reco_addbjets_deltaR3[iChannel][iStep]->Sumw2();
+
+        h_reco_addbjets_invMass3[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s3_Ch%d_S%d%s",RECO_ADD_M_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_M, reco_addbjets_M_width);
+        h_reco_addbjets_invMass3[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_reco_addbjets_invMass3[iChannel][iStep]->SetYTitle("Entries");
+        h_reco_addbjets_invMass3[iChannel][iStep]->Sumw2();
+
       }//step
     }//channel
   }//mode
   else if(_mode == 2){
-    std::cout << "Make mode2" << std::endl;
+    //std::cout << "Make mode2" << std::endl;
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
         h_gen_gentop_deltaR[iChannel][iStep] = new TH1D(
@@ -382,20 +383,20 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_gen_gentop_invMass[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
         h_gen_gentop_invMass[iChannel][iStep]->SetYTitle("Entries");
         h_gen_gentop_invMass[iChannel][iStep]->Sumw2();
+ 
+        h_gen_gentop_deltaR2[iChannel][iStep] = new TH1D(
+            Form("h_gentop_%s2_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_gen_gentop_deltaR2[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_gen_gentop_deltaR2[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_gentop_deltaR2[iChannel][iStep]->Sumw2();
 
-        h_gen_gentop_deltaEta[iChannel][iStep] = new TH1D(
-            Form("h_gentop_%s_Ch%d_S%d%s",GEN_ADD_DETA_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dEta, gen_addbjets_dEta_min, gen_addbjets_dEta_max);
-        h_gen_gentop_deltaEta[iChannel][iStep]->SetXTitle(Form("#Delta#eta_{b#bar{b}}(GeV)"));
-        h_gen_gentop_deltaEta[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_gentop_deltaEta[iChannel][iStep]->Sumw2();
-
-        h_gen_gentop_deltaPhi[iChannel][iStep] = new TH1D(
-            Form("h_gentop_%s_Ch%d_S%d%s",GEN_ADD_DPHI_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dPhi, gen_addbjets_dPhi_min, gen_addbjets_dPhi_max);
-        h_gen_gentop_deltaPhi[iChannel][iStep]->SetXTitle(Form("#Delta#phi_{b#bar{b}}(GeV)"));
-        h_gen_gentop_deltaPhi[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_gentop_deltaPhi[iChannel][iStep]->Sumw2();
+        h_gen_gentop_invMass2[iChannel][iStep] = new TH1D(
+            Form("h_gentop_%s2_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_gen_gentop_invMass2[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_gen_gentop_invMass2[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_gentop_invMass2[iChannel][iStep]->Sumw2();
         
         h_gen_mindR_deltaR[iChannel][iStep] = new TH1D(
             Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
@@ -410,21 +411,21 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_gen_mindR_invMass[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
         h_gen_mindR_invMass[iChannel][iStep]->SetYTitle("Entries");
         h_gen_mindR_invMass[iChannel][iStep]->Sumw2();
+         
+        h_gen_mindR_deltaR2[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s2_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_gen_mindR_deltaR2[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_gen_mindR_deltaR2[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_mindR_deltaR2[iChannel][iStep]->Sumw2();
 
-        h_gen_mindR_deltaEta[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_DETA_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dEta, gen_addbjets_dEta_min, gen_addbjets_dEta_max);
-        h_gen_mindR_deltaEta[iChannel][iStep]->SetXTitle(Form("#Delta#eta_{b#bar{b}}(GeV)"));
-        h_gen_mindR_deltaEta[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_mindR_deltaEta[iChannel][iStep]->Sumw2();
-
-        h_gen_mindR_deltaPhi[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_DPHI_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dPhi, gen_addbjets_dPhi_min, gen_addbjets_dPhi_max);
-        h_gen_mindR_deltaPhi[iChannel][iStep]->SetXTitle(Form("#Delta#phi_{b#bar{b}}(GeV)"));
-        h_gen_mindR_deltaPhi[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_mindR_deltaPhi[iChannel][iStep]->Sumw2();
-        
+        h_gen_mindR_invMass2[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s2_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_gen_mindR_invMass2[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_gen_mindR_invMass2[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_mindR_invMass2[iChannel][iStep]->Sumw2();
+       
         h_respMatrix_gentop_deltaR[iChannel][iStep] = new TH2D(
             Form("h_gentop_%s_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
             nbins_reco_addbjets_dR, reco_addbjets_dR_width,
@@ -440,22 +441,6 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_respMatrix_gentop_invMass[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
         h_respMatrix_gentop_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
         h_respMatrix_gentop_invMass[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_gentop_deltaEta[iChannel][iStep] = new TH2D(
-            Form("h_gentop_%s_Ch%d_S%d%s",MATRIX_DETA_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dEta, reco_addbjets_dEta_min, reco_addbjets_dEta_max,
-            nbins_gen_addbjets_dEta, gen_addbjets_dEta_min, gen_addbjets_dEta_max);
-        h_respMatrix_gentop_deltaEta[iChannel][iStep]->SetYTitle("Gen. #Delta#eta_{b#bar{b}}");
-        h_respMatrix_gentop_deltaEta[iChannel][iStep]->SetXTitle("Reco. #Delta#eta_{b#bar{b}}");
-        h_respMatrix_gentop_deltaEta[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_gentop_deltaPhi[iChannel][iStep] = new TH2D(
-            Form("h_gentop_%s_Ch%d_S%d%s",MATRIX_DPHI_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dPhi, reco_addbjets_dPhi_min, reco_addbjets_dPhi_max,
-            nbins_gen_addbjets_dPhi, gen_addbjets_dPhi_min, gen_addbjets_dPhi_max);
-        h_respMatrix_gentop_deltaPhi[iChannel][iStep]->SetYTitle("Gen. #Delta#phi_{b#bar{b}}");
-        h_respMatrix_gentop_deltaPhi[iChannel][iStep]->SetXTitle("Reco. #Delta#phi_{b#bar{b}}");
-        h_respMatrix_gentop_deltaPhi[iChannel][iStep]->Sumw2();
         
         h_respMatrix_mindR_deltaR[iChannel][iStep] = new TH2D(
             Form("h_mindR_%s_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
@@ -473,25 +458,9 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_respMatrix_mindR_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
         h_respMatrix_mindR_invMass[iChannel][iStep]->Sumw2();
 
-        h_respMatrix_mindR_deltaEta[iChannel][iStep] = new TH2D(
-            Form("h_mindR_%s_Ch%d_S%d%s",MATRIX_DETA_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dEta, reco_addbjets_dEta_min, reco_addbjets_dEta_max,
-            nbins_gen_addbjets_dEta, gen_addbjets_dEta_min, gen_addbjets_dEta_max);
-        h_respMatrix_mindR_deltaEta[iChannel][iStep]->SetYTitle("Gen. #Delta#eta_{b#bar{b}}");
-        h_respMatrix_mindR_deltaEta[iChannel][iStep]->SetXTitle("Reco. #Delta#eta_{b#bar{b}}");
-        h_respMatrix_mindR_deltaEta[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_mindR_deltaPhi[iChannel][iStep] = new TH2D(
-            Form("h_mindR_%s_Ch%d_S%d%s",MATRIX_DPHI_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dPhi, reco_addbjets_dPhi_min, reco_addbjets_dPhi_max,
-            nbins_gen_addbjets_dPhi, gen_addbjets_dPhi_min, gen_addbjets_dPhi_max);
-        h_respMatrix_mindR_deltaPhi[iChannel][iStep]->SetYTitle("Gen. #Delta#phi_{b#bar{b}}");
-        h_respMatrix_mindR_deltaPhi[iChannel][iStep]->SetXTitle("Reco. #Delta#phi_{b#bar{b}}");
-        h_respMatrix_mindR_deltaPhi[iChannel][iStep]->Sumw2(); 
-
         h_respMatrix_gentop_deltaR2[iChannel][iStep] = new TH2D(
             Form("h_gentop_%s2_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width,
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
             nbins_gen_addbjets_dR, gen_addbjets_dR_width);
         h_respMatrix_gentop_deltaR2[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
         h_respMatrix_gentop_deltaR2[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
@@ -499,7 +468,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 
         h_respMatrix_gentop_invMass2[iChannel][iStep] = new TH2D(
             Form("h_gentop_%s2_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_M, gen_addbjets_M_width,
+            nbins_reco_addbjets_M, reco_addbjets_M_width,
             nbins_gen_addbjets_M, gen_addbjets_M_width);
         h_respMatrix_gentop_invMass2[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
         h_respMatrix_gentop_invMass2[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
@@ -507,7 +476,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         
         h_respMatrix_mindR_deltaR2[iChannel][iStep] = new TH2D(
             Form("h_mindR_%s2_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width,
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
             nbins_gen_addbjets_dR, gen_addbjets_dR_width);
         h_respMatrix_mindR_deltaR2[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
         h_respMatrix_mindR_deltaR2[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
@@ -515,7 +484,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 
         h_respMatrix_mindR_invMass2[iChannel][iStep] = new TH2D(
             Form("h_mindR_%s2_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_M, gen_addbjets_M_width,
+            nbins_reco_addbjets_M, reco_addbjets_M_width,
             nbins_gen_addbjets_M, gen_addbjets_M_width);
         h_respMatrix_mindR_invMass2[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
         h_respMatrix_mindR_invMass2[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
@@ -539,20 +508,6 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_stability_invMass[iChannel]->SetYTitle("Stability");
       h_stability_invMass[iChannel]->Sumw2();
 
-      h_stability_deltaEta[iChannel] = new TH1D(
-          Form("h_%s_Ch%d_S3%s",STB_DETA_,iChannel,_process),"",
-          nbins_gen_addbjets_dEta, gen_addbjets_dEta_min, gen_addbjets_dEta_max);
-      h_stability_deltaEta[iChannel]->SetXTitle("#Delta#eta_{b#bar{b}}");
-      h_stability_deltaEta[iChannel]->SetYTitle("Stability");
-      h_stability_deltaEta[iChannel]->Sumw2();
-
-      h_stability_deltaPhi[iChannel] = new TH1D(
-          Form("h_%s_Ch%d_S3%s",STB_DPHI_,iChannel,_process),"",
-          nbins_gen_addbjets_dPhi, gen_addbjets_dPhi_min, gen_addbjets_dPhi_max);
-      h_stability_deltaPhi[iChannel]->SetXTitle("#Delta#phi_{b#bar{b}}");
-      h_stability_deltaPhi[iChannel]->SetYTitle("Stability");
-      h_stability_deltaPhi[iChannel]->Sumw2();
-
       h_purity_deltaR[iChannel] = new TH1D(
           Form("h_%s_Ch%d_S3_%s",PUR_DR_,iChannel,_process),"",
           nbins_gen_addbjets_dR, gen_addbjets_dR_width);
@@ -567,20 +522,6 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_purity_invMass[iChannel]->SetYTitle("Purity");
       h_purity_invMass[iChannel]->Sumw2();
 
-      h_purity_deltaEta[iChannel] = new TH1D(
-          Form("h_%s_Ch%d_S3_%s",PUR_DETA_,iChannel,_process),"",
-          nbins_gen_addbjets_dEta, gen_addbjets_dEta_min, gen_addbjets_dEta_max);
-      h_purity_deltaEta[iChannel]->SetXTitle("#Delta#eta_{b#bar{b}}");
-      h_purity_deltaEta[iChannel]->SetYTitle("Purity");
-      h_purity_deltaEta[iChannel]->Sumw2();
-
-      h_purity_deltaPhi[iChannel] = new TH1D(
-          Form("h_%s_Ch%d_S3_%s",PUR_DPHI_,iChannel,_process),"",
-          nbins_gen_addbjets_dPhi, gen_addbjets_dPhi_min, gen_addbjets_dPhi_max);
-      h_purity_deltaPhi[iChannel]->SetXTitle("#DeltaR_{b#bar{b}}");
-      h_purity_deltaPhi[iChannel]->SetYTitle("Purity");
-      h_purity_deltaPhi[iChannel]->Sumw2();
-
       h_acceptance_deltaR[iChannel] = new TH1D(
           Form("h_%s_Ch%d%s",ACC_DR_,iChannel,_process),"",
           nbins_gen_addbjets_dR, gen_addbjets_dR_width);
@@ -594,20 +535,6 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_acceptance_invMass[iChannel]->SetXTitle("M_{b#bar{b}}(GeV)");
       h_acceptance_invMass[iChannel]->SetYTitle("acceptance");
       h_acceptance_invMass[iChannel]->Sumw2();
-
-      h_acceptance_deltaEta[iChannel] = new TH1D(
-          Form("h_%s_Ch%d%s",ACC_DETA_,iChannel,_process),"",
-          nbins_gen_addbjets_dEta, gen_addbjets_dEta_min, gen_addbjets_dEta_max);
-      h_acceptance_deltaEta[iChannel]->SetXTitle("#Delta#eta_{b#bar{b}}");
-      h_acceptance_deltaEta[iChannel]->SetYTitle("Acceptance");
-      h_acceptance_deltaEta[iChannel]->Sumw2();
-      
-      h_acceptance_deltaPhi[iChannel] = new TH1D(
-          Form("h_%s_Ch%d%s",ACC_DPHI_,iChannel,_process),"",
-          nbins_gen_addbjets_dPhi, gen_addbjets_dPhi_min, gen_addbjets_dPhi_max);
-      h_acceptance_deltaPhi[iChannel]->SetXTitle("#Delta#phi_{b#bar{b}}");
-      h_acceptance_deltaPhi[iChannel]->SetYTitle("Acceptance");
-      h_acceptance_deltaPhi[iChannel]->Sumw2();
     }//channel
   }//mode
   else
