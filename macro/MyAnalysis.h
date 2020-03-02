@@ -113,6 +113,8 @@ public :
    std::vector<HistoBook *> h_control;
    std::vector<HistoBook *> h_matrix;
    std::vector<HistoBook *> h_split;
+
+   TH1D *h_bSF[3][4];
 };
 
 #endif

@@ -152,15 +152,21 @@ public:
   //~Histo_Book();
   
   //control plots : mode = 1
+  TH1D *h_pv[nChannel][nStep];
+  TH1D *h_pv_nosf[nChannel][nStep];
+  
   TH1D *h_lepton_pt[nChannel][nStep];
   TH1D *h_lepton_eta[nChannel][nStep];
   TH1D *h_lepton_relIso[nChannel][nStep];
+  
   TH1D *h_njets[nChannel][nStep];
   TH1D *h_nbjets[nChannel][nStep];
-  TH1D *h_jet_pt_sum[nChannel][nStep];
+  
   TH1D *h_jet_pt[nChannel][nStep][nJet];
   TH1D *h_jet_eta[nChannel][nStep][nJet];
+  
   TH1D *h_trans_mass[nChannel][nStep];
+  
   TH1D *h_csv[nChannel][nStep][nJet];
   TH1D *h_1st_csv[nChannel][nStep];
   TH1D *h_2nd_csv[nChannel][nStep][nbins_csv];
@@ -207,6 +213,19 @@ HistoBook::HistoBook(const int _mode, const char *_process){
     //std::cout << "Make mode1" << std::endl;
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
+        h_pv[iChannel][iStep] = new TH1D(
+            Form("h_PV_Ch%d_S%d%s",iChannel,iStep,_process),"",
+            60, 0, 60);
+        h_pv[iChannel][iStep]->SetXTitle("Good PV");
+        h_pv[iChannel][iStep]->SetYTitle("Entries");
+        h_pv[iChannel][iStep]->Sumw2();
+
+        h_pv_nosf[iChannel][iStep] = new TH1D(
+            Form("h_PV_noSF_Ch%d_S%d%s",iChannel,iStep,_process),"",
+            60, 0, 60);
+        h_pv_nosf[iChannel][iStep]->SetXTitle("Good PV without reweighting");
+        h_pv_nosf[iChannel][iStep]->Sumw2();
+
         h_lepton_pt[iChannel][iStep] = new TH1D(
 	          Form("h_%s_Ch%d_S%d%s",RECO_LEP_PT_,iChannel,iStep,_process),"",
 	          nbins_lep_pt, lep_pt_min, lep_pt_max);
@@ -268,13 +287,6 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_nbjets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "#geq 4");
         h_nbjets[iChannel][iStep]->Sumw2();
         
-        h_jet_pt_sum[iChannel][iStep] = new TH1D(
-            Form("h_%s_sum_Ch%d_S%d%s",RECO_JET_PT_,iChannel,iStep,_process),"",
-            nbins_jet_pt, jet_pt_min, jet_pt_max);
-        h_jet_pt_sum[iChannel][iStep]->SetXTitle("Sum of jet p_{T} (GeV)");
-        h_jet_pt_sum[iChannel][iStep]->SetYTitle("Entries");
-        h_jet_pt_sum[iChannel][iStep]->Sumw2();
-
         for(int iJet=0; iJet<nJet; ++iJet){
           h_jet_pt[iChannel][iStep][iJet] = new TH1D(
               Form("h_%s_%d_Ch%d_S%d%s",RECO_JET_PT_,iJet,iChannel,iStep,_process),"",
