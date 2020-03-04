@@ -149,7 +149,7 @@ if __name__ == '__main__':
             p = TProof.Open("", "workers=8")
 
             for sample in samples:
-                runAna(year, inputDir, str(sample)+".root", "dataDriven_"+str(sample))
+                runAna(year, inputDir_nosplit, str(sample)+".root", "dataDriven_"+str(sample), True, True)
                       
             outdir = 'output/root'+str(year)+'_qcd'
             if os.path.exists(outdir): 
