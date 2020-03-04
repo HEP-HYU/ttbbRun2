@@ -10,58 +10,38 @@ import argparse
 from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
 
 import macro.getSampleList
-import macro.runPostProcess as post
 import macro.getQCD
 
-start_time = time.time()
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0', 'False'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected')
 
-parser = argparse.ArgumentParser(description='Analyze ntuples')
-
-parser.add_argument('-t', '--test', required=False, type=bool, default=False, help='Run test sample')
-parser.add_argument('-y', '--year', required=False, type=int, default=9999, help='Run special year')
-parser.add_argument('-q', '--qcd',  required=False, type=bool, default=False, help='QCD estimation')
-parser.add_argument('-d', '--dataset', required=False, type=str, default='all', help='Option: all, data, ttbar, other. run splited dataset')
-
-args = parser.parse_args()
-
-run16  = False 
-run17  = False 
-run18  = False
-test   = False 
-estimateQCD = False
-dataset = "all"
-
-if args.year == 16 or args.year == 2016: run16 = True
-if args.year == 17 or args.year == 2017: run17 = True
-if args.year == 18 or args.year == 2018: run18 = True
-if args.year == 9999:
-    run16 = True
-    run17 = True
-    run18 = True
-
-if args.test: test = True
-
-if args.qcd: estimateQCD = True
-
-dataset = args.dataset
-
-def runAna(year, dir, file, name, isQCD=False, onProof=False):
+def runAna(year, dir, file, name, isQCD=False, onProof=False):   
+    # tmp: /data/users/seohyun/ntuple/Run2016/v808/nosplit/Nosys_Compile/TTLJ_PowhegPythia_ttbbFilter_ttbb
+    # process: Run2016/TTLJ_PowhegPythia_ttbb__jecup/TTLJ_PowhegPythia_ttbb
+    tmp = dir+'/'+str(name)+'/'+file[:-5]
+    tmp = tmp.split('/')
+    process = str(tmp[5])+'/'+str(tmp[-2])+'/'+str(tmp[-1])
+    
+    print("Begin Process "+str(os.getpid())+": "+str(process))
+    
     outdir = 'output/root'+str(year)
-    if not os.path.exists(outdir):
+    if 'Tree' in file:
+        outdir += '/'+name
+    try:
         os.makedirs(outdir)
-        
-    if not os.path.exists(outdir+'/'+name):
-        os.makedirs(outdir+'/'+name)
-
+    except OSError:
+        print(outdir+": already exists")
+    
     if isQCD:
         chain = TChain("ttbbLepJetsQCD/tree", "events")
     else:
         chain = TChain("ttbbLepJets/tree","events")
-   
-    # Process: /data/users/seohyun/ntuple/Run2016/v808/nosplit/Nosys_Compile/TTLJ_PowhegPythia_ttbbFilter_ttbb.root
-    tmp = dir+'/'+str(name)+'/'+file[:-5]
-    tmp = tmp.split('/')
-    process = str(tmp[5])+'/'+str(tmp[-2])+'/'+str(tmp[-1])
+
     chain.Add(dir+"/"+file)
     if onProof:
         chain.SetProof()
@@ -70,7 +50,11 @@ def runAna(year, dir, file, name, isQCD=False, onProof=False):
     f = TFile(dir+"/"+file,"read")
 
     ## save Event Summary histogram ##
-    out = TFile(outdir+'/'+name+"/hist_"+file, "update")
+    if 'Tree' in process:
+        out = TFile(outdir+'/hist_'+file, 'update')
+    else:
+        out = TFile(outdir+'/hist_'+name+'.root', 'update')
+    
     hevt = f.Get("ttbbLepJets/EventInfo")
     hsw = f.Get("ttbbLepJets/ScaleWeights")
     hpdf = f.Get("ttbbLepJets/PDFWeights")
@@ -79,8 +63,36 @@ def runAna(year, dir, file, name, isQCD=False, onProof=False):
     if not hsw == None: hsw.Write()
     out.Write()
     out.Close()
+    
+    print("End Process "+str(os.getpid())+": "+str(process))
 
 if __name__ == '__main__':
+    start_time = time.time()
+
+    parser = argparse.ArgumentParser(description='Analyze ntuples')
+
+    parser.add_argument('-t', '--test', required=False, type=str2bool, default=False, help='Run test sample')
+    parser.add_argument('-y', '--year', required=False, type=int, default=9999, help='Run special year')
+    parser.add_argument('-q', '--qcd',  required=False, type=str2bool, default=False, help='QCD estimation')
+    parser.add_argument('-d', '--dataset', required=False, type=str, default='all', help='Option: all, data, ttbar, other. run splited dataset')
+
+    args = parser.parse_args()
+
+    run16  = False 
+    run17  = False 
+    run18  = False
+    dataset = "all"
+
+    if args.year == 16 or args.year == 2016: run16 = True
+    if args.year == 17 or args.year == 2017: run17 = True
+    if args.year == 18 or args.year == 2018: run18 = True
+    if args.year == 9999:
+        run16 = True
+        run17 = True
+        run18 = True
+
+    dataset = args.dataset
+
     macro.getSampleList.getSampleList(os.getcwd()+'/samples')
 
     for year in range(16,19):
@@ -95,25 +107,34 @@ if __name__ == '__main__':
                 line = f.readline()
                 if not line: break
                 if n == 1:
-                    #inputDir = line[:-1]
                     inputDir_nosplit = line[:-1]
                     inputDir = line[:-8]+'split/'
                 else:
                     samples.append(line[:-1])
                 n += 1
-       
+
+        data = []
+        with open('samples/data'+str(year)+'.txt', 'r') as f:
+            while True:
+                line = f.readline()
+                if not line: break
+                data.append(line[:-1])
+        
+        if args.qcd:
+            samples.append("DataSingleMu")
+            samples.append("DataSingleEG")
+        else:
+            samples += data
+                   
         #Compiling TSelector
         if dataset == 'data' or dataset == 'all':
             runAna(year, inputDir_nosplit, "TTLJ_PowhegPythia_ttbb.root", "Nosys_Compile", False, False)
-
-        processes = os.listdir(inputDir)
         
-        if test:
-            for process in processes:
+        if args.test:
+            for sample in samples:
                 procs = [] 
-                if 'SYS' in process: continue
-                for item in os.listdir(inputDir+process):
-                    proc = mp.Process(target=runAna, args=(year, inputDir+process, item, 'Nosys_'+process))
+                for item in os.listdir(inputDir+sample):
+                    proc = mp.Process(target=runAna, args=(year, inputDir+sample, item, 'Nosys_'+sample))
                     procs.append(proc)
                     proc.start()
                 for proc in procs:
@@ -124,11 +145,8 @@ if __name__ == '__main__':
                 os.system('mv '+outdir+' '+outdir+'_'+str(datetime.today().strftime("%Y%m%d")))
             os.system('mv output/root'+str(year)+' '+outdir)
 
-        elif estimateQCD:
+        elif args.qcd:
             p = TProof.Open("", "workers=8")
-
-            runAna(year, inputDir_nosplit, "DataSingleEG.root", "dataDriven_DataSingleEG", True, True)
-            runAna(year, inputDir_nosplit, "DataSingleMu.root", "dataDriven_DataSingleEG", True, True)
 
             for sample in samples:
                 runAna(year, inputDir, str(sample)+".root", "dataDriven_"+str(sample))
@@ -139,17 +157,30 @@ if __name__ == '__main__':
             os.system('mv output/root'+str(year)+' '+outdir)
 
             macro.getQCD.getQCDShape(os.getcwd(), year, samples)
-        
         else:
-            for process in processes:
-                if dataset == "data" and not 'Data' in process: continue
-                if dataset == "ttbar" and not 'TT' in process: continue
-                if dataset == "other" and ('Data' in process or 'TT' in process): continue
+            for sample in samples:
+                run = False
+                if dataset == "data":
+                    if any(i in sample for i in ['Data', 'ttLF']): 
+                        run = True
+                elif dataset == "ttbar":
+                    if 'TT' in sample:
+                        if not any(i in sample for i in ['ttother', 'ttLF']):
+                            run = True
+                elif dataset == "other":
+                    if not any(i in sample for i in ['Data', 'TT']):
+                        run = True
+                    elif 'ttother' in sample:
+                        run = True
+                else:
+                    print("There is no such dataset")
+                    break
+               
+                if not run: continue
+
                 procs = [] 
-                if 'SYS' in process: continue
-                if 'Herwig' in process: continue
-                for item in os.listdir(inputDir+process):
-                    proc = mp.Process(target=runAna, args=(year, inputDir+process, item, process))
+                for item in os.listdir(inputDir+sample):
+                    proc = mp.Process(target=runAna, args=(year, inputDir+sample, item, sample))
                     procs.append(proc)
                     proc.start()
                 for proc in procs:
@@ -157,13 +188,9 @@ if __name__ == '__main__':
 
             if dataset == 'data' or dataset == 'all':
                 p = TProof.Open("", "workers=8")
-                if year == 16:
-                    runAna(year, inputDir_nosplit, "TTLJ_PowhegPythia_ttbbFilter_ttbb.root", "ResponseMatrix_ttbb", False, True)
-                else: 
-                    runAna(year, inputDir_nosplit, "TTLJ_PowhegPythia_ttbb.root", "ResponseMatrix_ttbb", False, True)
 
                 for sample in samples:
-                    if not "QCD" in sample:
+                    if not "QCD" in sample and not "Data" in sample:
                         runAna(year, inputDir_nosplit, str(sample)+".root", str(sample)+"__jerup", False, True)
                         runAna(year, inputDir_nosplit, str(sample)+".root", str(sample)+"__jerdown", False, True)
                         runAna(year, inputDir_nosplit, str(sample)+".root", str(sample)+"__jecup", False, True)
@@ -225,12 +252,4 @@ if __name__ == '__main__':
                     runAna(year, inputDir_nosplit, tmp_name2+"SYS_FSRdown.root",        tmp_name2+"_fsrdown", False, True)
 
                 p.Close()
-
-            #post.runPostProcess(os.getcwd(), samples, year)
-            #cmd = ['root', '-l', '-b', '-q', 'macro/runGentree.C"'+str(inputDir)+'/","'+os.getcwd()+'/output/root'+str(year)+'/")']
-            #cmd2 = ['hadd', os.getcwd()+'/output/hist_TTLJ_PowhegPythia_ttbb.root', os.getcwd()+'/output/root'+str(year)+'/hist_TTLJ_PowhegPythia_ttbb.root', os.getcwd()+'/output/root'+str(year)+'/hist_gen.root']
-            #subprocess.call(cmd)
-            #subprocess.call(cmd2)
-            #os.system('mv hist_TTLJ_PowhegPythia_ttbb.root output/root'+str(year)+'/')
-
     print("Total running time: %s" %(time.time() - start_time))

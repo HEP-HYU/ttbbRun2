@@ -13,6 +13,7 @@ for hist in hist_list:
     if "Resp" in hist: continue
     if "EventInfo" in hist: continue
     if "ScaleWeights" in hist: continue
+    if "bSF" in hist: continue
     f_hist.write("'"+hist+"':\n")
     f_hist.write('  y-axis: "Events"\n')
     f_hist.write('  y-axis-format: "%1% / %2$.2f"\n')
