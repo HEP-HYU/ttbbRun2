@@ -9,7 +9,7 @@ luminosities = {16:35922, 17:41529, 18:59693}
 for year in range(16,19):
     tmp_tmp = 0.0
     
-    f_nevt = open('../output/nevt'+str(year)+'.tex', 'w')
+    f_nevt = open('../output/cutflow/nevt'+str(year)+'.tex', 'w')
     f_config = open('../plotIt/configs/files'+str(year)+'.yml','w')
 
     f_config.write("'root"+str(year)+"/hist_DataSingleMu.root':\n")
@@ -97,7 +97,7 @@ for year in range(16,19):
                         hist_tmp.Scale(scale)
                         tmp_evt = hist_tmp.Integral(0, hist_tmp.GetNbinsX()+1)
                         tmp_stat = hist_tmp.IntegralAndError(0, hist_tmp.GetNbinsX()+1, ROOT.Double(tmp_tmp));
-                        nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_stat)
+                        nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_tmp)
 		nevt += '\\ \n'
 		f_nevt.write(nevt)
             n += 1
@@ -117,7 +117,7 @@ for year in range(16,19):
                 tmp_evt = hist_elec.Integral()+hist_elec.GetBinContent(hist_elec.GetNbinsX()+1)
                 tmp_stat = hist_elec.IntegralAndError(0, hist_elec.GetNbinsX()+1, ROOT.Double(tmp_tmp))
 
-            nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_stat)
+            nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_tmp)
     nevt += '\n'
     f_nevt.write(nevt)
     f_nevt.write('        \\hline\n')
