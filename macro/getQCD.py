@@ -56,8 +56,7 @@ def getQCDShape(base_path, year, sample_list):
             nevt_data = h_qcd.Integral(0, h_qcd.GetNbinsX()+1)
 
         for proc in sample_list:
-            if 'QCD' in proc: continue
-            #print("Sample: "+str(proc))
+            if any(i in proc for i in ['QCD', 'Filter', 'Data']): continue
             h_tmp = samples[proc].Get(hist)
             scale = lumi[year]*xsec[proc]/genevt[proc]
             h_tmp.Scale(scale)
