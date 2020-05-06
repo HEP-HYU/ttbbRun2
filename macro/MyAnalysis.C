@@ -87,7 +87,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     }
     else{
       if( process.Contains("2017") ){
-        //v_syst.push_back("__prefireup"); v_syst.push_back("__prefiredown");
+        v_syst.push_back("__prefireup"); v_syst.push_back("__prefiredown");
       }
       v_syst.push_back("__muidup");  v_syst.push_back("__muiddown");
       v_syst.push_back("__muisoup"); v_syst.push_back("__muisodown");
@@ -177,7 +177,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       ELECTRON_PT_   = 30.0;
       ELECTRON_ETA_  = 2.4;
       JET_CSV_TIGHT_ = 0.8001;
-      //prefireweight = {fReader, "prefireweight"};
+      prefireweight = {fReader, "prefireweight"};
     }
     if( process.Contains("2018") ){
       MUON_ETA_      = 2.4;
@@ -223,6 +223,9 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
           h_bSF[iChannel][iStep]->GetXaxis()->SetBinLabel(18, "cferr2down");
           fOutput->Add(h_bSF[iChannel][iStep]);
         }
+        fOutput->Add(h_control[i]->h_1st_csv[iChannel][iStep]);
+        for(int iRegion = 0; iRegion < 20; ++iRegion)
+          fOutput->Add(h_control[i]->h_2nd_csv[iChannel][iStep][iRegion]);
         
         fOutput->Add(h_control[i]->h_lepton_pt[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_lepton_eta[iChannel][iStep]);
@@ -238,16 +241,15 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
           fOutput->Add(h_control[i]->h_jet_eta[iChannel][iStep][iJet]);
           fOutput->Add(h_control[i]->h_csv[iChannel][iStep][iJet]);
         }
-        fOutput->Add(h_control[i]->h_1st_csv[iChannel][iStep]);
-        for(int iRegion = 0; iRegion < 20; ++iRegion)
-          fOutput->Add(h_control[i]->h_2nd_csv[iChannel][iStep][iRegion]);
-
         fOutput->Add(h_control[i]->h_reco_addbjets_deltaR[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_reco_addbjets_invMass[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_reco_addbjets_deltaR2[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_reco_addbjets_invMass2[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_reco_addbjets_deltaR3[iChannel][iStep]);
         fOutput->Add(h_control[i]->h_reco_addbjets_invMass3[iChannel][iStep]);
+
+        fOutput->Add(h_control[i]->h_reco_deltaRvsInvMass[iChannel][iStep]);
+        fOutput->Add(h_control[i]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]);
         
         fOutput->Add(h_matrix[i]->h_gen_gentop_deltaR[iChannel][iStep]);
         fOutput->Add(h_matrix[i]->h_gen_gentop_invMass[iChannel][iStep]);
@@ -437,6 +439,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   int passcut = -1;
   if( passchannel >= 0 && njets >= 1 ) passcut = 0;
   if( process.Contains("dataDriven") ){
+    if( !passmuon and passelectron and abs(lepton.Eta()) > 1.4445 ) return kTRUE;
     if( invertIso ){
       ++passcut;
       if( njets >= 2 ){
@@ -485,9 +488,9 @@ Bool_t MyAnalysis::Process(Long64_t entry){
    
       //Prefire weight, 2017only
       if( process.Contains("2017") ){
-        //if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
-        //else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
-        //else                                   EventWeight *= prefireweight[0];
+        if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
+        else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
+        else                                   EventWeight *= prefireweight[0];
       }
       
       //Lepton Scale Factor
@@ -656,8 +659,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
           }
         }
       }
-    }// EventWeight 
-   
+    }// EventWeight
+
     for(int iCut=0; iCut <= passcut; ++iCut){
       h_control[iSys]->h_pv[passchannel][iCut]           ->Fill(*GoodPV, bSF*EventWeight);
       h_control[iSys]->h_pv_nosf[passchannel][iCut]      ->Fill(*GoodPV, bSF*EventWeight/PUWeight[0]);
@@ -689,8 +692,12 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       h_matrix[iSys]->h_gen_gentop_invMass[passchannel][iCut] ->Fill(gen_addbjet_invMass,   bSF*EventWeight);
       h_matrix[iSys]->h_gen_mindR_deltaR[passchannel][iCut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
       h_matrix[iSys]->h_gen_mindR_invMass[passchannel][iCut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
+
+      h_control[iSys]->h_reco_deltaRvsInvMass[passchannel][iCut]->Fill(reco_addbjet_deltaR, reco_addbjet_invMass, bSF*EventWeight);
  
-      if( passlepton ){
+      if( passlepton ){      
+        h_control[iSys]->h_pv[2][iCut]           ->Fill(*GoodPV, bSF*EventWeight);
+        h_control[iSys]->h_pv_nosf[2][iCut]      ->Fill(*GoodPV, bSF*EventWeight/PUWeight[0]);
         h_control[iSys]->h_lepton_pt[2][iCut]    ->Fill(lepton.Pt(),                  bSF*EventWeight);
         h_control[iSys]->h_lepton_eta[2][iCut]   ->Fill(abs(lepton.Eta()),            bSF*EventWeight);
         h_control[iSys]->h_lepton_relIso[2][iCut]->Fill(relIso,                       bSF*EventWeight);
@@ -714,6 +721,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
         h_matrix[iSys]->h_gen_gentop_invMass[2][iCut] ->Fill(gen_addbjet_invMass,   bSF*EventWeight);
         h_matrix[iSys]->h_gen_mindR_deltaR[2][iCut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
         h_matrix[iSys]->h_gen_mindR_invMass[2][iCut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
+      
+        h_control[iSys]->h_reco_deltaRvsInvMass[2][iCut]->Fill(reco_addbjet_deltaR, reco_addbjet_invMass, bSF*EventWeight);
 
         h_matrix[iSys]->h_respMatrix_gentop_deltaR[2][iCut]  ->Fill(reco_addbjet_deltaR,   gen_addbjet_deltaR,   bSF*EventWeight);
         h_matrix[iSys]->h_respMatrix_gentop_invMass[2][iCut] ->Fill(reco_addbjet_invMass,  gen_addbjet_invMass,  bSF*EventWeight);
@@ -768,6 +777,22 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 void MyAnalysis::SlaveTerminate(){
   //std::cout << "SlaveTerminate" << std::endl;
   option = GetOption();
+  for(unsigned int iSys = 0; iSys < v_syst.size(); ++iSys){
+   for(int iChannel=0; iChannel<nChannel; ++iChannel){
+     for(int iStep=0; iStep<nStep; ++iStep){
+       int ibin = 1;
+       for(int ixbin=1; ixbin <= h_control[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsX(); ++ixbin){
+         for(int iybin=1; iybin <= h_control[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsY(); ++iybin){
+           double value = h_control[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinContent(ixbin,iybin);
+           double error = h_control[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinError(ixbin,iybin);
+           h_control[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinContent(ibin, value);
+           h_control[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinError(ibin, error);
+           ibin++;
+         }
+       }
+     }
+   }
+  }
 }
 
 void MyAnalysis::Terminate(){
