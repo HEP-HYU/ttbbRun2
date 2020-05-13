@@ -9,7 +9,7 @@ import argparse
 
 from ROOT import *
 
-import macro.postProcess as pp
+import python.postProcess as pp
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):

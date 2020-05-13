@@ -9,8 +9,8 @@ import argparse
 
 from ROOT import TChain, TProof, TFile, TH1D, TH1F, TCanvas
 
-import macro.getSampleList
-import macro.getQCD
+import python.getSampleList
+import python.getQCD
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         else:
             samples += data
                    
-        #Compiling TSelector
+        #Compile TSelector
         if dataset == 'data' or dataset == 'all':
             runAna(year, inputDir_nosplit, "TTLJ_PowhegPythia_ttbb.root", "Nosys_Compile", False, False)
         
