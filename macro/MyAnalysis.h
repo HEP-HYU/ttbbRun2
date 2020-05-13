@@ -26,7 +26,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "/home/seohyun/work/ttbb/ttbbRun2_dev/include/histBook.h"
+#include "histBook.h"
 
 class MyAnalysis : public TSelector {
 public :
@@ -44,7 +44,7 @@ public :
    TTreeReaderArray<float>    pdfweight         = {fReader, "PUWeight"};
    TTreeReaderArray<float>    scaleweight       = {fReader, "PUWeight"};
    TTreeReaderArray<float>    psweight          = {fReader, "PUWeight"};
-   TTreeReaderArray<double>   prefireweight     = {fReader, "prefireweight"};
+   //TTreeReaderArray<double>   prefireweight     = {fReader, "prefireweight"};
    TTreeReaderValue<Float_t>  MET               = {fReader, "MET"};
    TTreeReaderValue<Float_t>  MET_phi           = {fReader, "MET_phi"};
    TTreeReaderValue<Float_t>  lepton_pT         = {fReader, NULL};

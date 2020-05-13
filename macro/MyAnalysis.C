@@ -62,18 +62,9 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     if( process.Contains("jecdown") ) v_syst.push_back("__jecdown");
   }
   else{
-    v_syst = {"",
-      "__puup", "__pudown",
-      "__lfup", "__lfdown", "__hfup", "__hfdown",
-      "__hfstat1up", "__hfstat1down", "__hfstat2up", "__hfstat2down",
-      "__lfstat1up", "__lfstat1down", "__lfstat2up", "__lfstat2down",
-      "__cferr1up", "__cferr1down", "__cferr2up", "__cferr2down"
-    };
+    v_syst = syst_basic;
     if( process.Contains("2016") ){
-      v_syst.push_back("__musfup");  v_syst.push_back("__musfdown");
-      v_syst.push_back("__mutrgup"); v_syst.push_back("__mutrgdown");
-      v_syst.push_back("__elsfup");  v_syst.push_back("__elsfdown");
-      v_syst.push_back("__eltrgup"); v_syst.push_back("__eltrgdown");
+      v_syst.insert(v_syst.end(), syst_lep16.begin(), syst_lep16.end());
       if( process.Contains("TTLJ") || process.Contains("Bkg") ){
         v_syst.push_back("__scale0"); v_syst.push_back("__scale1"); v_syst.push_back("__scale2");
 	      v_syst.push_back("__scale3"); v_syst.push_back("__scale4"); v_syst.push_back("__scale5");
@@ -86,16 +77,10 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       }
     }
     else{
-      if( process.Contains("2017") ){
-        v_syst.push_back("__prefireup"); v_syst.push_back("__prefiredown");
-      }
-      v_syst.push_back("__muidup");  v_syst.push_back("__muiddown");
-      v_syst.push_back("__muisoup"); v_syst.push_back("__muisodown");
-      v_syst.push_back("__mutrgup"); v_syst.push_back("__mutrgdown");
-      v_syst.push_back("__elidup");   v_syst.push_back("__eliddown");
-      v_syst.push_back("__elrecoup"); v_syst.push_back("__elrecodown");
-      v_syst.push_back("__elzvtxup"); v_syst.push_back("__elzvtxdown");
-      v_syst.push_back("__eltrgup");  v_syst.push_back("__eltrgdown");
+      //if( process.Contains("2017") ){
+      //  v_syst.push_back("__prefireup"); v_syst.push_back("__prefiredown");
+      //}
+      v_syst.insert(v_syst.end(), syst_lep1718.begin(), syst_lep1718.end());
       if( process.Contains("TTLJ") || process.Contains("Bkg") || process.Contains("Resp") ){
         v_syst.push_back("__scale0"); v_syst.push_back("__scale1"); v_syst.push_back("__scale2");
         v_syst.push_back("__scale3"); v_syst.push_back("__scale4"); v_syst.push_back("__scale5");
@@ -177,7 +162,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       ELECTRON_PT_   = 30.0;
       ELECTRON_ETA_  = 2.4;
       JET_CSV_TIGHT_ = 0.8001;
-      prefireweight = {fReader, "prefireweight"};
+      //prefireweight = {fReader, "prefireweight"};
     }
     if( process.Contains("2018") ){
       MUON_ETA_      = 2.4;
@@ -487,11 +472,11 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       else                              EventWeight *= PUWeight[0];
    
       //Prefire weight, 2017only
-      if( process.Contains("2017") ){
-        if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
-        else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
-        else                                   EventWeight *= prefireweight[0];
-      }
+      //if( process.Contains("2017") ){
+      //  if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
+      //  else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
+      //  else                                   EventWeight *= prefireweight[0];
+      //}
       
       //Lepton Scale Factor
       if( process.Contains("2016") ){
