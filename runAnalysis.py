@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     dataset = args.dataset
 
-    macro.getSampleList.getSampleList(os.getcwd()+'/samples')
+    python.getSampleList.getSampleList(os.getcwd()+'/samples')
 
     for year in range(16,19):
         if year == 16 and run16 == False: continue
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                 os.system('mv '+outdir+' '+outdir+'_backup_'+str(datetime.today().strftime("%Y%m%d")))
             os.system('mv output/root'+str(year)+' '+outdir)
 
-            macro.getQCD.getQCDShape(os.getcwd(), year, samples)
+            python.getQCD.getQCDShape(os.getcwd(), year, samples)
         else:
             for sample in samples:
                 run = False

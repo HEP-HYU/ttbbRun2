@@ -7,8 +7,8 @@ import subprocess
 from ROOT import *
 import ROOT
 
-from python import unfoldPreProcess as upp
-from python import drawUnfoldHists as duh
+import python.unfoldPreProcess as upp
+import python.drawUnfoldOutput as duo
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):
@@ -84,8 +84,9 @@ if __name__ == '__main__':
         
         lumi = {16:35922, 17:41529, 18:59693}
 
-        #upp.unfoldPreProcess(**argDict)
-        #makeAcceptance(argDict['prefitDir'], argDict['outputDir'], year, argDict['matrix'], argDict['genMode'])
-        #runUnfol(argDict['outputDir'], year, argDict['genMode'], argDict['recoMode'], scanLcurve, fixTau)
-        duh.drawHist(argDict['outputDir'], lumi[year], 'hist_accept.root', argDict['recoMode'], argDict['genMode'])
-        duh.drawHist(argDict['outputDir'], lumi[year], 'hist_output.root', argDict['recoMode'], argDict['genMode'])
+        upp.unfoldPreProcess(**argDict)
+        makeAcceptance(argDict['prefitDir'], argDict['outputDir'], year, argDict['matrix'], argDict['genMode'])
+        runUnfold(argDict['outputDir'], year, argDict['genMode'], argDict['recoMode'], scanLcurve, fixTau)
+        duo.drawHist(argDict['outputDir'],  lumi[year], 'hist_accept.root', argDict['recoMode'], argDict['genMode'])
+        duo.drawHist(argDict['outputDir'],  lumi[year], 'hist_output.root', argDict['recoMode'], argDict['genMode'])
+        duo.drawTable(year, argDict['outputDir'], lumi[year], 'hist_output.root', argDict['recoMode'], argDict['genMode'])
