@@ -113,17 +113,18 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
     //    bool fixTau_ = false, double fixedTau_ = 0.)
     v_unfold_out = runTUnfold(
       unfoldDir.c_str(), h_reco_clos, h_resp_pref,
-      std::map<const char *, TH1 *>(), std::map<const char *, double>(), m_sysInput,
+      std::map<const char *, TH1 *>(), std::map<const char *, double>(), std::map<const char*, TH2 *>(),
       scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
     for ( auto out : v_unfold_out ){
       if( out != NULL ) out->Write();
     }
+    h_gen_clos->Write();
     
     // Unfold data
     std::cout << "Unfold data..." << std::endl;
     TH2 *h_resp_post = (TH2 *)f_matrix->Get(Form("h_%s_ResponseMatrix%s_Ch2_S3_postfit", genMode, vari.c_str()));
     TH1 *h_data = (TH1 *)f_input->Get(Form("h_%s_RecoAddbJet%s_Ch2_S3_data_obs", recoMode, vari.c_str()));
-    std::map<const char *, TH1 *> m_bkg;
+    std::map<const char *, TH1 *> m_bkg, m_bkgup, m_bkgdown;
     std::map<const char *, double> m_scale;
 
     for(auto bkg : group){
@@ -132,16 +133,30 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
       if( (pos = bkg.find("ttbb",0)) != std::string::npos ) continue;
       m_scale.insert(pair<const char *, double>(bkg.c_str(), 1));
       auto tmp = (TH1 *)f_input->Get(Form("h_%s_RecoAddbJet%s_Ch2_S3_%s", recoMode, vari.c_str(), bkg.c_str()));
+      auto tmpup = (TH1 *)f_input->Get(Form("h_%s_RecoAddbJet%s_Ch2_S3_%s__postfitup", recoMode, vari.c_str(), bkg.c_str()));
+      auto tmpdown = (TH1 *)f_input->Get(Form("h_%s_RecoAddbJet%s_Ch2_S3_%s__postfitdown", recoMode, vari.c_str(), bkg.c_str()));
       m_bkg.insert(pair<const char *, TH1 *>(bkg.c_str(), tmp));
+      m_bkgup.insert(pair<const char *, TH1 *>(bkg.c_str(), tmpup));
+      m_bkgdown.insert(pair<const char *, TH1 *>(bkg.c_str(), tmpdown));
     }
 
     v_unfold_out = runTUnfold(
       unfoldDir.c_str(), h_data, h_resp_post,
-      m_bkg, m_scale, std::map<const char *, TH2 *>(),
+      m_bkg, m_scale, m_sysInput,
       scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
     for ( auto out : v_unfold_out ){
       if( out != NULL ) out->Write();
     }
+    auto v_up = runTUnfold(
+      unfoldDir.c_str(), h_data, h_resp_post,
+      m_bkgup, m_scale, std::map<const char*, TH2 *>(),
+      scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
+    auto v_down = runTUnfold(
+      unfoldDir.c_str(), h_data, h_resp_post,
+      m_bkgdown, m_scale, std::map<const char*, TH2 *>(),
+      scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
+    v_up[0]->SetName(Form("Background_%s__postup", v_up[0]->GetName())); v_up[0]->Write();
+    v_down[0]->SetName(Form("Background_%s__postdown", v_down[0]->GetName())); v_down[0]->Write();
 
     // Calculate differential cross section
     std::cout << "Calculate Differential cross section" << std::endl;
@@ -153,6 +168,7 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
 
     h_diffXsec_MC->Write();
     h_diffXsec->Write();
+    h_gen_nosel->Write();
 
     for( auto syst : syst_list ){
       if(syst == "") continue;
@@ -161,6 +177,7 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
       h_diffSys->SetName(Form("Acceptance_%s%s", h_data->GetName(), syst.c_str()));
       h_diffSys->Write();
     }
+
   }
   std::cout << "Finish unfolding" << std::endl;
   f_out->Close();
