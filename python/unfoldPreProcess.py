@@ -56,40 +56,43 @@ def makeInputHists(*args):
             if getNbinsDR and getNbinsM and getWidthDR and getWidthM: break
 
     f_out = TFile.Open(outputDir+'/hist_input.root','recreate')
-    
+
+    systList = ['','__postfitup','__postfitdown']
     for process in group:
         f_tmp = TFile.Open(inputDir+'/'+process+'_postfit_histos.root')
-        h_post = f_tmp.Get(discriminant)
-        h_dR = TH1D('h_'+recoMode+'_RecoAddbJetDeltaR_Ch2_S3_'+process,'',nbinsDR, array('d', widthDR))
-        h_dR.SetXTitle('#DeltaR_{b#bar{b}}')
-        h_dR.SetYTitle('Entries')
-        h_dR.Sumw2()
-        h_M = TH1D('h_'+recoMode+'_RecoAddbJetInvMass_Ch2_S3_'+process,'',nbinsM, array('d', widthM))
-        h_M.SetXTitle('M_{b#bar{b}}(GeV)')
-        h_M.SetYTitle('Entries')
-        h_M.Sumw2()
+        for syst in systList:
+            if 'data' in process and syst != '': continue
+            h_post = f_tmp.Get(discriminant+syst)
+            h_dR = TH1D('h_'+recoMode+'_RecoAddbJetDeltaR_Ch2_S3_'+process+syst,'',nbinsDR, array('d', widthDR))
+            h_dR.SetXTitle('#DeltaR_{b#bar{b}}')
+            h_dR.SetYTitle('Entries')
+            h_dR.Sumw2()
+            h_M = TH1D('h_'+recoMode+'_RecoAddbJetInvMass_Ch2_S3_'+process+syst,'',nbinsM, array('d', widthM))
+            h_M.SetXTitle('M_{b#bar{b}}(GeV)')
+            h_M.SetYTitle('Entries')
+            h_M.Sumw2()
 
-        for ibin in range(1,nbinsDR+1):
-            value = 0.0
-            sqrEr = 0.0
-            for jbin in range(nbinsM):
-                value += h_post.GetBinContent(ibin+6*jbin)
-                sqrEr += pow(h_post.GetBinError(ibin+6*jbin),2)
-            h_dR.SetBinContent(ibin, value)
-            h_dR.SetBinError(ibin, math.sqrt(sqrEr))
+            for ibin in range(1,nbinsDR+1):
+                value = 0.0
+                sqrEr = 0.0
+                for jbin in range(nbinsM):
+                    value += h_post.GetBinContent(ibin+6*jbin)
+                    sqrEr += pow(h_post.GetBinError(ibin+6*jbin),2)
+                h_dR.SetBinContent(ibin, value)
+                h_dR.SetBinError(ibin, math.sqrt(sqrEr))
 
-        for ibin in range(1,nbinsM+1):
-            value = 0.0
-            sqrEr = 0.0
-            for jbin in range(nbinsDR):
-                value += h_post.GetBinContent(1+(ibin-1)*6+jbin)
-                sqrEr += pow(h_post.GetBinError(1+(ibin-1)*6+jbin),2)
-            h_M.SetBinContent(ibin, value)
-            h_M.SetBinError(ibin, math.sqrt(sqrEr))
+            for ibin in range(1,nbinsM+1):
+                value = 0.0
+                sqrEr = 0.0
+                for jbin in range(nbinsDR):
+                    value += h_post.GetBinContent(1+(ibin-1)*6+jbin)
+                    sqrEr += pow(h_post.GetBinError(1+(ibin-1)*6+jbin),2)
+                h_M.SetBinContent(ibin, value)
+                h_M.SetBinError(ibin, math.sqrt(sqrEr))
 
-        f_out.cd()
-        h_dR.Write()
-        h_M.Write()
+            f_out.cd()
+            h_dR.Write()
+            h_M.Write()
         f_tmp.Close()
 
     f_out.Close()
@@ -179,6 +182,7 @@ def extractMatrix(*args):
         h_full = f_gen.Get('h_'+genMode+'_GenAddbJet'+vari+'_Ch2_nosel')
         h_full.Scale(lumi*preXsec/preGenEvts)
 
+        h_gen.SetName('h_'+genMode+'_GenAddbJet'+vari+'_Ch2_S3')
         h_gen.Write()
         h_full.Write()
         

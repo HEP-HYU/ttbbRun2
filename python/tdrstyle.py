@@ -156,7 +156,8 @@ def tdrCMSlabel(lumi):
   label.SetY1NDC(0.94)
   label.SetY2NDC(0.98)
   label.SetTextFont(42)
-  text = "CMS, "+str(lumi)+"fb^{-1} at #sqrt{s} = 13TeV"
+  lumi *= 0.001
+  text = "CMS, %.1ffb^{-1} at #sqrt{s} = 13TeV" % lumi
   label.AddText(text)
   label.SetFillStyle(0)
   label.SetBorderSize(0)
