@@ -28,20 +28,32 @@ def write_envelope(sys_name, h_central, h_sys_list, h_eventinfo, h_weights):
         #hist.Scale(h_eventinfo.GetBinContent(2)/(h_weights.GetBinContent(index+1)*bratio))
         h_sys_weighted_list.append(hist)
 
-    nbins = h_central.GetNbinsX()
     h_up = h_central.Clone()
     h_down = h_central.Clone()
+    
+    if h_central.GetDimension() == 1:
+        for ibin in range(h_central.GetNbinsX()+2):
+            minimum = float("inf")
+            maximum = float("-inf")
 
-    for ibin in range(nbins+1):
-        minimum = float("inf")
-        maximum = float("-inf")
+            for hist in h_sys_weighted_list:
+                minimum = min(minimum, hist.GetBinContent(ibin))
+                maximum = max(maximum, hist.GetBinContent(ibin))
 
-        for hist in h_sys_weighted_list:
-            minimum = min(minimum, hist.GetBinContent(ibin))
-            maximum = max(maximum, hist.GetBinContent(ibin))
+            h_up.SetBinContent(ibin, maximum)
+            h_down.SetBinContent(ibin, minimum)
+    elif h_central.GetDimension() == 2:
+        for ixbin in range(h_central.GetNbinsX()+2):
+            for iybin in range(h_central.GetNbinsY()+2):
+                minimum = float("inf")
+                maximum = float("-inf")
 
-        h_up.SetBinContent(ibin, maximum)
-        h_down.SetBinContent(ibin, minimum)
+                for hist in h_sys_weighted_list:
+                    minimum = min(minimum, hist.GetBinContent(ixbin, iybin))
+                    maximum = max(maximum, hist.GetBinContent(ixbin, iybin))
+
+                h_up.SetBinContent(ixbin, iybin, maximum)
+                h_down.SetBinContent(ixbin, iybin, minimum)
 
     upname = "__"+sys_name+"up"
     downname= "__"+sys_name+"down"

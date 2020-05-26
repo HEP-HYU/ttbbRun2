@@ -72,6 +72,17 @@ if __name__ == '__main__':
 
         if args.merge:
             print("Merge histogram root files")
+
+            """
+            today = time.localtime()
+            dirName = "%04d%02d%02d" % (today.tm_year, today.tm_mon, today.tm_mday)
+            if not os.path.exists(os.getcwd()+'/output/backup/'+str(dirName)):
+                os.makedirs(os.getcwd()+'/output/backup/'+str(dirName))
+            cmd = ['cp','-r', input_dir, str(os.getcwd())+'/output/backup/'+str(dirName)]
+            print cmd
+            subprocess.call(cmd)
+            """
+
             procs = []
             dir_list = filter(os.path.isdir, glob.glob('output/root'+str(year)+'/*'))
             for item in dir_list:
@@ -84,14 +95,6 @@ if __name__ == '__main__':
             for item in os.listdir(input_dir):
                 if os.path.isdir(input_dir+'/'+item):
                     os.system('rm -rf '+input_dir+'/'+item)
-
-            today = time.localtime()
-            dirName = "%04d%02d%02d" % (today.tm_year, today.tm_mon, today.tm_mday)
-            if not os.path.exists(os.getcwd()+'/output/backup/'+str(dirName)):
-                os.makedirs(os.getcwd()+'/output/backup/'+str(dirName))
-            cmd = ['cp -r', input_dir,  str(os.getcwd())+'/output/backup/'+str(dirName)+'/']
-            subprocess.call(cmd)
-
         if args.post:
             print("Run post process")
             procs = []
@@ -118,10 +121,11 @@ if __name__ == '__main__':
             cmd = ['hadd', str(output_dir)+'/hist_DataSingleEG.root']+glob.glob(input_dir+'/hist_DataSingleEG*')
             subprocess.call(cmd)
             for file in glob.glob(input_dir+'/hist_QCD*'):
-                subprocess.call('cp '+file+' '+output_dir)
-            cmd = ['cp -r', str(output_dir), str(os.getcwd())+'/output/post'+str(year)]
+                cmd = ['cp',file,output_dir]
+                subprocess.call(cmd)
+            cmd = ['cp', '-r', str(output_dir), str(os.getcwd())+'/output/post'+str(year)]
             subprocess.call(cmd)
-            cmd = ['rm -rf', str(input_dir)]
+            cmd = ['rm', '-rf', str(input_dir)]
             subprocess.call(cmd)
             subprocess.call('mv '+os.getcwd()+'/output/post'+str(year)+' '+os.getcwd()+'/output/root'+str(year))
 
