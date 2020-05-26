@@ -55,6 +55,7 @@ def drawHist(outputDir, lumi, inFile, recoMode='mindR', genMode='mindR'):
 
         canvas.cd()
         if 'Bin' in hist:
+            if '__' in hist: continue
             h_in.Scale(100)
             h_err = h_in.Clone()
             if 'Acceptance' in h_in.GetName():
@@ -87,8 +88,7 @@ def drawHist(outputDir, lumi, inFile, recoMode='mindR', genMode='mindR'):
                 h_in.Draw('box')
             labelSim.Draw('same')
         elif '__' in h_in.GetName() and h_in.InheritsFrom(TH1.Class()):
-            h_in.Draw('hist')
-            labelSim.Draw('hist same')
+            continue
         else:
             if 'Gen' in h_in.GetName() or 'Input' in h_in.GetName():
                 continue
@@ -221,7 +221,7 @@ def drawTable(year, outputDir, lumi, inFile, recoMode='mindR', genMode='mindR'):
                     (h_accept.GetBinContent(ibin)*h_nominal.GetXaxis().GetBinWidth(ibin)*lumi*bRatio)
             if value < 0.0:
                 value = 0.0
-            strMatrixStatUnc += '& %.2f ' % value
+            strMatrixStatUnc += '& %.7f ' % value
         
         h_postUp = calculateDiffXsec(lumi, f_in.Get('Background_Unfolded_'+hist+'_data_obs__postup'), h_accept)
         h_postDown = calculateDiffXsec(lumi, f_in.Get('Background_Unfolded_'+hist+'_data_obs__postdown'), h_accept)
@@ -233,30 +233,33 @@ def drawTable(year, outputDir, lumi, inFile, recoMode='mindR', genMode='mindR'):
             deltaUp = up - nominal
             deltaDown = down - nominal
             value = max(abs(deltaUp), abs(deltaDown))
-            strMCbkgUnc += '& %.2f ' % value
+            strMCbkgUnc += '& %.7f ' % value
 
         for categories, systList in systCategories.items():
             for syst in systList:
-                h_systUp = calculateDiffXsec(lumi, f_in.Get('DeltaSysSource_'+hist+'_data_obs__'+syst+'up'), h_accept)
-                h_systDown = calculateDiffXsec(lumi, f_in.Get('DeltaSysSource_'+hist+'_data_obs__'+syst+'down'), h_accept)
-                if h_systUp is None:
+                h_systUp = f_in.Get('DeltaSysSource_'+hist+'_data_obs__'+syst+'up')
+                h_systDown = f_in.Get('DeltaSysSource_'+hist+'_data_obs__'+syst+'down') 
+                if h_systUp == None:
                     print '%s up does not exist, %s up systematic uncertainties set zero' % (syst, syst)
                     h_systUp = h_nominal.Clone()
                     for ibin in range(1,h_nominal.GetNbinsX()+1):
                         h_systUp.SetBinContent(ibin, 0)
-                if h_systDown is None:
+                else:
+                    h_systUp = calculateDiffXsec(lumi, f_in.Get('DeltaSysSource_'+hist+'_data_obs__'+syst+'up'), h_accept)
+                if h_systDown == None:
                     print '%s down does not exist, %s down systematic uncertainties set zero' % (syst, syst)
                     h_systDown = h_nominal.Clone()
                     for ibin in range(1,h_nominal.GetNbinsX()+1):
                         h_systDown.SetBinContent(ibin, 0)
-
+                else:
+                    h_systDown = calculateDiffXsec(lumi, f_in.Get('DeltaSysSource_'+hist+'_data_obs__'+syst+'down'), h_accept)
                 tmpStr = '      & '+syst+' '
                 for ibin in range(1, h_nominal.GetNbinsX()+1):
                     deltaUp = h_systUp.GetBinContent(ibin)
                     deltaDown = h_systDown.GetBinContent(ibin)
                     value = max(abs(deltaUp), abs(deltaDown))
 
-                    tmpStr += '& %.2f ' % value
+                    tmpStr += '& %.7f ' % value
                 tmpStr += '\\\\\n'
                 strUnc[categories].append(tmpStr)
         

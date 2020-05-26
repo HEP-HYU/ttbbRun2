@@ -140,7 +140,7 @@ def extractMatrix(*args):
     f_out.cd()
     
     variables = ['DeltaR', 'InvMass']
-    systList = [
+    systList = ['',
         '__swup', '__swdown', '__psup', '__psdown',
         '__tuneup', '__tunedown', '__hdampup', '__hdampdown',
         '__pdfup', '__pdfdown',
@@ -165,56 +165,57 @@ def extractMatrix(*args):
     for vari in variables: 
         h_prefit = f_matrix.Get('h_'+recoMode+'_RecoAddbJet'+vari+'_Ch2_S3')
         h_prefit.Scale(lumi*preXsec/preGenEvts)
+        
         h_postfit = f_postfit.Get('h_'+recoMode+'_RecoAddbJet'+vari+'_Ch2_S3_ttbb')
+        
+        h_full = f_gen.Get('h_'+genMode+'_GenAddbJet'+vari+'_Ch2_nosel')
+        h_full.Scale(lumi*preXsec/preGenEvts)
         if ttbb != matrix:
             h_mc = f_ttbb.Get('h_'+recoMode+'_RecoAddbJet'+vari+'_Ch2_S3')
             h_mc.Scale(lumi*ttbbXsec/ttbbGenEvts)
             h_gen = f_ttbb.Get('h_'+genMode+'_GenAddbJet'+vari+'_Ch2_S3')
             h_gen.Scale(lumi*ttbbXsec/ttbbGenEvts)
-            h2_mat_prefit = f_matrix.Get('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3')
         else:
             h_mc = f_ttbb.Get('h_'+recoMode+'_RecoAddbJet'+vari+'2_Ch2_S3')
             h_mc.Scale(lumi*ttbbXsec/ttbbGenEvts)
             h_gen = f_ttbb.Get('h_'+genMode+'_GenAddbJet'+vari+'2_Ch2_S3')
             h_gen.Scale(lumi*ttbbXsec/ttbbGenEvts)
-            h2_mat_prefit = f_matrix.Get('h_'+genMode+'_ResponseMatrix'+vari+'2_Ch2_S3')
-
-        h_full = f_gen.Get('h_'+genMode+'_GenAddbJet'+vari+'_Ch2_nosel')
-        h_full.Scale(lumi*preXsec/preGenEvts)
-
         h_gen.SetName('h_'+genMode+'_GenAddbJet'+vari+'_Ch2_S3')
-        h_gen.Write()
-        h_full.Write()
         
-        h2_mat_postfit = h2_mat_prefit.Clone()
         h_ratio = h_postfit.Clone()
         h_ratio.Divide(h_prefit)
-
-        for iybin in range(1,h2_mat_prefit.GetNbinsY()+1):
-            for ixbin in range(1,h2_mat_prefit.GetNbinsX()+1):
-                value = h2_mat_prefit.GetBinContent(ixbin, iybin)*h_ratio.GetBinContent(ixbin) 
-                error = h2_mat_prefit.GetBinError(ixbin, iybin)*h_ratio.GetBinContent(ixbin)
-                h2_mat_postfit.SetBinContent(ixbin, iybin, value)
-                h2_mat_postfit.SetBinError(ixbin, iybin, error)
 
         h_mc.SetName(h_postfit.GetName()+'_closure')
         h_prefit.SetName(h_prefit.GetName()+'_prefit')
         h_postfit.SetName(h_postfit.GetName()+'_postfit')
-        h2_mat_prefit.SetName('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3_prefit')
-        h2_mat_postfit.SetName('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3_postfit')
         h_ratio.SetName(h_ratio.GetName()+'_fitRatio')
 
+        for syst in systList:
+            if ttbb != matrix:
+                h2_mat_prefit = f_matrix.Get('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3'+syst)
+            else:
+                h2_mat_prefit = f_matrix.Get('h_'+genMode+'_ResponseMatrix'+vari+'2_Ch2_S3'+syst)
+
+            h2_mat_postfit = h2_mat_prefit.Clone()
+            for iybin in range(1,h2_mat_prefit.GetNbinsY()+1):
+                for ixbin in range(1,h2_mat_prefit.GetNbinsX()+1):
+                    value = h2_mat_prefit.GetBinContent(ixbin, iybin)*h_ratio.GetBinContent(ixbin) 
+                    error = h2_mat_prefit.GetBinError(ixbin, iybin)*h_ratio.GetBinContent(ixbin)
+                    h2_mat_postfit.SetBinContent(ixbin, iybin, value)
+                    h2_mat_postfit.SetBinError(ixbin, iybin, error)
+
+            h2_mat_prefit.SetName('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3_prefit'+syst)
+            h2_mat_postfit.SetName('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3_postfit'+syst)
+
+            h2_mat_prefit.Write()
+            h2_mat_postfit.Write()
+
+        h_gen.Write()
+        h_full.Write()
+        h_ratio.Write()
         h_mc.Write()
         h_prefit.Write()
-        h_postfit.Write()
-        h2_mat_prefit.Write()
-        h2_mat_postfit.Write()
-        h_ratio.Write()
-        
-        for syst in systList:
-            h2_mat_syst = f_matrix.Get('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3'+syst)
-            h2_mat_syst.SetName('h_'+genMode+'_ResponseMatrix'+vari+'_Ch2_S3_prefit'+syst)
-            h2_mat_syst.Write()
+        h_postfit.Write()       
 
     f_gen.Close()
     f_ttbb.Close()
