@@ -155,7 +155,7 @@ std::vector<TH1 *> runTUnfold(std::string outdir_, TH1 *h_in_, TH2 *h_resp_,
   const double unfoldResult = unfold->DoUnfold(bestTau, h_in);
   auto h_output = unfold->GetOutput(Form("Unfolded_%s",h_in->GetName()),"",0,"*[UO]",true);
   auto h_input = unfold->GetInput(Form("Input_%s", h_in->GetName()),"",0,"*[UO]",true);
-  auto h2_emat = unfold->GetEmatrixTotal(Form("EmatrixTotal_%s",h_in->GetName()));
+  auto h2_emat = unfold->GetEmatrixInput(Form("EmatrixInput_%s",h_in->GetName()));
   for( int ibin = 1; ibin <= h_output->GetNbinsX(); ibin++ ){
     auto error = sqrt(h2_emat->GetBinContent(ibin, ibin));
     h_output->SetBinError(ibin, error);
@@ -175,13 +175,13 @@ std::vector<TH1 *> runTUnfold(std::string outdir_, TH1 *h_in_, TH2 *h_resp_,
   //     1. Covraiance matrix from the uncorrelated background unceratinties
   //     2. 1-sigma shift corresponding to a background scale uncertainty
   vector<TH1 *> v_output;
-  v_output.push_back(h_output);
-  v_output.push_back(h_input);
-  v_output.push_back(h2_emat);
-  v_output.push_back(unfold->GetEmatrixInput(Form("EmatrixInput_%s",h_in->GetName())));
-  v_output.push_back(unfold->GetEmatrixSysUncorr(Form("EmatrixSysUncorr_%s", h_in->GetName())));
+  v_output.push_back(h_output); //[0]
+  v_output.push_back(h_input); //[1]
+  v_output.push_back(unfold->GetEmatrixTotal(Form("EmatrixTotal_%s",h_in->GetName()))); //[2]
+  v_output.push_back(unfold->GetEmatrixInput(Form("EmatrixInput_%s",h_in->GetName()))); //[3]
+  v_output.push_back(unfold->GetEmatrixSysUncorr(Form("EmatrixSysUncorr_%s", h_in->GetName()))); //[4]
   //v_output.push_back(unfold->GetBias(Form("%s_Bias", h_in->GetName())));
-  v_output.push_back(unfold->GetDeltaSysTau(Form("DeltaSysTau_%s", h_in->GetName())));
+  v_output.push_back(unfold->GetDeltaSysTau(Form("DeltaSysTau_%s", h_in->GetName()))); //[4]
   TH2D *h2_emat_tau = (TH2D *)h2_emat->Clone();
   unfold->GetEmatrixSysTau(h2_emat_tau);
   h2_emat_tau->SetName(Form("EmatrixSysTau_%s", h_in->GetName()));

@@ -91,20 +91,12 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
   std::vector<std::string> variables = {"DeltaR", "InvMass"};
   for( auto vari : variables ){
     std::vector<TH1 *> v_unfold_out;
-    
     // Closure Test
     // Calculate Matrix Systematic Uncertainties
-    std::cout << "Calculate Matrix Systematic uncertainties..." << std::endl;
     TH2 *h_resp_pref = (TH2 *)f_matrix->Get(Form("h_%s_ResponseMatrix%s_Ch2_S3_prefit", genMode, vari.c_str()));
     TH1 *h_reco_clos = (TH1 *)f_matrix->Get(Form("h_%s_RecoAddbJet%s_Ch2_S3_ttbb_closure", recoMode, vari.c_str()));
     TH1 *h_gen_clos  = (TH1 *)f_matrix->Get(Form("h_%s_GenAddbJet%s_Ch2_S3", genMode, vari.c_str()));
 
-    std::map<const char *, TH2 *> m_sysInput;
-    for( std::string syst : syst_list ){
-      TH2 *tmp = (TH2 *)f_matrix->Get(Form("h_%s_ResponseMatrix%s_Ch2_S3_prefit%s", genMode, vari.c_str(), syst.c_str()));
-      m_sysInput.insert(pair<const char *, TH2 *>(syst.c_str(), tmp));
-    }
-  
     //  std::vector<TH1 *> runTUnfold(
     //    std::string outdir_, TH1 *h_in_, TH2 *h_resp_,
     //    std::map<const char *, TH1 *> m_bkgs_, std::map<const char *, double> m_scale_,
@@ -113,7 +105,7 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
     //    bool fixTau_ = false, double fixedTau_ = 0.)
     v_unfold_out = runTUnfold(
       unfoldDir.c_str(), h_reco_clos, h_resp_pref,
-      std::map<const char *, TH1 *>(), std::map<const char *, double>(), std::map<const char*, TH2 *>(),
+      std::map<const char *, TH1 *>(), std::map<const char *, double>(), std::map<const char *, TH2 *>(),
       scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
     for ( auto out : v_unfold_out ){
       if( out != NULL ) out->Write();
@@ -127,6 +119,12 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
     std::map<const char *, TH1 *> m_bkg, m_bkgup, m_bkgdown;
     std::map<const char *, double> m_scale;
 
+    std::map<const char *, TH2 *> m_sysInput;
+    for( std::string syst : syst_list ){
+      TH2 *tmp = (TH2 *)f_matrix->Get(Form("h_%s_ResponseMatrix%s_Ch2_S3_postfit%s", genMode, vari.c_str(), syst.c_str()));
+      m_sysInput.insert(pair<const char *, TH2 *>(syst.c_str(), tmp));
+    }
+  
     for(auto bkg : group){
       size_t pos;
       if( (pos = bkg.find("data",0)) != std::string::npos ) continue;
