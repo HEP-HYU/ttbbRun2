@@ -4,10 +4,139 @@ import sys
 from ROOT import *
 import ROOT
 
-luminosities = {16:35922, 17:41529, 18:59693}
-
-for year in range(16,19):
+def drawYields(year, inDir, lumi):
     tmp_tmp = 0.0
+    strTemplate = """
+\\begin{table}[htb]
+  \\rotatebox{90}{
+  \\footnotesize
+  \\begin{center}
+	\\caption{%(year)s yields table}
+	\\begin{tabular}{%(nRows)s}
+      \\hline\\hline
+      Sample & Ch0S0 & Ch0S1 & Ch0S2 & Ch1S0 & Ch1S1 & Ch1S2 & Ch2S0 & Ch2S1 & Ch2S2 \\\\
+      \\hline
+%(mcNevts)s
+      \\hline
+%(dataNevts)s
+%(totalMC)s
+%(ratio)s
+      \\hline\\hline
+    \\end{tabular}
+  \\end{center}
+  }
+\\end{table}
+    """
+    # MC samples
+    genevt = {}
+    with open('../samples/genevt'+str(year)+'.txt','r') as f:
+        while True:
+            line = f.readline()
+            if not line: break
+            tmp = line.split(' ')
+            genevt[tmp[0]] = float(tmp[1])
+
+    hist_name = 'h_nJets'
+    dicNevts = {}
+    dicErrors = {}
+    dicOrder = {}
+    nData  = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0] 
+    nDataErr  = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0] 
+
+    with open('../samples/xsec'+str(year)+'.txt','r') as f:
+        while True:
+            line = f.readline()
+            if not line: break
+            if 'Sample Xsec' in line: continue
+            tmp = line.split(' ')
+            sample = tmp[0]
+            xsec = float(tmp[1])
+            order = int(tmp[2])
+            color = tmp[3]
+            group = tmp[4][:-1]
+            #if "QCD" in group: continue
+            if order < 0: continue
+            if not group in dicNevts.keys():
+                dicNevts[group]  = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+                dicErrors[group] = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+                dicOrder[order] = group
+            
+            f_sample = ROOT.TFile(inDir+'/hist_'+sample+'.root')
+            scale = (lumi*xsec/genevt[sample])
+            print "Sample: "+sample+" Scale: "+str(scale)
+            tmp = 0
+            for ich in range(0,3):
+                for istep in range(0,4):
+                    if istep == 2: continue
+                    hist_tmp = f_sample.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
+                    hist_tmp.Scale(scale)
+                    #tmp_evt = hist_tmp.Integral(0, hist_tmp.GetNbinsX()+1)
+                    tmp_err = ROOT.Double()
+                    tmp_evt = hist_tmp.IntegralAndError(1, hist_tmp.GetNbinsX()+1, tmp_err);
+                    if tmp_evt < 0.0: tmp_evt = 0.0
+                    dicNevts[group][tmp] += tmp_evt
+                    dicErrors[group][tmp] += tmp_err
+                    tmp += 1
+             
+    f_muon = ROOT.TFile(inDir+'/hist_DataSingleMu.root')
+    f_elec = ROOT.TFile(inDir+'/hist_DataSingleEG.root')
+    tmp = 0
+    for ich in range(0,3):
+        for istep in range(0,4):
+            tmp_evt = 0.0
+            tmp_err = ROOT.Double() 
+            if istep == 2: continue
+            hist_muon = f_muon.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
+            hist_elec = f_elec.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
+            if ich == 0:
+                tmp_evt = hist_muon.IntegralAndError(1, hist_muon.GetNbinsX()+1, tmp_err)
+            elif ich == 1:
+                tmp_evt = hist_elec.IntegralAndError(1, hist_elec.GetNbinsX()+1, tmp_err)
+            else: 
+                tmp_evt = hist_muon.IntegralAndError(1, hist_muon.GetNbinsX()+1, tmp_err)
+                tmp_err2 = ROOT.Double()
+                tmp_evt += hist_elec.IntegralAndError(1, hist_elec.GetNbinsX()+1, tmp_err2)
+                tmp_err += tmp_err2
+            
+            nData[tmp] += tmp_evt
+            nDataErr[tmp] += tmp_err
+            tmp += 1
+
+    dictIn = {'year':str(year),'nRows':'|c|c|c|c|c|c|c|c|c|c|','mcNevts':'', 'dataNevts':'','totalMC':'','ratio':''}
+
+#%(mcNevts)s
+#%(dataNevts)s
+#%(totalMC)s
+#%(ratio)s
+    totalMC = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+    totalErr = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+
+    for key, value in dicOrder.items():
+        dictIn['mcNevts'] += '      %s ' % (value)
+        for i in range(9):
+            totalMC[i] += dicNevts[value][i]
+            totalErr[i] += dicErrors[value][i]
+            dictIn['mcNevts'] += '& $%.1f {\scriptstyle\ \pm\ %.1f}$ ' % (dicNevts[value][i], dicErrors[value][i])
+        dictIn['mcNevts'] += '\\\\\n'
+
+    dictIn['dataNevts'] += '      Data '
+    dictIn['totalMC'] += '      TotalMC '
+    dictIn['ratio'] += '      Ratio '
+    for i in range(9):
+        ratio = nData[i]/totalMC[i]
+        dictIn['dataNevts'] += '& $%.0f {\scriptstyle\ \pm\ %.1f}$ ' % (nData[i], nDataErr[i])
+        dictIn['totalMC'] += '& $%.1f {\scriptstyle\ \pm\ %.1f}$ ' % (totalMC[i], totalErr[i])
+        dictIn['ratio'] += '& $%.2f$ ' % (ratio)
+    dictIn['dataNevts'] += '\\\\'
+    dictIn['totalMC'] += '\\\\'
+    dictIn['ratio'] += '\\\\'
+    
+    #nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_stat)
+    strOut = strTemplate % dictIn
+    with open("../output/yields"+str(year)+".tex", 'w') as f: f.write(strOut)
+
+"""
+for year in range(16,19):
     input_loc = '../output/root'+str(year)+'_post/'
 
     f_nevt = open('../output/cutflow/nevt'+str(year)+'.tex', 'w')
@@ -95,20 +224,6 @@ for year in range(16,19):
             n += 1
 
     # Data
-    f_muon = ROOT.TFile(input_loc+'/hist_DataSingleMu.root')
-    f_elec = ROOT.TFile(input_loc+'/hist_DataSingleEG.root')
-    nevt = 'Data'
-    for ich in range(0,2):
-        for istep in range(0,4):
-            hist_muon = f_muon.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
-            hist_elec = f_elec.Get(hist_name+'_Ch'+str(ich)+'_S'+str(istep))
-            if ich == 0:
-                tmp_evt = hist_muon.Integral()+hist_muon.GetBinContent(hist_muon.GetNbinsX()+1)
-                tmp_stat = hist_muon.IntegralAndError(0, hist_muon.GetNbinsX()+1, ROOT.Double(tmp_tmp))
-            else: 
-                tmp_evt = hist_elec.Integral()+hist_elec.GetBinContent(hist_elec.GetNbinsX()+1)
-                tmp_stat = hist_elec.IntegralAndError(0, hist_elec.GetNbinsX()+1, ROOT.Double(tmp_tmp))
-
             nevt += '& $%.2f {\scriptstyle\ \pm\ %.2f}$ ' % (tmp_evt, tmp_stat)
     nevt += '\n'
     f_nevt.write(nevt)
@@ -119,3 +234,7 @@ for year in range(16,19):
 
     f_nevt.close()
     f_config.close()
+"""
+drawYields(16, '../output/root16_post', 35922)
+drawYields(17, '../output/root17_post', 41529)
+drawYields(18, '../output/root18_post', 59693)
