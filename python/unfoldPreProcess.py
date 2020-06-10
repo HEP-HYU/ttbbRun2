@@ -76,8 +76,8 @@ def makeInputHists(*args):
                 value = 0.0
                 sqrEr = 0.0
                 for jbin in range(nbinsM):
-                    value += h_post.GetBinContent(ibin+6*jbin)
-                    sqrEr += pow(h_post.GetBinError(ibin+6*jbin),2)
+                    value += h_post.GetBinContent(1+(ibin-1)*8+jbin)
+                    sqrEr += pow(h_post.GetBinError(1+(ibin-1)*8+jbin),2)
                 h_dR.SetBinContent(ibin, value)
                 h_dR.SetBinError(ibin, math.sqrt(sqrEr))
 
@@ -85,8 +85,8 @@ def makeInputHists(*args):
                 value = 0.0
                 sqrEr = 0.0
                 for jbin in range(nbinsDR):
-                    value += h_post.GetBinContent(1+(ibin-1)*6+jbin)
-                    sqrEr += pow(h_post.GetBinError(1+(ibin-1)*6+jbin),2)
+                    value += h_post.GetBinContent(ibin+jbin*8)
+                    sqrEr += pow(h_post.GetBinError(ibin+jbin*8),2)
                 h_M.SetBinContent(ibin, value)
                 h_M.SetBinError(ibin, math.sqrt(sqrEr))
 
