@@ -105,7 +105,7 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
     //    bool fixTau_ = false, double fixedTau_ = 0.)
     v_unfold_out = runTUnfold(
       unfoldDir.c_str(), h_reco_clos, h_resp_pref,
-      std::map<const char *, TH1 *>(), std::map<const char *, double>(), std::map<const char *, TH2 *>(),
+      std::map<const char *, TH1 *>(), std::map<const char *, double>(), std::map<const char *, TH2 *>(), 
       scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
     for ( auto out : v_unfold_out ){
       if( out != NULL ) out->Write();
@@ -119,12 +119,6 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
     std::map<const char *, TH1 *> m_bkg, m_bkgup, m_bkgdown;
     std::map<const char *, double> m_scale;
 
-    std::map<const char *, TH2 *> m_sysInput;
-    for( std::string syst : syst_list ){
-      TH2 *tmp = (TH2 *)f_matrix->Get(Form("h_%s_ResponseMatrix%s_Ch2_S3_postfit%s", genMode, vari.c_str(), syst.c_str()));
-      m_sysInput.insert(pair<const char *, TH2 *>(syst.c_str(), tmp));
-    }
-  
     for(auto bkg : group){
       size_t pos;
       if( (pos = bkg.find("data",0)) != std::string::npos ) continue;
@@ -138,6 +132,12 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
       m_bkgdown.insert(pair<const char *, TH1 *>(bkg.c_str(), tmpdown));
     }
 
+    std::map<const char *, TH2 *> m_sysInput;
+    for( std::string syst : syst_list ){
+      TH2 *tmp = (TH2 *)f_matrix->Get(Form("h_%s_ResponseMatrix%s_Ch2_S3_postfit%s", genMode, vari.c_str(), syst.c_str()));
+      m_sysInput.insert(pair<const char *, TH2 *>(syst.c_str(), tmp));
+    }
+  
     v_unfold_out = runTUnfold(
       unfoldDir.c_str(), h_data, h_resp_post,
       m_bkg, m_scale, m_sysInput,
@@ -148,13 +148,13 @@ void ttbbDiffXsec(std::string unfoldDir, std::string year, const char *genMode, 
     auto v_up = runTUnfold(
       unfoldDir.c_str(), h_data, h_resp_post,
       m_bkgup, m_scale, std::map<const char*, TH2 *>(),
-      scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
+      scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR, "__postup");
     auto v_down = runTUnfold(
       unfoldDir.c_str(), h_data, h_resp_post,
       m_bkgdown, m_scale, std::map<const char*, TH2 *>(),
-      scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR);
-    v_up[0]->SetName(Form("Background_%s__postup", v_up[0]->GetName())); v_up[0]->Write();
-    v_down[0]->SetName(Form("Background_%s__postdown", v_down[0]->GetName())); v_down[0]->Write();
+      scanLcurve, taumin_dR, taumax_dR, fixtau, fixedtau_dR, "__postdown");
+    v_up[0]->SetName(Form("Background_%s", v_up[0]->GetName())); v_up[0]->Write();
+    v_down[0]->SetName(Form("Background_%s", v_down[0]->GetName())); v_down[0]->Write();
 
     // Calculate differential cross section
     std::cout << "Calculate Differential cross section" << std::endl;
