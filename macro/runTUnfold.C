@@ -65,7 +65,7 @@ std::vector<TH1 *> runTUnfold(std::string outdir_, TH1 *h_in_, TH2 *h_resp_,
     std::map<const char *, TH1 *> m_bkgs_, std::map<const char *, double> m_scale_,
     std::map<const char *, TH2 *> m_sys_,
     bool scanLcurve_ = false, double tauMin_ = 0., double tauMax_ = 0.,
-    bool fixTau_ = false, double fixedTau_ = 0.){
+    bool fixTau_ = false, double fixedTau_ = 0., const char * specialName = ""){
 
   TH1 * h_in = (TH1 *)h_in_->Clone();
   TH2 * h_resp = (TH2 *)h_resp_->Clone();
@@ -153,13 +153,14 @@ std::vector<TH1 *> runTUnfold(std::string outdir_, TH1 *h_in_, TH2 *h_resp_,
   std::cout << "----------------------------------------" << std::endl;
   
   const double unfoldResult = unfold->DoUnfold(bestTau, h_in);
-  auto h_output = unfold->GetOutput(Form("Unfolded_%s",h_in->GetName()),"",0,"*[UO]",true);
-  auto h_input = unfold->GetInput(Form("Input_%s", h_in->GetName()),"",0,"*[UO]",true);
-  auto h2_emat = unfold->GetEmatrixInput(Form("EmatrixInput_%s",h_in->GetName()));
-  for( int ibin = 1; ibin <= h_output->GetNbinsX(); ibin++ ){
-    auto error = sqrt(h2_emat->GetBinContent(ibin, ibin));
-    h_output->SetBinError(ibin, error);
-  }
+  auto h_output = unfold->GetOutput(Form("Unfolded_%s%s",h_in->GetName(), specialName),"",0,"*[UO]",true);
+  auto h_input = unfold->GetInput(Form("Input_%s%s", h_in->GetName(), specialName),"",0,"*[UO]",true);
+  //auto h2_emat = unfold->GetEmatrixInput(Form("EmatrixInput_%s",h_in->GetName()));
+  auto h2_emat = unfold->GetEmatrixInput(Form("TempMatrix_%s%s",h_in->GetName(), specialName));
+  //for( int ibin = 1; ibin <= h_output->GetNbinsX(); ibin++ ){
+  //  auto error = sqrt(h2_emat->GetBinContent(ibin, ibin));
+  //  h_output->SetBinError(ibin, error);
+  //}
   //Output vector
   //[0]: TUnfold output
   //[1]: TUnfold input
@@ -177,23 +178,23 @@ std::vector<TH1 *> runTUnfold(std::string outdir_, TH1 *h_in_, TH2 *h_resp_,
   vector<TH1 *> v_output;
   v_output.push_back(h_output); //[0]
   v_output.push_back(h_input); //[1]
-  v_output.push_back(unfold->GetEmatrixTotal(Form("EmatrixTotal_%s",h_in->GetName()))); //[2]
-  v_output.push_back(unfold->GetEmatrixInput(Form("EmatrixInput_%s",h_in->GetName()))); //[3]
-  v_output.push_back(unfold->GetEmatrixSysUncorr(Form("EmatrixSysUncorr_%s", h_in->GetName()))); //[4]
+  v_output.push_back(unfold->GetEmatrixTotal(Form("EmatrixTotal_%s%s",h_in->GetName(), specialName))); //[2]
+  v_output.push_back(unfold->GetEmatrixInput(Form("EmatrixInput_%s%s",h_in->GetName(), specialName))); //[3]
+  v_output.push_back(unfold->GetEmatrixSysUncorr(Form("EmatrixSysUncorr_%s%s", h_in->GetName(), specialName))); //[4]
   //v_output.push_back(unfold->GetBias(Form("%s_Bias", h_in->GetName())));
-  v_output.push_back(unfold->GetDeltaSysTau(Form("DeltaSysTau_%s", h_in->GetName()))); //[4]
+  v_output.push_back(unfold->GetDeltaSysTau(Form("DeltaSysTau_%s%s", h_in->GetName(), specialName))); //[4]
   TH2D *h2_emat_tau = (TH2D *)h2_emat->Clone();
   unfold->GetEmatrixSysTau(h2_emat_tau);
-  h2_emat_tau->SetName(Form("EmatrixSysTau_%s", h_in->GetName()));
+  h2_emat_tau->SetName(Form("EmatrixSysTau_%s%s", h_in->GetName(), specialName));
   v_output.push_back(h2_emat_tau);
   
   for(auto m_itr=m_sys_.begin(); m_itr != m_sys_.end(); ++m_itr){
     TH2D *h2_emat_source = (TH2D *)h2_emat->Clone();
     unfold->GetEmatrixSysSource(h2_emat_source, m_itr->first);
-    h2_emat_source->SetName(Form("EmatrixSysSource_%s%s", h_in->GetName(), m_itr->first));
+    h2_emat_source->SetName(Form("EmatrixSysSource_%s%s%s", h_in->GetName(), m_itr->first, specialName));
     v_output.push_back(h2_emat_source);
     v_output.push_back(unfold->GetDeltaSysSource(m_itr->first,
-          Form("DeltaSysSource_%s%s", h_in->GetName(), m_itr->first)));
+          Form("DeltaSysSource_%s%s%s", h_in->GetName(), m_itr->first, specialName)));
   }
   /*
   for(auto m_itr=m_bkgs_.begin(); m_itr != m_bkgs_.end(); ++m_itr){
