@@ -127,6 +127,7 @@ if __name__ == '__main__':
             subprocess.call(cmd)
             cmd = ['rm', '-rf', str(input_dir)]
             subprocess.call(cmd)
-            subprocess.call('mv '+os.getcwd()+'/output/post'+str(year)+' '+os.getcwd()+'/output/root'+str(year))
+            cmd = ['mv',os.getcwd()+'/output/post'+str(year),os.getcwd()+'/output/root'+str(year)+'_post']
+            subprocess.call(cmd)
 
     print("Total running time: %s" %(time.time() - start_time))
