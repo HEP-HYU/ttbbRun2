@@ -2,6 +2,8 @@
 #include <TH2.h>
 #include <TStyle.h>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include "MyAnalysis.h"
 
 using namespace TMath;
@@ -11,7 +13,6 @@ void MyAnalysis::Begin(TTree * /*tree*/){
 }
 
 void MyAnalysis::SlaveBegin(TTree * /*tree*/){
-  //std::cout << "Start SlaveBegin" << std::endl;
   option = GetOption();
   process = option.Data();
 
@@ -164,7 +165,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
       ELECTRON_PT_   = 30.0;
       ELECTRON_ETA_  = 2.4;
       JET_CSV_TIGHT_ = 0.8001;
-      //prefireweight = {fReader, "prefireweight"};
+      prefireweight = {fReader, "prefireweight"};
     }
     if( process.Contains("2018") ){
       MUON_ETA_      = 2.4;
@@ -174,15 +175,11 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     }
   }
 
-  //std::cout << "Make HistoBook" << std::endl;
   for(unsigned int i = 0; i < v_syst.size(); i++){
     HistoBook *h_tmp1 = new HistoBook(1, v_syst[i].c_str());
-    HistoBook *h_tmp2 = new HistoBook(2, v_syst[i].c_str());
-    h_control.push_back(h_tmp1);
-    h_matrix.push_back(h_tmp2);
+    histBook.push_back(h_tmp1);
   }
    
-  //std::cout << "Get Hist list" << std::endl;
   for(unsigned int i = 0; i < v_syst.size(); i++){
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
@@ -210,60 +207,61 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
           h_bSF[iChannel][iStep]->GetXaxis()->SetBinLabel(18, "cferr2down");
           fOutput->Add(h_bSF[iChannel][iStep]);
         }
-        fOutput->Add(h_control[i]->h_1st_csv[iChannel][iStep]);
-        for(int iRegion = 0; iRegion < 20; ++iRegion)
-          fOutput->Add(h_control[i]->h_2nd_csv[iChannel][iStep][iRegion]);
         
-        fOutput->Add(h_control[i]->h_lepton_pt[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_lepton_eta[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_lepton_relIso[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_njets[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_nbjets[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_trans_mass[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_pv[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_pv_nosf[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_lepton_pt[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_lepton_eta[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_lepton_relIso[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_njets[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_nbjets[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_trans_mass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_pv[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_pv_nosf[iChannel][iStep]);
         
         for(int iJet=0; iJet<nJet; ++iJet){
-          fOutput->Add(h_control[i]->h_jet_pt[iChannel][iStep][iJet]);
-          fOutput->Add(h_control[i]->h_jet_eta[iChannel][iStep][iJet]);
-          fOutput->Add(h_control[i]->h_csv[iChannel][iStep][iJet]);
+          fOutput->Add(histBook[i]->h_jet_pt[iChannel][iStep][iJet]);
+          fOutput->Add(histBook[i]->h_jet_eta[iChannel][iStep][iJet]);
+          fOutput->Add(histBook[i]->h_csv[iChannel][iStep][iJet]);
         }
-        fOutput->Add(h_control[i]->h_reco_addbjets_deltaR[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_reco_addbjets_invMass[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_reco_addbjets_deltaR2[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_reco_addbjets_invMass2[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_reco_addbjets_deltaR3[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_reco_addbjets_invMass3[iChannel][iStep]);
 
-        fOutput->Add(h_control[i]->h_reco_deltaRvsInvMass[iChannel][iStep]);
-        fOutput->Add(h_control[i]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]);
-        
-        fOutput->Add(h_matrix[i]->h_gen_gentop_deltaR[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_gen_gentop_invMass[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_gen_gentop_deltaR2[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_gen_gentop_invMass2[iChannel][iStep]);
-        
-        fOutput->Add(h_matrix[i]->h_gen_mindR_deltaR[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_gen_mindR_invMass[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_gen_mindR_deltaR2[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_gen_mindR_invMass2[iChannel][iStep]);
-        
-        fOutput->Add(h_matrix[i]->h_respMatrix_gentop_deltaR[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_respMatrix_gentop_invMass[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_respMatrix_gentop_deltaR2[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_respMatrix_gentop_invMass2[iChannel][iStep]);
-       
-        fOutput->Add(h_matrix[i]->h_respMatrix_mindR_deltaR[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_respMatrix_mindR_invMass[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_respMatrix_mindR_deltaR2[iChannel][iStep]);
-        fOutput->Add(h_matrix[i]->h_respMatrix_mindR_invMass2[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_addbjets_deltaR[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_addbjets_invMass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_addbjets_deltaR_split[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_addbjets_invMass_split[iChannel][iStep]);
+
+        fOutput->Add(histBook[i]->h_gen_mindR_deltaR[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_mindR_invMass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_mindR_deltaR_split[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_mindR_invMass_split[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_mindR_deltaR[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_mindR_invMass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_mindR_deltaR_split[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_mindR_invMass_split[iChannel][iStep]);
+
+        fOutput->Add(histBook[i]->h_gen_gentop_deltaR[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_gentop_invMass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_gentop_deltaR_split[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_gentop_invMass_split[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_gentop_deltaR[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_gentop_invMass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_gentop_deltaR_split[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_respMatrix_gentop_invMass_split[iChannel][iStep]);
+
+        fOutput->Add(histBook[i]->h_reco_deltaRvsInvMass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]);
+ 
+        for(int iBin=0; iBin < nbins_reco_addbjets_dR; iBin++)
+          fOutput->Add(histBook[i]->h_reco_deltaRvsJetPt_bin[iChannel][iStep][iBin]);
+        for(int iBin=0; iBin < nbins_reco_addbjets_M; iBin++)
+          fOutput->Add(histBook[i]->h_reco_invMassvsJetPt_bin[iChannel][iStep][iBin]);
+        fOutput->Add(histBook[i]->h_reco_deltaRvsJetPt[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_invMassvsJetPt[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_3Dmatrix_mindR_deltaR[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_3Dmatrix_mindR_invMass[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_3Dmatrix_gentop_deltaR[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_3Dmatrix_gentop_invMass[iChannel][iStep]);
       }//step
     }//channel
   }//syst
-  //std::cout << "Begin Process: " << process << std::endl;
-
-  //std::cout << "Number of Systematics: " << v_syst.size() << std::endl;
-  //std::cout << "End SlaveBegin" << std::endl;
 }
 
 Bool_t MyAnalysis::Process(Long64_t entry){
@@ -273,7 +271,6 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   const int mode = *channel;
   if(mode>2) return kTRUE;
  
-  
   //Object selection
   TLorentzVector p4met;
   const double met = *MET;
@@ -300,20 +297,23 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   bool invertIso = false;
   if( passmuon ){
     if     ( syst_ext == "__qcdisoup"   ) invertIso = relIso > 0.4 ? true : false;
-    else if( syst_ext == "__qcdisodwon" ) invertIso = relIso > 0.2 and relIso <= 0.4 ? true : false;
+    else if( syst_ext == "__qcdisodown" ) invertIso = (relIso > 0.2 and relIso <= 0.4) ? true : false;
     else                                  invertIso = relIso > 0.2 ? true : false;
   }
   if( passelectron ){
-    if     ( syst_ext == "__qcdisoup"   ) invertIso = relIso > 0.0 and relIso <= 0.3 ? true : false;
-    else if( syst_ext == "__qcdisodwon" ) invertIso = relIso > 0.0588 and relIso < 0.85 ? true : false; 
-    else                                  invertIso = relIso < 0.85 ? true : false;
+    // 2016 electron
+    // Isolation: <= 0.0588 in barrel region
+    // Cut-based veto working point: I_rel > 0.175
+    if     ( syst_ext == "__qcdisoup"   ) invertIso = relIso > 0.3 /*and relIso <= 0.85)*/ ? true : false;
+    else if( syst_ext == "__qcdisodown" ) invertIso = relIso > 0.0588 and relIso <= 0.3 ? true : false; 
+    else                                  invertIso = relIso > 0.0588 /*and relIso < 0.85)*/ ? true : false;
   }
   
   int njets = 0;
   int nbjets = 0;
   multimap<float /*jet_Pt*/,   TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets;
   multimap<float /*jet_CSV*/,  TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets_csv;
-  multimap<float /*jet_CSV*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_bjets;
+  multimap<float /*jet_Pt*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_bjets;
   for (unsigned int iJet = 0; iJet < jet_pT.GetSize() ; ++iJet) {
     float jetSystVar = 1.0;
     if( !process.Contains("Data") ){
@@ -337,7 +337,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     ++njets;
     if( jet_CSV[iJet] > JET_CSV_TIGHT_ ){
       ++nbjets;
-      m_bjets.insert(pair<float, TLorentzVector>(jet_CSV[iJet], jet));
+      m_bjets.insert(pair<float, TLorentzVector>(jet.Pt(), jet));
     }
   }
 
@@ -359,51 +359,34 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   }
 
   TLorentzVector reco_addbjet1, reco_addbjet2;
-  double reco_addbjet1_csv = -999.0;
-  double reco_addbjet2_csv = -999.0;
-  double reco_addbjet_deltaR   = -999.0;
-  double reco_addbjet_invMass  = -999.0;
-  //double reco_addJet_CSV[2] = {-999.0, -999.0};
+  double reco_addbjet1_pt = -999, reco_addbjet2_pt = -999;
+  double reco_addbjets_deltaR = -999, reco_addbjets_invMass = -999;
   if (m_bjets.size() >= 2){
     for(auto m_itr = m_bjets.begin(); m_itr != m_bjets.end(); m_itr++){
       for(auto m_itr2 = m_itr; m_itr2 != m_bjets.end(); m_itr2++){
         if( m_itr->first == m_itr2->first ) continue;
         double tmp_dR = (m_itr->second).DeltaR(m_itr2->second);
         
-        if(tmp_dR < abs(reco_addbjet_deltaR)){
+        if(tmp_dR < abs(reco_addbjets_deltaR)){
           reco_addbjet1 = m_itr->second;
           reco_addbjet2 = m_itr2->second;
-          reco_addbjet1_csv = m_itr->first;
-          reco_addbjet2_csv = m_itr2->first;
+          reco_addbjet1_pt = m_itr->first;
+          reco_addbjet2_pt = m_itr2->first;
 
-          reco_addbjet_deltaR   = tmp_dR;
-          reco_addbjet_invMass  = (reco_addbjet1 + reco_addbjet2).M();
+          reco_addbjets_deltaR   = tmp_dR;
+          reco_addbjets_invMass  = (reco_addbjet1 + reco_addbjet2).M();
         }
       }
     }
   }
 
-  int region = 999;
-  if     ( a_jetCSV[2] >= 0.0 && a_jetCSV[2] <= 0.05 ) region = 0;
-  else if( a_jetCSV[2] > 0.05 && a_jetCSV[2] <= 0.10 ) region = 1;
-  else if( a_jetCSV[2] > 0.10 && a_jetCSV[2] <= 0.15 ) region = 2;
-  else if( a_jetCSV[2] > 0.15 && a_jetCSV[2] <= 0.20 ) region = 3;
-  else if( a_jetCSV[2] > 0.20 && a_jetCSV[2] <= 0.25 ) region = 4;
-  else if( a_jetCSV[2] > 0.25 && a_jetCSV[2] <= 0.30 ) region = 5;
-  else if( a_jetCSV[2] > 0.30 && a_jetCSV[2] <= 0.35 ) region = 6;
-  else if( a_jetCSV[2] > 0.35 && a_jetCSV[2] <= 0.40 ) region = 7;
-  else if( a_jetCSV[2] > 0.40 && a_jetCSV[2] <= 0.45 ) region = 8;
-  else if( a_jetCSV[2] > 0.45 && a_jetCSV[2] <= 0.50 ) region = 9;
-  else if( a_jetCSV[2] > 0.50 && a_jetCSV[2] <= 0.55 ) region = 10;
-  else if( a_jetCSV[2] > 0.55 && a_jetCSV[2] <= 0.60 ) region = 11;
-  else if( a_jetCSV[2] > 0.60 && a_jetCSV[2] <= 0.65 ) region = 12;
-  else if( a_jetCSV[2] > 0.65 && a_jetCSV[2] <= 0.70 ) region = 13;
-  else if( a_jetCSV[2] > 0.70 && a_jetCSV[2] <= 0.75 ) region = 14;
-  else if( a_jetCSV[2] > 0.75 && a_jetCSV[2] <= 0.80 ) region = 15;
-  else if( a_jetCSV[2] > 0.80 && a_jetCSV[2] <= 0.85 ) region = 16;
-  else if( a_jetCSV[2] > 0.85 && a_jetCSV[2] <= 0.90 ) region = 17;
-  else if( a_jetCSV[2] > 0.90 && a_jetCSV[2] <= 0.95 ) region = 18;
-  else if( a_jetCSV[2] > 0.95 && a_jetCSV[2] <= 1.00 ) region = 19;
+  int dRregion = 999, Mregion = 999;
+  int len_dR = sizeof(reco_addbjets_dR_width)/sizeof(*reco_addbjets_dR_width);
+  int len_M = sizeof(reco_addbjets_M_width)/sizeof(*reco_addbjets_M_width);
+  for(int i=0; i < len_dR-1; i++)
+    if( reco_addbjets_deltaR >= reco_addbjets_dR_width[i] and reco_addbjets_deltaR < reco_addbjets_dR_width[i+1] ) dRregion = i;
+  for(int i=0; i < len_M-1; i++)
+    if( reco_addbjets_invMass >= reco_addbjets_M_width[i] and reco_addbjets_invMass < reco_addbjets_M_width[i+1] ) Mregion = i;
 
   TLorentzVector gen_addbjet1, gen_addbjet2;
   TLorentzVector gen_mindRbjet1, gen_mindRbjet2;
@@ -414,8 +397,8 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     gen_mindRbjet1.SetPtEtaPhiE(*mindRbjet1_pt, *mindRbjet1_eta, *mindRbjet1_phi, *mindRbjet1_e);
     gen_mindRbjet2.SetPtEtaPhiE(*mindRbjet2_pt, *mindRbjet2_eta, *mindRbjet2_phi, *mindRbjet2_e);
   }
-  double gen_addbjet_deltaR    = gen_addbjet1.DeltaR(gen_addbjet2);
-  double gen_addbjet_invMass   = (gen_addbjet1+gen_addbjet2).M(); 
+  double gen_addbjets_deltaR    = gen_addbjet1.DeltaR(gen_addbjet2);
+  double gen_addbjets_invMass   = (gen_addbjet1+gen_addbjet2).M(); 
   
   double gen_mindR_deltaR   = gen_mindRbjet1.DeltaR(gen_mindRbjet2); 
   double gen_mindR_invMass  = (gen_mindRbjet1+gen_mindRbjet2).M(); 
@@ -436,16 +419,16 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   for(int icut = 0; icut < ncut; icut++) eventSelection[icut] = false;
 
   if( process.Contains("dataDriven") ){
-    eventSelection[0] = passmuon or ( passelectron and abs(lepton.Eta()) <= 1.4445 );
+    eventSelection[0] = passlepton; //passmuon or passelectron and abs(lepton.Eta()) <= 1.4445 );
     eventSelection[1] = eventSelection[0] and invertIso; 
     eventSelection[2] = eventSelection[1] and njets >= 2 and njets < 6;
-    eventSelection[3] = eventSelection[1] and njets >= 6 and nbjets < 3;
+    eventSelection[3] = eventSelection[1] and njets >= 6 and nbjets >= 3;
   }
   else if( process.Contains("Nosys") ){
     eventSelection[0] = passlepton;
-    eventSelection[1] = !invertIso;
-    eventSelection[2] = eventSelection[1] and njets >= 2 and njets < 6;
-    eventSelection[3] = eventSelection[1] and njets >= 6 and nbjets < 3;
+    eventSelection[1] = eventSelection[0];
+    eventSelection[2] = eventSelection[0] and njets >= 2 and njets < 6;
+    eventSelection[3] = eventSelection[0] and njets >= 6 and nbjets >= 3;
   }
   else{
     eventSelection[0] = passlepton and njets >= 1;
@@ -470,11 +453,11 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       else                              EventWeight *= PUWeight[0];
    
       //Prefire weight, 2017only
-      //if( process.Contains("2017") ){
-      //  if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
-      //  else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
-      //  else                                   EventWeight *= prefireweight[0];
-      //}
+      if( process.Contains("2017") ){
+        if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
+        else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
+        else                                   EventWeight *= prefireweight[0];
+      }
       
       //Lepton Scale Factor
       if( process.Contains("2016") ){
@@ -596,29 +579,6 @@ Bool_t MyAnalysis::Process(Long64_t entry){
         else if( syst_ext == "__cferr1down"  ) h_bSF[passchannel][icut]->Fill(15.5, bSF*EventWeight);
         else if( syst_ext == "__cferr2up"    ) h_bSF[passchannel][icut]->Fill(16.5, bSF*EventWeight);
         else if( syst_ext == "__cferr2down"  ) h_bSF[passchannel][icut]->Fill(17.5, bSF*EventWeight);
-
-        if( passlepton ){
-           if     ( syst_ext == ""              ){
-            h_bSF[2][icut]->Fill(0.5, EventWeight);
-            h_bSF[2][icut]->Fill(1.5, bSF*EventWeight);
-          }
-          else if( syst_ext == "__lfup"        ) h_bSF[2][icut]->Fill(2.5,  bSF*EventWeight);
-          else if( syst_ext == "__lfdown"      ) h_bSF[2][icut]->Fill(3.5,  bSF*EventWeight);
-          else if( syst_ext == "__hfup"        ) h_bSF[2][icut]->Fill(4.5,  bSF*EventWeight);
-          else if( syst_ext == "__hfdown"      ) h_bSF[2][icut]->Fill(5.5,  bSF*EventWeight);
-          else if( syst_ext == "__hfstat1up"   ) h_bSF[2][icut]->Fill(6.5,  bSF*EventWeight);
-          else if( syst_ext == "__hfstat1down" ) h_bSF[2][icut]->Fill(7.5,  bSF*EventWeight);
-          else if( syst_ext == "__hfstat2up"   ) h_bSF[2][icut]->Fill(8.5,  bSF*EventWeight);
-          else if( syst_ext == "__hfstat2down" ) h_bSF[2][icut]->Fill(9.5,  bSF*EventWeight);
-          else if( syst_ext == "__lfstat1up"   ) h_bSF[2][icut]->Fill(10.5, bSF*EventWeight); 
-          else if( syst_ext == "__lfstat1down" ) h_bSF[2][icut]->Fill(11.5, bSF*EventWeight); 
-          else if( syst_ext == "__lfstat2up"   ) h_bSF[2][icut]->Fill(12.5, bSF*EventWeight); 
-          else if( syst_ext == "__lfstat2down" ) h_bSF[2][icut]->Fill(13.5, bSF*EventWeight);
-          else if( syst_ext == "__cferr1up"    ) h_bSF[2][icut]->Fill(14.5, bSF*EventWeight);
-          else if( syst_ext == "__cferr1down"  ) h_bSF[2][icut]->Fill(15.5, bSF*EventWeight);
-          else if( syst_ext == "__cferr2up"    ) h_bSF[2][icut]->Fill(16.5, bSF*EventWeight);
-          else if( syst_ext == "__cferr2down"  ) h_bSF[2][icut]->Fill(17.5, bSF*EventWeight);
-        }
       }
 
       //Parton Shower
@@ -647,112 +607,60 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
     for(int icut=0; icut < ncut; ++icut){
       if( !eventSelection[icut] ) continue;
-      h_control[iSys]->h_pv[passchannel][icut]           ->Fill(*GoodPV, bSF*EventWeight);
-      h_control[iSys]->h_pv_nosf[passchannel][icut]      ->Fill(*GoodPV, bSF*EventWeight/PUWeight[0]);
-      h_control[iSys]->h_lepton_pt[passchannel][icut]    ->Fill(lepton.Pt(),                  bSF*EventWeight);
-      h_control[iSys]->h_lepton_eta[passchannel][icut]   ->Fill(abs(lepton.Eta()),            bSF*EventWeight);
-      h_control[iSys]->h_lepton_relIso[passchannel][icut]->Fill(relIso,                       bSF*EventWeight);
-      h_control[iSys]->h_njets[passchannel][icut]        ->Fill(njets,                        bSF*EventWeight);
-      h_control[iSys]->h_nbjets[passchannel][icut]       ->Fill(nbjets,                       bSF*EventWeight);
-      h_control[iSys]->h_trans_mass[passchannel][icut]   ->Fill(transverseMass(lepton,p4met), bSF*EventWeight);
+      histBook[iSys]->h_pv[passchannel][icut]           ->Fill(*GoodPV, bSF*EventWeight);
+      histBook[iSys]->h_pv_nosf[passchannel][icut]      ->Fill(*GoodPV, bSF*EventWeight/PUWeight[0]);
+      histBook[iSys]->h_lepton_pt[passchannel][icut]    ->Fill(lepton.Pt(),                  bSF*EventWeight);
+      histBook[iSys]->h_lepton_eta[passchannel][icut]   ->Fill(abs(lepton.Eta()),            bSF*EventWeight);
+      histBook[iSys]->h_lepton_relIso[passchannel][icut]->Fill(relIso,                       bSF*EventWeight);
+      histBook[iSys]->h_njets[passchannel][icut]        ->Fill(njets,                        bSF*EventWeight);
+      histBook[iSys]->h_nbjets[passchannel][icut]       ->Fill(nbjets,                       bSF*EventWeight);
+      histBook[iSys]->h_trans_mass[passchannel][icut]   ->Fill(transverseMass(lepton,p4met), bSF*EventWeight);
 
       for(int iJet=0; iJet<nJet; ++iJet){
-        h_control[iSys]->h_jet_pt[passchannel][icut][iJet] ->Fill(a_jetPt[iJet],  bSF*EventWeight);
-        h_control[iSys]->h_jet_eta[passchannel][icut][iJet]->Fill(a_jetEta[iJet], bSF*EventWeight);
-        h_control[iSys]->h_csv[passchannel][icut][iJet]    ->Fill(a_jetCSV[iJet], bSF*EventWeight);
+        histBook[iSys]->h_jet_pt[passchannel][icut][iJet] ->Fill(a_jetPt[iJet],  bSF*EventWeight);
+        histBook[iSys]->h_jet_eta[passchannel][icut][iJet]->Fill(a_jetEta[iJet], bSF*EventWeight);
+        histBook[iSys]->h_csv[passchannel][icut][iJet]    ->Fill(a_jetCSV[iJet], bSF*EventWeight);
       }
       
-      h_control[iSys]->h_1st_csv[passchannel][icut]->Fill(a_jetCSV[2], bSF*EventWeight);
-      if( region != 999 ) h_control[iSys]->h_2nd_csv[passchannel][icut][region]->Fill(a_jetCSV[3], bSF*EventWeight);
+      histBook[iSys]->h_reco_addbjets_deltaR[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   bSF*EventWeight);
+      histBook[iSys]->h_reco_addbjets_invMass[passchannel][icut] ->Fill(reco_addbjets_invMass,  bSF*EventWeight);
+
+      histBook[iSys]->h_respMatrix_gentop_deltaR[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   gen_addbjets_deltaR,   bSF*EventWeight);
+      histBook[iSys]->h_respMatrix_gentop_invMass[passchannel][icut] ->Fill(reco_addbjets_invMass,  gen_addbjets_invMass,  bSF*EventWeight);
+      histBook[iSys]->h_respMatrix_mindR_deltaR[passchannel][icut]   ->Fill(reco_addbjets_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
+      histBook[iSys]->h_respMatrix_mindR_invMass[passchannel][icut]  ->Fill(reco_addbjets_invMass,  gen_mindR_invMass,    bSF*EventWeight);
+
+      histBook[iSys]->h_gen_gentop_deltaR[passchannel][icut]  ->Fill(gen_addbjets_deltaR,    bSF*EventWeight);
+      histBook[iSys]->h_gen_gentop_invMass[passchannel][icut] ->Fill(gen_addbjets_invMass,   bSF*EventWeight);
+      histBook[iSys]->h_gen_mindR_deltaR[passchannel][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
+      histBook[iSys]->h_gen_mindR_invMass[passchannel][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
+
+      histBook[iSys]->h_reco_deltaRvsInvMass[passchannel][icut]->Fill(reco_addbjets_deltaR, reco_addbjets_invMass, bSF*EventWeight);
       
-      h_control[iSys]->h_reco_addbjets_deltaR[passchannel][icut]  ->Fill(reco_addbjet_deltaR,   bSF*EventWeight);
-      h_control[iSys]->h_reco_addbjets_invMass[passchannel][icut] ->Fill(reco_addbjet_invMass,  bSF*EventWeight);
+      if( dRregion != 999 ) histBook[iSys]->h_reco_deltaRvsJetPt_bin[passchannel][icut][dRregion]->Fill(reco_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_reco_deltaRvsJetPt[passchannel][icut]->Fill(reco_addbjets_deltaR, reco_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_mindR_deltaR[passchannel][icut]->Fill(reco_addbjets_deltaR, gen_mindR_deltaR, reco_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_gentop_deltaR[passchannel][icut]->Fill(reco_addbjets_deltaR, gen_addbjets_deltaR, reco_addbjet1_pt, bSF*EventWeight);
 
-      h_matrix[iSys]->h_respMatrix_gentop_deltaR[passchannel][icut]  ->Fill(reco_addbjet_deltaR,   gen_addbjet_deltaR,   bSF*EventWeight);
-      h_matrix[iSys]->h_respMatrix_gentop_invMass[passchannel][icut] ->Fill(reco_addbjet_invMass,  gen_addbjet_invMass,  bSF*EventWeight);
-      h_matrix[iSys]->h_respMatrix_mindR_deltaR[passchannel][icut]   ->Fill(reco_addbjet_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
-      h_matrix[iSys]->h_respMatrix_mindR_invMass[passchannel][icut]  ->Fill(reco_addbjet_invMass,  gen_mindR_invMass,    bSF*EventWeight);
-
-      h_matrix[iSys]->h_gen_gentop_deltaR[passchannel][icut]  ->Fill(gen_addbjet_deltaR,    bSF*EventWeight);
-      h_matrix[iSys]->h_gen_gentop_invMass[passchannel][icut] ->Fill(gen_addbjet_invMass,   bSF*EventWeight);
-      h_matrix[iSys]->h_gen_mindR_deltaR[passchannel][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
-      h_matrix[iSys]->h_gen_mindR_invMass[passchannel][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
-
-      h_control[iSys]->h_reco_deltaRvsInvMass[passchannel][icut]->Fill(reco_addbjet_deltaR, reco_addbjet_invMass, bSF*EventWeight);
- 
-      if( passlepton ){      
-        h_control[iSys]->h_pv[2][icut]           ->Fill(*GoodPV, bSF*EventWeight);
-        h_control[iSys]->h_pv_nosf[2][icut]      ->Fill(*GoodPV, bSF*EventWeight/PUWeight[0]);
-        h_control[iSys]->h_lepton_pt[2][icut]    ->Fill(lepton.Pt(),                  bSF*EventWeight);
-        h_control[iSys]->h_lepton_eta[2][icut]   ->Fill(abs(lepton.Eta()),            bSF*EventWeight);
-        h_control[iSys]->h_lepton_relIso[2][icut]->Fill(relIso,                       bSF*EventWeight);
-        h_control[iSys]->h_njets[2][icut]        ->Fill(njets,                        bSF*EventWeight);
-        h_control[iSys]->h_nbjets[2][icut]       ->Fill(nbjets,                       bSF*EventWeight);
-        h_control[iSys]->h_trans_mass[2][icut]   ->Fill(transverseMass(lepton,p4met), bSF*EventWeight);
-        
-        for(int iJet=0; iJet<nJet; ++iJet){
-          h_control[iSys]->h_jet_pt[2][icut][iJet] ->Fill(a_jetPt[iJet],  bSF*EventWeight);
-          h_control[iSys]->h_jet_eta[2][icut][iJet]->Fill(a_jetEta[iJet], bSF*EventWeight);
-          h_control[iSys]->h_csv[2][icut][iJet]    ->Fill(a_jetCSV[iJet], bSF*EventWeight);
-        }
-        
-        h_control[iSys]->h_1st_csv[2][icut]->Fill(a_jetCSV[2], bSF*EventWeight);
-        if( region != 999 ) h_control[iSys]->h_2nd_csv[2][icut][region]->Fill(a_jetCSV[3], bSF*EventWeight);
-        
-        h_control[iSys]->h_reco_addbjets_deltaR[2][icut]  ->Fill(reco_addbjet_deltaR,   bSF*EventWeight);
-        h_control[iSys]->h_reco_addbjets_invMass[2][icut] ->Fill(reco_addbjet_invMass,  bSF*EventWeight);
-        
-        h_matrix[iSys]->h_gen_gentop_deltaR[2][icut]  ->Fill(gen_addbjet_deltaR,    bSF*EventWeight);
-        h_matrix[iSys]->h_gen_gentop_invMass[2][icut] ->Fill(gen_addbjet_invMass,   bSF*EventWeight);
-        h_matrix[iSys]->h_gen_mindR_deltaR[2][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
-        h_matrix[iSys]->h_gen_mindR_invMass[2][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
-      
-        h_control[iSys]->h_reco_deltaRvsInvMass[2][icut]->Fill(reco_addbjet_deltaR, reco_addbjet_invMass, bSF*EventWeight);
-
-        h_matrix[iSys]->h_respMatrix_gentop_deltaR[2][icut]  ->Fill(reco_addbjet_deltaR,   gen_addbjet_deltaR,   bSF*EventWeight);
-        h_matrix[iSys]->h_respMatrix_gentop_invMass[2][icut] ->Fill(reco_addbjet_invMass,  gen_addbjet_invMass,  bSF*EventWeight);
-        h_matrix[iSys]->h_respMatrix_mindR_deltaR[2][icut]   ->Fill(reco_addbjet_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
-        h_matrix[iSys]->h_respMatrix_mindR_invMass[2][icut]  ->Fill(reco_addbjet_invMass,  gen_mindR_invMass,    bSF*EventWeight);
-      }
+      if( Mregion != 999 ) histBook[iSys]->h_reco_invMassvsJetPt_bin[passchannel][icut][Mregion]->Fill(reco_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_reco_invMassvsJetPt[passchannel][icut]->Fill(reco_addbjets_invMass, reco_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_mindR_invMass[passchannel][icut]->Fill(reco_addbjets_invMass, gen_mindR_invMass, reco_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_gentop_invMass[passchannel][icut]->Fill(reco_addbjets_invMass, gen_addbjets_invMass, reco_addbjet1_pt, bSF*EventWeight);
 
       if( nevt % 2 == 0 ){
-        h_control[iSys]->h_reco_addbjets_deltaR2[passchannel][icut]  ->Fill(reco_addbjet_deltaR,   bSF*EventWeight);
-        h_control[iSys]->h_reco_addbjets_invMass2[passchannel][icut] ->Fill(reco_addbjet_invMass,  bSF*EventWeight);
-        h_control[iSys]->h_reco_addbjets_deltaR3[passchannel][icut]  ->Fill(reco_addbjet_deltaR,   bSF*EventWeight);
-        
-        h_matrix[iSys]->h_gen_gentop_deltaR2[passchannel][icut]  ->Fill(gen_addbjet_deltaR,    bSF*EventWeight);
-        h_matrix[iSys]->h_gen_gentop_invMass2[passchannel][icut] ->Fill(gen_addbjet_invMass,   bSF*EventWeight);
-        h_matrix[iSys]->h_gen_mindR_deltaR2[passchannel][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
-        h_matrix[iSys]->h_gen_mindR_invMass2[passchannel][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
-
-        if( passlepton ){
-          h_control[iSys]->h_reco_addbjets_deltaR2[2][icut]  ->Fill(reco_addbjet_deltaR,   bSF*EventWeight);
-          h_control[iSys]->h_reco_addbjets_invMass2[2][icut] ->Fill(reco_addbjet_invMass,  bSF*EventWeight);
-          h_control[iSys]->h_reco_addbjets_deltaR3[2][icut]  ->Fill(reco_addbjet_deltaR,   bSF*EventWeight);
-          
-          h_matrix[iSys]->h_gen_gentop_deltaR2[2][icut]  ->Fill(gen_addbjet_deltaR,    bSF*EventWeight);
-          h_matrix[iSys]->h_gen_gentop_invMass2[2][icut] ->Fill(gen_addbjet_invMass,   bSF*EventWeight);
-          h_matrix[iSys]->h_gen_mindR_deltaR2[2][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
-          h_matrix[iSys]->h_gen_mindR_invMass2[2][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
-        }
+        histBook[iSys]->h_reco_addbjets_deltaR_split[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   bSF*EventWeight);
+        histBook[iSys]->h_reco_addbjets_invMass_split[passchannel][icut] ->Fill(reco_addbjets_invMass,  bSF*EventWeight);
+        histBook[iSys]->h_gen_gentop_deltaR_split[passchannel][icut]  ->Fill(gen_addbjets_deltaR,    bSF*EventWeight);
+        histBook[iSys]->h_gen_gentop_invMass_split[passchannel][icut] ->Fill(gen_addbjets_invMass,   bSF*EventWeight);
+        histBook[iSys]->h_gen_mindR_deltaR_split[passchannel][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
+        histBook[iSys]->h_gen_mindR_invMass_split[passchannel][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
       }
       else{
-        h_control[iSys]->h_reco_addbjets_invMass3[passchannel][icut]->Fill(reco_addbjet_invMass, bSF*EventWeight);
-        
-        h_matrix[iSys]->h_respMatrix_gentop_deltaR2[passchannel][icut]  ->Fill(reco_addbjet_deltaR,   gen_addbjet_deltaR,   bSF*EventWeight);
-        h_matrix[iSys]->h_respMatrix_gentop_invMass2[passchannel][icut] ->Fill(reco_addbjet_invMass,  gen_addbjet_invMass,  bSF*EventWeight);
-        h_matrix[iSys]->h_respMatrix_mindR_deltaR2[passchannel][icut]   ->Fill(reco_addbjet_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
-        h_matrix[iSys]->h_respMatrix_mindR_invMass2[passchannel][icut]  ->Fill(reco_addbjet_invMass,  gen_mindR_invMass,    bSF*EventWeight);
-
-        if( passlepton ){
-          h_control[iSys]->h_reco_addbjets_invMass3[2][icut]->Fill(reco_addbjet_invMass, bSF*EventWeight);
-          
-          h_matrix[iSys]->h_respMatrix_gentop_deltaR2[2][icut]  ->Fill(reco_addbjet_deltaR,   gen_addbjet_deltaR,   bSF*EventWeight);
-          h_matrix[iSys]->h_respMatrix_gentop_invMass2[2][icut] ->Fill(reco_addbjet_invMass,  gen_addbjet_invMass,  bSF*EventWeight);
-          h_matrix[iSys]->h_respMatrix_mindR_deltaR2[2][icut]   ->Fill(reco_addbjet_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
-          h_matrix[iSys]->h_respMatrix_mindR_invMass2[2][icut]  ->Fill(reco_addbjet_invMass,  gen_mindR_invMass,    bSF*EventWeight);
-        }
-      }//nevt%2
+        histBook[iSys]->h_respMatrix_gentop_deltaR_split[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   gen_addbjets_deltaR,   bSF*EventWeight);
+        histBook[iSys]->h_respMatrix_gentop_invMass_split[passchannel][icut] ->Fill(reco_addbjets_invMass,  gen_addbjets_invMass,  bSF*EventWeight);
+        histBook[iSys]->h_respMatrix_mindR_deltaR_split[passchannel][icut]   ->Fill(reco_addbjets_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
+        histBook[iSys]->h_respMatrix_mindR_invMass_split[passchannel][icut]  ->Fill(reco_addbjets_invMass,  gen_mindR_invMass,    bSF*EventWeight);
+      }
     }//cut
   }
   ++nevt;
@@ -760,23 +668,23 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 }
 
 void MyAnalysis::SlaveTerminate(){
-  //std::cout << "SlaveTerminate" << std::endl;
   option = GetOption();
+
   for(unsigned int iSys = 0; iSys < v_syst.size(); ++iSys){
-   for(int iChannel=0; iChannel<nChannel; ++iChannel){
-     for(int iStep=0; iStep<nStep; ++iStep){
-       int ibin = 1;
-       for(int ixbin=1; ixbin <= h_control[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsX(); ++ixbin){
-         for(int iybin=1; iybin <= h_control[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsY(); ++iybin){
-           double value = h_control[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinContent(ixbin,iybin);
-           double error = h_control[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinError(ixbin,iybin);
-           h_control[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinContent(ibin, value);
-           h_control[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinError(ibin, error);
-           ibin++;
-         }
-       }
-     }
-   }
+    for(int iChannel=0; iChannel<nChannel; ++iChannel){
+      for(int iStep=0; iStep<nStep; ++iStep){
+        int ibin = 1;
+        for(int ixbin=1; ixbin <= histBook[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsX(); ++ixbin){
+          for(int iybin=1; iybin <= histBook[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsY(); ++iybin){
+            double value = histBook[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinContent(ixbin,iybin);
+            double error = histBook[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinError(ixbin,iybin);
+            histBook[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinContent(ibin, value);
+            histBook[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinError(ibin, error);
+            ibin++;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -784,8 +692,6 @@ void MyAnalysis::Terminate(){
   option = GetOption();
   process = option.Data();
   string str_opt = option.Data();
-
-  //std::cout << "Terminate Process: " << str_opt << std::endl;
 
   size_t first_idx = str_opt.find_first_of("/");
   size_t last_idx  = str_opt.find_last_of("/");
@@ -809,6 +715,29 @@ void MyAnalysis::Terminate(){
   while( (obj = next()) ){
     const char *name = obj->GetName();
     std::string str(name);
+    if(str.find("Ch2") != std::string::npos ){
+      std::string strMuon = boost::replace_all_copy(str, "Ch2", "Ch0");
+      std::string strElec = boost::replace_all_copy(str, "Ch2", "Ch1");
+      TList *tmp = new TList;
+      if( obj->InheritsFrom(TH1D::Class()) ){
+        auto htmp = dynamic_cast<TH1D *>(obj);
+        tmp->Add((TH1D *)fOutput->FindObject(strMuon.c_str()));
+        tmp->Add((TH1D *)fOutput->FindObject(strElec.c_str()));
+        htmp->Merge(tmp);
+      }
+      else if( obj->InheritsFrom(TH2D::Class()) ){
+        auto htmp = dynamic_cast<TH2D *>(obj);
+        tmp->Add((TH2D *)fOutput->FindObject(strMuon.c_str()));
+        tmp->Add((TH2D *)fOutput->FindObject(strElec.c_str()));
+        htmp->Merge(tmp);     
+      }
+      else if( obj->InheritsFrom(TH3D::Class()) ){
+        auto htmp = dynamic_cast<TH3D *>(obj);
+        tmp->Add((TH3D *)fOutput->FindObject(strMuon.c_str()));
+        tmp->Add((TH3D *)fOutput->FindObject(strElec.c_str()));
+        htmp->Merge(tmp);          
+      }
+    }
     if(str.find("h_") != std::string::npos ) obj->Write();
   }
   out->Write();

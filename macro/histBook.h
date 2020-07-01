@@ -1,6 +1,7 @@
 #include <TObject.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TH3.h>
 
 std::map<std::string, int> m_lumi = {{"16",35922}, {"17",41529}, {"18",59693}};
 
@@ -92,6 +93,8 @@ const double lep_eta_min=0; const double lep_eta_max=2.5;
 
 const int nbins_jet_pt=20;
 const double jet_pt_min=0; const double jet_pt_max=400;
+const double jet_pt_width[21] = {0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200,
+  220, 240, 260, 280, 300, 320, 340, 360, 380, 400};
 const int nbins_jet_eta=20;
 const double jet_eta_min=0; const double jet_eta_max=2.5;
 
@@ -100,6 +103,8 @@ const double wmass_min=0; const double wmass_max=200;
 
 const int nbins_csv=20;
 const double csv_min=0; const double csv_max=1;
+const double csv_width[21] = {0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+  0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00};
 
 const int nbins_njets=10;
 const double njets_min=6; const double njets_max=10;
@@ -181,7 +186,8 @@ public:
   HistoBook(const int _mode, const char *_process);
   //~Histo_Book();
   
-  //control plots : mode = 1
+  //mode = 1
+  // control
   TH1D *h_pv[nChannel][nStep];
   TH1D *h_pv_nosf[nChannel][nStep];
   
@@ -198,41 +204,50 @@ public:
   TH1D *h_trans_mass[nChannel][nStep];
   
   TH1D *h_csv[nChannel][nStep][nJet];
-  TH1D *h_1st_csv[nChannel][nStep];
-  TH1D *h_2nd_csv[nChannel][nStep][nbins_csv];
-  
+ 
+  // addbjet 
   TH1D *h_reco_addbjets_deltaR[nChannel][nStep];
   TH1D *h_reco_addbjets_invMass[nChannel][nStep];
-  TH1D *h_reco_addbjets_deltaR2[nChannel][nStep];
-  TH1D *h_reco_addbjets_invMass2[nChannel][nStep];
-  TH1D *h_reco_addbjets_deltaR3[nChannel][nStep];
-  TH1D *h_reco_addbjets_invMass3[nChannel][nStep];
+  TH1D *h_reco_addbjets_deltaR_split[nChannel][nStep];
+  TH1D *h_reco_addbjets_invMass_split[nChannel][nStep];
 
-  TH2D *h_reco_deltaRvsInvMass[nChannel][nStep];
-  TH1D *h_reco_deltaRvsInvMass_spread[nChannel][nStep];
-
-  //response matrix : mode = 2
-  TH1D *h_gen_gentop_deltaR[nChannel][nStep];
-  TH1D *h_gen_gentop_invMass[nChannel][nStep];
-  TH1D *h_gen_gentop_deltaR2[nChannel][nStep];
-  TH1D *h_gen_gentop_invMass2[nChannel][nStep];
- 
+  // mindR
   TH1D *h_gen_mindR_deltaR[nChannel][nStep];
   TH1D *h_gen_mindR_invMass[nChannel][nStep];
-  TH1D *h_gen_mindR_deltaR2[nChannel][nStep];
-  TH1D *h_gen_mindR_invMass2[nChannel][nStep];
+  TH1D *h_gen_mindR_deltaR_split[nChannel][nStep];
+  TH1D *h_gen_mindR_invMass_split[nChannel][nStep];
+  
+  TH2D *h_respMatrix_mindR_deltaR[nChannel][nStep];
+  TH2D *h_respMatrix_mindR_invMass[nChannel][nStep];
+  TH2D *h_respMatrix_mindR_deltaR_split[nChannel][nStep];
+  TH2D *h_respMatrix_mindR_invMass_split[nChannel][nStep];
+
+  // genTop
+  TH1D *h_gen_gentop_deltaR[nChannel][nStep];
+  TH1D *h_gen_gentop_invMass[nChannel][nStep];
+  TH1D *h_gen_gentop_deltaR_split[nChannel][nStep];
+  TH1D *h_gen_gentop_invMass_split[nChannel][nStep];
   
   TH2D *h_respMatrix_gentop_deltaR[nChannel][nStep];
   TH2D *h_respMatrix_gentop_invMass[nChannel][nStep];
-  TH2D *h_respMatrix_mindR_deltaR[nChannel][nStep];
-  TH2D *h_respMatrix_mindR_invMass[nChannel][nStep];
+  TH2D *h_respMatrix_gentop_deltaR_split[nChannel][nStep];
+  TH2D *h_respMatrix_gentop_invMass_split[nChannel][nStep];
 
-  TH2D *h_respMatrix_mindR_deltaR2[nChannel][nStep];
-  TH2D *h_respMatrix_mindR_invMass2[nChannel][nStep];
-  TH2D *h_respMatrix_gentop_deltaR2[nChannel][nStep];
-  TH2D *h_respMatrix_gentop_invMass2[nChannel][nStep];
+  // fitting
+  TH2D *h_reco_deltaRvsInvMass[nChannel][nStep];
+  TH1D *h_reco_deltaRvsInvMass_spread[nChannel][nStep];
 
-  //etc : mode = 3
+  TH1D *h_reco_deltaRvsJetPt_bin[nChannel][nStep][nbins_reco_addbjets_dR];
+  TH2D *h_reco_deltaRvsJetPt[nChannel][nStep];
+  TH3D *h_3Dmatrix_mindR_deltaR[nChannel][nStep];
+  TH3D *h_3Dmatrix_gentop_deltaR[nChannel][nStep];
+  
+  TH1D *h_reco_invMassvsJetPt_bin[nChannel][nStep][nbins_reco_addbjets_M];
+  TH2D *h_reco_invMassvsJetPt[nChannel][nStep];
+  TH3D *h_3Dmatrix_mindR_invMass[nChannel][nStep];
+  TH3D *h_3Dmatrix_gentop_invMass[nChannel][nStep];
+  
+  //mode = 3
   TH1D *h_stability_deltaR[nChannel];
   TH1D *h_stability_invMass[nChannel];
   TH1D *h_purity_deltaR[nChannel];
@@ -243,9 +258,9 @@ public:
 
 HistoBook::HistoBook(const int _mode, const char *_process){
   if(_mode == 1){   
-    //std::cout << "Make mode1" << std::endl;
     for(int iChannel=0; iChannel<nChannel; ++iChannel){
       for(int iStep=0; iStep<nStep; ++iStep){
+        // Control
         h_pv[iChannel][iStep] = new TH1D(
             Form("h_PV_Ch%d_S%d%s",iChannel,iStep,_process),"",
             60, 0, 60);
@@ -273,37 +288,43 @@ HistoBook::HistoBook(const int _mode, const char *_process){
 	      h_lepton_eta[iChannel][iStep]->SetYTitle("Entries");
 	      h_lepton_eta[iChannel][iStep]->Sumw2();
 
-	      h_lepton_relIso[iChannel][iStep] = new TH1D(
-	          Form("h_%s_Ch%d_S%d%s",RECO_LEP_RELISO_,iChannel,iStep,_process),"",
-	          20, 0, 1);
-	      h_lepton_relIso[iChannel][iStep]->SetXTitle(Form("%s relIso",v_chName[iChannel].c_str()));
-	      h_lepton_relIso[iChannel][iStep]->SetYTitle("Entries");
-	      h_lepton_relIso[iChannel][iStep]->Sumw2();
-
         if(iStep == 0){
+          h_lepton_relIso[iChannel][iStep] = new TH1D(
+	            Form("h_%s_Ch%d_S%d%s",RECO_LEP_RELISO_,iChannel,iStep,_process),"",
+	            20, 0, 2);
+          
           h_njets[iChannel][iStep] = new TH1D(
               Form("h_%s_Ch%d_S%d%s", RECO_N_JETS_, iChannel, iStep, _process), "",
               10, 0, 10);
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "4");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(6, "5");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(7, "6");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(8, "7");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(9, "8");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(10, "#geq 9");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "0");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "1");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "2");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "3");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(5, "4");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(6, "5");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(7, "6");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(8, "7");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(9, "8");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(10, "#geq 9");
         }
       	else{
+          h_lepton_relIso[iChannel][iStep] = new TH1D(
+              Form("h_%s_Ch%d_S%d%s",RECO_LEP_RELISO_,iChannel,iStep,_process),"",
+              20, 0, 2);
+
           h_njets[iChannel][iStep] = new TH1D(
               Form("h_%s_Ch%d_S%d%s",RECO_N_JETS_,iChannel,iStep,_process),"",
               4, 6, 10);
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "6");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "7");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "8");
-              h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "#geq 9");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(1, "6");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(2, "7");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(3, "8");
+          h_njets[iChannel][iStep]->GetXaxis()->SetBinLabel(4, "#geq 9");
         }
+
+        h_lepton_relIso[iChannel][iStep]->SetXTitle(Form("%s relIso",v_chName[iChannel].c_str()));
+        h_lepton_relIso[iChannel][iStep]->SetYTitle("Entries");
+        h_lepton_relIso[iChannel][iStep]->Sumw2();
+
         h_njets[iChannel][iStep]->SetXTitle("Jet multiplicity");
         h_njets[iChannel][iStep]->SetYTitle("Entries");
         h_njets[iChannel][iStep]->Sumw2();
@@ -343,22 +364,6 @@ HistoBook::HistoBook(const int _mode, const char *_process){
           h_csv[iChannel][iStep][iJet]->Sumw2();
         }
 
-        h_1st_csv[iChannel][iStep] = new TH1D(
-            Form("h_%s_1st_Ch%d_S%d%s", RECO_CSV_, iChannel, iStep, _process),"",
-            nbins_csv, csv_min, csv_max);
-        h_1st_csv[iChannel][iStep]->SetXTitle("b discriminator");
-        h_1st_csv[iChannel][iStep]->SetYTitle("Entries");
-        h_1st_csv[iChannel][iStep]->Sumw2();
-
-        for(int iregion = 0; iregion < nbins_csv; iregion++){
-          h_2nd_csv[iChannel][iStep][iregion] = new TH1D(
-              Form("h_%s_2nd_Region%d_Ch%d_S%d%s", RECO_CSV_,iregion,iChannel,iStep,_process),"",
-              nbins_csv, csv_min, csv_max);
-          h_2nd_csv[iChannel][iStep][iregion]->SetXTitle("b discriminator");
-          h_2nd_csv[iChannel][iStep][iregion]->SetYTitle("Entries");
-          h_2nd_csv[iChannel][iStep][iregion]->Sumw2(); 
-        }
-
         h_trans_mass[iChannel][iStep] = new TH1D(
             Form("h_%s_Ch%d_S%d%s",RECO_TRANS_M_,iChannel,iStep,_process),"",
             nbins_wmass, wmass_min, wmass_max);
@@ -366,6 +371,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_trans_mass[iChannel][iStep]->SetYTitle("Entries");
         h_trans_mass[iChannel][iStep]->Sumw2();
 
+        // Additonal b jets
         h_reco_addbjets_deltaR[iChannel][iStep] = new TH1D(
             Form("h_mindR_%s_Ch%d_S%d%s",RECO_ADD_DR_,iChannel,iStep,_process),"",
             nbins_reco_addbjets_dR, reco_addbjets_dR_width);
@@ -380,34 +386,143 @@ HistoBook::HistoBook(const int _mode, const char *_process){
         h_reco_addbjets_invMass[iChannel][iStep]->SetYTitle("Entries");
         h_reco_addbjets_invMass[iChannel][iStep]->Sumw2();
 
-        h_reco_addbjets_deltaR2[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s2_Ch%d_S%d%s",RECO_ADD_DR_,iChannel,iStep,_process),"",
+        h_reco_addbjets_deltaR_split[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s_split_Ch%d_S%d%s",RECO_ADD_DR_,iChannel,iStep,_process),"",
             nbins_reco_addbjets_dR, reco_addbjets_dR_width);
-        h_reco_addbjets_deltaR2[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
-        h_reco_addbjets_deltaR2[iChannel][iStep]->SetYTitle("Entries");
-        h_reco_addbjets_deltaR2[iChannel][iStep]->Sumw2();
+        h_reco_addbjets_deltaR_split[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_reco_addbjets_deltaR_split[iChannel][iStep]->SetYTitle("Entries");
+        h_reco_addbjets_deltaR_split[iChannel][iStep]->Sumw2();
 
-        h_reco_addbjets_invMass2[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s2_Ch%d_S%d%s",RECO_ADD_M_,iChannel,iStep,_process),"",
+        h_reco_addbjets_invMass_split[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s_split_Ch%d_S%d%s",RECO_ADD_M_,iChannel,iStep,_process),"",
             nbins_reco_addbjets_M, reco_addbjets_M_width);
-        h_reco_addbjets_invMass2[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
-        h_reco_addbjets_invMass2[iChannel][iStep]->SetYTitle("Entries");
-        h_reco_addbjets_invMass2[iChannel][iStep]->Sumw2();
+        h_reco_addbjets_invMass_split[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_reco_addbjets_invMass_split[iChannel][iStep]->SetYTitle("Entries");
+        h_reco_addbjets_invMass_split[iChannel][iStep]->Sumw2();
 
-        h_reco_addbjets_deltaR3[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s3_Ch%d_S%d%s",RECO_ADD_DR_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dR, reco_addbjets_dR_width);
-        h_reco_addbjets_deltaR3[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
-        h_reco_addbjets_deltaR3[iChannel][iStep]->SetYTitle("Entries");
-        h_reco_addbjets_deltaR3[iChannel][iStep]->Sumw2();
+        // Minimum deltaR 
+        h_gen_mindR_deltaR[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_gen_mindR_deltaR[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_gen_mindR_deltaR[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_mindR_deltaR[iChannel][iStep]->Sumw2();
 
-        h_reco_addbjets_invMass3[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s3_Ch%d_S%d%s",RECO_ADD_M_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_M, reco_addbjets_M_width);
-        h_reco_addbjets_invMass3[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
-        h_reco_addbjets_invMass3[iChannel][iStep]->SetYTitle("Entries");
-        h_reco_addbjets_invMass3[iChannel][iStep]->Sumw2();
+        h_gen_mindR_invMass[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_gen_mindR_invMass[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_gen_mindR_invMass[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_mindR_invMass[iChannel][iStep]->Sumw2();
+         
+        h_gen_mindR_deltaR_split[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s_split_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_gen_mindR_deltaR_split[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_gen_mindR_deltaR_split[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_mindR_deltaR_split[iChannel][iStep]->Sumw2();
+
+        h_gen_mindR_invMass_split[iChannel][iStep] = new TH1D(
+            Form("h_mindR_%s_split_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_gen_mindR_invMass_split[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_gen_mindR_invMass_split[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_mindR_invMass_split[iChannel][iStep]->Sumw2();
+
+        h_respMatrix_mindR_deltaR[iChannel][iStep] = new TH2D(
+            Form("h_mindR_%s_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_respMatrix_mindR_deltaR[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
+        h_respMatrix_mindR_deltaR[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
+        h_respMatrix_mindR_deltaR[iChannel][iStep]->Sumw2();
+
+        h_respMatrix_mindR_invMass[iChannel][iStep] = new TH2D(
+            Form("h_mindR_%s_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_M, reco_addbjets_M_width,
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_respMatrix_mindR_invMass[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
+        h_respMatrix_mindR_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
+        h_respMatrix_mindR_invMass[iChannel][iStep]->Sumw2();
+
+        h_respMatrix_mindR_deltaR_split[iChannel][iStep] = new TH2D(
+            Form("h_mindR_%s_split_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_respMatrix_mindR_deltaR_split[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
+        h_respMatrix_mindR_deltaR_split[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
+        h_respMatrix_mindR_deltaR_split[iChannel][iStep]->Sumw2();
+
+        h_respMatrix_mindR_invMass_split[iChannel][iStep] = new TH2D(
+            Form("h_mindR_%s_split_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_M, reco_addbjets_M_width,
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_respMatrix_mindR_invMass_split[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
+        h_respMatrix_mindR_invMass_split[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
+        h_respMatrix_mindR_invMass_split[iChannel][iStep]->Sumw2();
+
+        // Gen Top
+        h_gen_gentop_deltaR[iChannel][iStep] = new TH1D(
+            Form("h_gentop_%s_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_gen_gentop_deltaR[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_gen_gentop_deltaR[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_gentop_deltaR[iChannel][iStep]->Sumw2();
+
+        h_gen_gentop_invMass[iChannel][iStep] = new TH1D(
+            Form("h_gentop_%s_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_gen_gentop_invMass[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_gen_gentop_invMass[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_gentop_invMass[iChannel][iStep]->Sumw2();
+ 
+        h_gen_gentop_deltaR_split[iChannel][iStep] = new TH1D(
+            Form("h_gentop_%s_split_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_gen_gentop_deltaR_split[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
+        h_gen_gentop_deltaR_split[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_gentop_deltaR_split[iChannel][iStep]->Sumw2();
+
+        h_gen_gentop_invMass_split[iChannel][iStep] = new TH1D(
+            Form("h_gentop_%s_split_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_gen_gentop_invMass_split[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
+        h_gen_gentop_invMass_split[iChannel][iStep]->SetYTitle("Entries");
+        h_gen_gentop_invMass_split[iChannel][iStep]->Sumw2();
+       
+        h_respMatrix_gentop_deltaR[iChannel][iStep] = new TH2D(
+            Form("h_gentop_%s_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_respMatrix_gentop_deltaR[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
+        h_respMatrix_gentop_deltaR[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
+        h_respMatrix_gentop_deltaR[iChannel][iStep]->Sumw2();
+
+        h_respMatrix_gentop_invMass[iChannel][iStep] = new TH2D(
+            Form("h_gentop_%s_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_M, reco_addbjets_M_width,
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_respMatrix_gentop_invMass[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
+        h_respMatrix_gentop_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
+        h_respMatrix_gentop_invMass[iChannel][iStep]->Sumw2();
         
+        h_respMatrix_gentop_deltaR_split[iChannel][iStep] = new TH2D(
+            Form("h_gentop_%s_split_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
+        h_respMatrix_gentop_deltaR_split[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
+        h_respMatrix_gentop_deltaR_split[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
+        h_respMatrix_gentop_deltaR_split[iChannel][iStep]->Sumw2();
+
+        h_respMatrix_gentop_invMass_split[iChannel][iStep] = new TH2D(
+            Form("h_gentop_%s_split_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
+            nbins_reco_addbjets_M, reco_addbjets_M_width,
+            nbins_gen_addbjets_M, gen_addbjets_M_width);
+        h_respMatrix_gentop_invMass_split[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
+        h_respMatrix_gentop_invMass_split[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
+        h_respMatrix_gentop_invMass_split[iChannel][iStep]->Sumw2();
+
+        // Fitting
         h_reco_deltaRvsInvMass[iChannel][iStep] = new TH2D(
             Form("h_mindR_RecoDeltaRvsInvMass_Ch%d_S%d%s",iChannel,iStep,_process),"",
             nbins_reco_addbjets_dR, reco_addbjets_dR_width,
@@ -431,143 +546,90 @@ HistoBook::HistoBook(const int _mode, const char *_process){
             ++tmp;
           }
         }
-
         h_reco_deltaRvsInvMass_spread[iChannel][iStep] = new TH1D(
             Form("h_mindR_RecoDeltaRvsInvMass_spread_Ch%d_S%d%s",iChannel,iStep,_process),"",
             nbin, spread_width);
         h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetXTitle("Bin width = Width_{dR} x Width_{M}");
         h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetYTitle("Entries");
         h_reco_deltaRvsInvMass_spread[iChannel][iStep]->Sumw2();
-      }//step
-    }//channel
-  }//mode
-  else if(_mode == 2){
-    //std::cout << "Make mode2" << std::endl;
-    for(int iChannel=0; iChannel<nChannel; ++iChannel){
-      for(int iStep=0; iStep<nStep; ++iStep){
-        h_gen_gentop_deltaR[iChannel][iStep] = new TH1D(
-            Form("h_gentop_%s_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_gen_gentop_deltaR[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
-        h_gen_gentop_deltaR[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_gentop_deltaR[iChannel][iStep]->Sumw2();
 
-        h_gen_gentop_invMass[iChannel][iStep] = new TH1D(
-            Form("h_gentop_%s_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_gen_gentop_invMass[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
-        h_gen_gentop_invMass[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_gentop_invMass[iChannel][iStep]->Sumw2();
+        h_reco_deltaRvsJetPt[iChannel][iStep] = new TH2D(
+            Form("h_mindR_RecoDeltaRvsJetPt_Ch%d_S%d%s",iChannel,iStep,_process),"",
+            nbins_jet_pt, jet_pt_min, jet_pt_max,
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width);
+        h_reco_deltaRvsJetPt[iChannel][iStep]->SetXTitle("Jet p_{T}(GeV)");
+        h_reco_deltaRvsJetPt[iChannel][iStep]->SetYTitle("#DeltaR_{b#bar{b}}");
+        h_reco_deltaRvsJetPt[iChannel][iStep]->Sumw2();
+
+        for(int ibin=0; ibin < nbins_reco_addbjets_dR; ibin++){
+          h_reco_deltaRvsJetPt_bin[iChannel][iStep][ibin] = new TH1D(
+              Form("h_mindR_RecoDeltaRvsJetPt_bin%d_Ch%d_S%d%s",ibin,iChannel,iStep,_process),"",
+              nbins_jet_pt, jet_pt_min, jet_pt_max);
+          h_reco_deltaRvsJetPt_bin[iChannel][iStep][ibin]->SetXTitle("Jet p_{T}(GeV)");
+          h_reco_deltaRvsJetPt_bin[iChannel][iStep][ibin]->SetYTitle("Entries");
+          h_reco_deltaRvsJetPt_bin[iChannel][iStep][ibin]->Sumw2();
+        }
+        
+        h_3Dmatrix_mindR_deltaR[iChannel][iStep] = new TH3D(
+            Form("h_mindR_3DmatrixDeltaR_Ch%d_S%d%s",iChannel,iStep,_process),"",
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width,
+            nbins_jet_pt, jet_pt_width);
+        h_3Dmatrix_mindR_deltaR[iChannel][iStep]->SetXTitle("Reco. #DeltaR{b#bar{b}}");
+        h_3Dmatrix_mindR_deltaR[iChannel][iStep]->SetYTitle("Gen. #DeltaR{b#bar{b}}");
+        h_3Dmatrix_mindR_deltaR[iChannel][iStep]->SetZTitle("Jet p_{T}(GeV)");
+        h_3Dmatrix_mindR_deltaR[iChannel][iStep]->Sumw2();
+        
+        h_3Dmatrix_gentop_deltaR[iChannel][iStep] = new TH3D(
+            Form("h_gentop_3DmatrixDeltaR_Ch%d_S%d%s",iChannel,iStep,_process),"",
+            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
+            nbins_gen_addbjets_dR, gen_addbjets_dR_width,
+            nbins_jet_pt, jet_pt_width);
+        h_3Dmatrix_gentop_deltaR[iChannel][iStep]->SetXTitle("Reco. #DeltaR{b#bar{b}}");
+        h_3Dmatrix_gentop_deltaR[iChannel][iStep]->SetYTitle("Gen. #DeltaR{b#bar{b}}");
+        h_3Dmatrix_gentop_deltaR[iChannel][iStep]->SetZTitle("Jet p_{T}(GeV)");
+        h_3Dmatrix_gentop_deltaR[iChannel][iStep]->Sumw2();
+        
+        h_reco_invMassvsJetPt[iChannel][iStep] = new TH2D(
+            Form("h_mindR_RecoInvMassDeltaRvsJetPt_Ch%d_S%d%s",iChannel,iStep,_process),"",
+            nbins_jet_pt, jet_pt_min, jet_pt_max,
+            nbins_reco_addbjets_M, reco_addbjets_M_width);
+        h_reco_invMassvsJetPt[iChannel][iStep]->SetXTitle("Jet p_{T}(GeV)");
+        h_reco_invMassvsJetPt[iChannel][iStep]->SetYTitle("M_{b#bar{b}}(GeV)");
+        h_reco_invMassvsJetPt[iChannel][iStep]->Sumw2();
+
+        for(int ibin=0; ibin < nbins_reco_addbjets_M; ibin++){
+          h_reco_invMassvsJetPt_bin[iChannel][iStep][ibin] = new TH1D(
+              Form("h_mindR_RecoInvMassvsJetPt_bin%d_Ch%d_S%d%s",ibin,iChannel,iStep,_process),"",
+              nbins_jet_pt, jet_pt_min, jet_pt_max);
+          h_reco_invMassvsJetPt_bin[iChannel][iStep][ibin]->SetXTitle("Jet p_{T}(GeV)");
+          h_reco_invMassvsJetPt_bin[iChannel][iStep][ibin]->SetYTitle("Entries");
+          h_reco_invMassvsJetPt_bin[iChannel][iStep][ibin]->Sumw2();
+        }
+
+        h_3Dmatrix_mindR_invMass[iChannel][iStep] = new TH3D(
+            Form("h_mindR_3DmatrixInvMass_Ch%d_S%d%s",iChannel,iStep,_process),"",
+            nbins_reco_addbjets_M, reco_addbjets_M_width,
+            nbins_gen_addbjets_M, reco_addbjets_M_width,
+            nbins_jet_pt, jet_pt_width);
+        h_3Dmatrix_mindR_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}");
+        h_3Dmatrix_mindR_invMass[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}");
+        h_3Dmatrix_mindR_invMass[iChannel][iStep]->SetZTitle("Jet p_{T}(GeV)");
+        h_3Dmatrix_mindR_invMass[iChannel][iStep]->Sumw2();
  
-        h_gen_gentop_deltaR2[iChannel][iStep] = new TH1D(
-            Form("h_gentop_%s2_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_gen_gentop_deltaR2[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
-        h_gen_gentop_deltaR2[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_gentop_deltaR2[iChannel][iStep]->Sumw2();
-
-        h_gen_gentop_invMass2[iChannel][iStep] = new TH1D(
-            Form("h_gentop_%s2_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_gen_gentop_invMass2[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
-        h_gen_gentop_invMass2[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_gentop_invMass2[iChannel][iStep]->Sumw2();
-        
-        h_gen_mindR_deltaR[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_gen_mindR_deltaR[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
-        h_gen_mindR_deltaR[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_mindR_deltaR[iChannel][iStep]->Sumw2();
-
-        h_gen_mindR_invMass[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_gen_mindR_invMass[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
-        h_gen_mindR_invMass[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_mindR_invMass[iChannel][iStep]->Sumw2();
-         
-        h_gen_mindR_deltaR2[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s2_Ch%d_S%d%s",GEN_ADD_DR_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_gen_mindR_deltaR2[iChannel][iStep]->SetXTitle(Form("#DeltaR_{b#bar{b}}"));
-        h_gen_mindR_deltaR2[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_mindR_deltaR2[iChannel][iStep]->Sumw2();
-
-        h_gen_mindR_invMass2[iChannel][iStep] = new TH1D(
-            Form("h_mindR_%s2_Ch%d_S%d%s",GEN_ADD_M_,iChannel,iStep,_process),"",
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_gen_mindR_invMass2[iChannel][iStep]->SetXTitle(Form("M_{b#bar{b}}(GeV)"));
-        h_gen_mindR_invMass2[iChannel][iStep]->SetYTitle("Entries");
-        h_gen_mindR_invMass2[iChannel][iStep]->Sumw2();
-       
-        h_respMatrix_gentop_deltaR[iChannel][iStep] = new TH2D(
-            Form("h_gentop_%s_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_respMatrix_gentop_deltaR[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
-        h_respMatrix_gentop_deltaR[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
-        h_respMatrix_gentop_deltaR[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_gentop_invMass[iChannel][iStep] = new TH2D(
-            Form("h_gentop_%s_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
+        h_3Dmatrix_gentop_invMass[iChannel][iStep] = new TH3D(
+            Form("h_gentop_3DmatrixInvMass_Ch%d_S%d%s",iChannel,iStep,_process),"",
             nbins_reco_addbjets_M, reco_addbjets_M_width,
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_respMatrix_gentop_invMass[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
-        h_respMatrix_gentop_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
-        h_respMatrix_gentop_invMass[iChannel][iStep]->Sumw2();
-        
-        h_respMatrix_mindR_deltaR[iChannel][iStep] = new TH2D(
-            Form("h_mindR_%s_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_respMatrix_mindR_deltaR[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
-        h_respMatrix_mindR_deltaR[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
-        h_respMatrix_mindR_deltaR[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_mindR_invMass[iChannel][iStep] = new TH2D(
-            Form("h_mindR_%s_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_M, reco_addbjets_M_width,
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_respMatrix_mindR_invMass[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
-        h_respMatrix_mindR_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
-        h_respMatrix_mindR_invMass[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_gentop_deltaR2[iChannel][iStep] = new TH2D(
-            Form("h_gentop_%s2_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_respMatrix_gentop_deltaR2[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
-        h_respMatrix_gentop_deltaR2[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
-        h_respMatrix_gentop_deltaR2[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_gentop_invMass2[iChannel][iStep] = new TH2D(
-            Form("h_gentop_%s2_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_M, reco_addbjets_M_width,
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_respMatrix_gentop_invMass2[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
-        h_respMatrix_gentop_invMass2[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
-        h_respMatrix_gentop_invMass2[iChannel][iStep]->Sumw2();
-        
-        h_respMatrix_mindR_deltaR2[iChannel][iStep] = new TH2D(
-            Form("h_mindR_%s2_Ch%d_S%d%s",MATRIX_DR_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_dR, reco_addbjets_dR_width,
-            nbins_gen_addbjets_dR, gen_addbjets_dR_width);
-        h_respMatrix_mindR_deltaR2[iChannel][iStep]->SetYTitle("Gen. #DeltaR_{b#bar{b}}");
-        h_respMatrix_mindR_deltaR2[iChannel][iStep]->SetXTitle("Reco. #DeltaR_{b#bar{b}}");
-        h_respMatrix_mindR_deltaR2[iChannel][iStep]->Sumw2();
-
-        h_respMatrix_mindR_invMass2[iChannel][iStep] = new TH2D(
-            Form("h_mindR_%s2_Ch%d_S%d%s",MATRIX_M_,iChannel,iStep,_process),"",
-            nbins_reco_addbjets_M, reco_addbjets_M_width,
-            nbins_gen_addbjets_M, gen_addbjets_M_width);
-        h_respMatrix_mindR_invMass2[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}(GeV)");
-        h_respMatrix_mindR_invMass2[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}(GeV)");
-        h_respMatrix_mindR_invMass2[iChannel][iStep]->Sumw2();
+            nbins_gen_addbjets_M, reco_addbjets_M_width,
+            nbins_jet_pt, jet_pt_width);
+        h_3Dmatrix_gentop_invMass[iChannel][iStep]->SetXTitle("Reco. M_{b#bar{b}}");
+        h_3Dmatrix_gentop_invMass[iChannel][iStep]->SetYTitle("Gen. M_{b#bar{b}}");
+        h_3Dmatrix_gentop_invMass[iChannel][iStep]->SetZTitle("Jet p_{T}(GeV)");
+        h_3Dmatrix_gentop_invMass[iChannel][iStep]->Sumw2();
       }//step
     }//channel
-  }//mode
-  else if(_mode == 3){
+  }//mode == 1
+  else if(_mode == 2){
     for(int iChannel=0; iChannel<nChannel; ++iChannel){	
       h_stability_deltaR[iChannel] = new TH1D(
           Form("h_%s_Ch%d_S3%s",STB_DR_,iChannel,_process),"",
@@ -611,7 +673,7 @@ HistoBook::HistoBook(const int _mode, const char *_process){
       h_acceptance_invMass[iChannel]->SetYTitle("acceptance");
       h_acceptance_invMass[iChannel]->Sumw2();
     }//channel
-  }//mode
+  }//mode == 2
   else
     cout << "Warning : There is no such mode" << endl;
 }
