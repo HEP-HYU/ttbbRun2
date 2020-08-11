@@ -2,7 +2,6 @@ import os
 import sys
 import glob
 import time
-from datetime import datetime
 
 import multiprocessing as mp
 import subprocess
@@ -10,7 +9,15 @@ import argparse
 
 from ROOT import *
 
-import macro.postProcess as pp
+import python.postProcess as pp
+
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0', 'False'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected')
 
 def mergeHist(input_dir):
     tmp = input_dir.split('/')
@@ -25,16 +32,8 @@ def runGentree(year):
     ntuple_loc = f_txt.readline()[:-1]
     f_txt.close()
     cmd = ['root', '-l', '-b', '-q', 
-           'macro/runGentree.C("'+str(ntuple_loc)+'", "'+str(os.getcwd())+"/output/root"+str(year)+'")']
+           'macro/runGentree.C("'+str(ntuple_loc)+'", "'+str(os.getcwd())+"/output/root"+str(year)+'/post")']
     subprocess.call(cmd)
-
-def str2bool(v):
-    if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0', 'False'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected')
 
 if __name__ == '__main__':
     start_time = time.time()
@@ -42,9 +41,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run post process')
 
     parser.add_argument('-y', '--year', required=False, type=int, default=9999, help='Run special year')
-    parser.add_argument('-m', '--merge', required=False, type=str2bool, default=True, help='Merge histograms')
-    parser.add_argument('-p', '--post', required=False, type=str2bool, default=True, help='Run post process')
-    parser.add_argument('-g', '--gen', required=False, type=str2bool, default=True, help='Run gen tree')
+    parser.add_argument('-m', '--merge', required=False, type=str2bool, default=False, help='Merge histograms')
+    parser.add_argument('-p', '--post', required=False, type=str2bool, default=False, help='Run post process')
+    parser.add_argument('-g', '--gen', required=False, type=str2bool, default=False, help='Run gen tree')
     
     args = parser.parse_args()
 
@@ -68,11 +67,22 @@ if __name__ == '__main__':
         if year == 17 and run17 == False: continue
         if year == 18 and run18 == False: continue
 
-        input_dir = 'output/root'+str(year)
+        input_dir = str(os.getcwd())+'/output/root'+str(year)
         os.system('rm -rf '+input_dir+'/hist_Nosys_Compile.root')
 
         if args.merge:
             print("Merge histogram root files")
+
+            """
+            today = time.localtime()
+            dirName = "%04d%02d%02d" % (today.tm_year, today.tm_mon, today.tm_mday)
+            if not os.path.exists(os.getcwd()+'/output/backup/'+str(dirName)):
+                os.makedirs(os.getcwd()+'/output/backup/'+str(dirName))
+            cmd = ['cp','-r', input_dir, str(os.getcwd())+'/output/backup/'+str(dirName)]
+            print cmd
+            subprocess.call(cmd)
+            """
+
             procs = []
             dir_list = filter(os.path.isdir, glob.glob('output/root'+str(year)+'/*'))
             for item in dir_list:
@@ -83,9 +93,8 @@ if __name__ == '__main__':
                 proc.join()
             
             for item in os.listdir(input_dir):
-                if not item.endswith('.root'):
-                    os.system('rm -rf '+item)
-
+                if os.path.isdir(input_dir+'/'+item):
+                    os.system('rm -rf '+input_dir+'/'+item)
         if args.post:
             print("Run post process")
             procs = []
@@ -103,5 +112,22 @@ if __name__ == '__main__':
         if args.gen:
             print("Run gentree")
             runGentree(year)
+
+        if args.merge and args.post and args.gen:
+            print("Save files")
+            output_dir = str(os.getcwd())+'/output/root'+str(year)+'/post'
+            cmd = ['hadd', str(output_dir)+'/hist_DataSingleMu.root']+glob.glob(input_dir+'/hist_DataSingleMu*')
+            subprocess.call(cmd)
+            cmd = ['hadd', str(output_dir)+'/hist_DataSingleEG.root']+glob.glob(input_dir+'/hist_DataSingleEG*')
+            subprocess.call(cmd)
+            for file in glob.glob(input_dir+'/hist_QCD*'):
+                cmd = ['cp',file,output_dir]
+                subprocess.call(cmd)
+            cmd = ['cp', '-r', str(output_dir), str(os.getcwd())+'/output/post'+str(year)]
+            subprocess.call(cmd)
+            cmd = ['rm', '-rf', str(input_dir)]
+            subprocess.call(cmd)
+            cmd = ['mv',os.getcwd()+'/output/post'+str(year),os.getcwd()+'/output/root'+str(year)+'_post']
+            subprocess.call(cmd)
 
     print("Total running time: %s" %(time.time() - start_time))
