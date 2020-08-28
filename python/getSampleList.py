@@ -2,55 +2,27 @@ import os
 import sys
 
 def getSampleList(save_path):
-    f_list16 = open(save_path+'/sample16.txt', 'w')
-    f_data16 = open(save_path+'/data16.txt', 'w')
-    f_list17 = open(save_path+'/sample17.txt', 'w')
-    f_data17 = open(save_path+'/data17.txt', 'w')
-    f_list18 = open(save_path+'/sample18.txt', 'w')
-    f_data18 = open(save_path+'/data18.txt', 'w')
- 
- 
-    base_path = '/data/users/seohyun/ntuple/'
-    path16 = base_path + 'Run2016/v808/nosplit'
-    path17 = base_path + 'Run2017/V9_6/nosplit'
-    path18 = base_path + 'Run2018/V10_3/nosplit'
+    dictNtuplePath = {
+        16:'/data/users/seohyun/ntuple/Run2016/V8_1',
+        17:'/data/users/seohyun/ntuple/Run2017/V9_6',
+        18:'/data/users/seohyun/ntuple/Run2018/V10_3'
+        }
+    for year in range(16,19):
+        path = dictNtuplePath[year]
+        f_data = open(save_path+'/data'+str(year)+'.txt','w')
+        f_mc   = open(save_path+'/sample'+str(year)+'.txt', 'w')
+        f_syst = open(save_path+'/systematic'+str(year)+'.txt','w')
 
-    f_list16.write(path16+'\n')
-    f_list17.write(path17+'\n')
-    f_list18.write(path18+'\n')
- 
-    path16 = base_path + 'Run2016/v808/split'
-    path17 = base_path + 'Run2017/V9_6/split'
-    path18 = base_path + 'Run2018/V10_3/split'
+        f_mc.write(path+'\n')
 
-   
-    for item in os.listdir(path16):
-        if "Data"   in item:
-            f_data16.write(item+'\n')
-            continue
-        if "part"   in item: continue
-        if "Herwig" in item: continue
-        if "Evtgen" in item: continue
-        if "TT_aMC" in item: continue
-        if "SYS"    in item: continue
-        f_list16.write(item+'\n')
-    f_list16.close()
-    f_data16.close()
+        for item in os.listdir(path+'/split'):
+            if 'Data' in item:
+                f_data.write(item+'\n')
+            elif any(i in item for i in ['Herwig','Evtgen','TT_aMC','SYS']):
+                f_syst.write(item+'\n')
+            else:
+                f_mc.write(item+'\n')
 
-    for item in os.listdir(path17):
-        if "Data" in item: 
-            f_data17.write(item+'\n')
-            continue
-        if "part" in item: continue
-        if "SYS"  in item: continue
-        f_list17.write(item+'\n')
-    f_list17.close()
-
-    for item in os.listdir(path18):
-        if "Data" in item:
-            f_data18.write(item+'\n')
-            continue
-        if "part" in item: continue
-        if "SYS"  in item: continue
-        f_list18.write(item+'\n')
-    f_list18.close()
+        f_data.close()
+        f_mc.close()
+        f_syst.close()
