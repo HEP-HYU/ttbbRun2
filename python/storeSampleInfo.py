@@ -16,7 +16,7 @@ def storeSampleList(save_path):
 
         f_mc.write(path+'\n')
 
-        for item in os.listdir(path+'/split'):
+        for item in os.listdir(path):
             if 'part' in item: continue
             if 'Data' in item:
                 f_data.write(item+'\n')
@@ -33,12 +33,12 @@ def storeNumberOfEvents(save_path):
     for year in range(16, 19): 
         path = dictNtuplePath[year]
         f_out = open(save_path+'/genevt'+str(year)+'.txt','w')
-        for item in os.listdir(os.path.join(path,'split')):
+        for item in os.listdir(path):
             if any(i in item for i in ['Data','part']): continue
             print item
             nevt = 0.0
-            for file in os.listdir(os.path.join(path,'split',item)):
-                TFile = ROOT.TFile.Open(os.path.join(path,'split',item,file)) 
+            for file in os.listdir(os.path.join(path,item)):
+                TFile = ROOT.TFile.Open(os.path.join(path,item,file)) 
                 EventInfo = TFile.Get('ttbbLepJets/EventInfo')
                 nevt += EventInfo.GetBinContent(2)
                 TFile.Close()
