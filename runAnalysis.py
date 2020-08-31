@@ -4,7 +4,7 @@ import sys
 import subprocess
 import argparse
 
-import python.getSampleList
+import python.storeSampleInfo
 import python.getQCD
 import python.runTSelector
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
         run17 = True
         run18 = True
 
-    python.getSampleList.getSampleList(os.getcwd()+'/samples')
+    python.storeSampleInfo.storeSampleList(os.getcwd()+'/samples')
 
     for year in range(16,19):
         if year == 16 and run16 == False: continue
