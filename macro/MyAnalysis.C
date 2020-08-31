@@ -539,22 +539,22 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       //   Linear and quadratic statistical fluctuations: lfstats1 and lfstats2
       // Systematics for charm flavor jets:
       //   Linear and quadratic uncertainties: cferr1 and cferr2
-      if     ( syst_ext == "__lfup"        ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[3];
-      else if( syst_ext == "__lfdown"      ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[4];
-      else if( syst_ext == "__hfup"        ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[5];
-      else if( syst_ext == "__hfdown"      ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[6];
-      else if( syst_ext == "__hfstat1up"   ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[7];
-      else if( syst_ext == "__hfstat1down" ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[8];
-      else if( syst_ext == "__hfstat2up"   ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[9];
-      else if( syst_ext == "__hfstat2down" ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[10];
-      else if( syst_ext == "__lfstat1up"   ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[11];
-      else if( syst_ext == "__lfstat1down" ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[12];
-      else if( syst_ext == "__lfstat2up"   ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[13];
-      else if( syst_ext == "__lfstat2down" ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[14];
-      else if( syst_ext == "__cferr1up"    ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[15];
-      else if( syst_ext == "__cferr1down"  ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[16];
-      else if( syst_ext == "__cferr2up"    ) bSF *= jet_SF_CSV_30[0] + jet_SF_CSV_30[17];
-      else if( syst_ext == "__cferr2down"  ) bSF *= jet_SF_CSV_30[0] - jet_SF_CSV_30[18];
+      if     ( syst_ext == "__lfup"        ) bSF *= jet_SF_CSV_30[3];
+      else if( syst_ext == "__lfdown"      ) bSF *= jet_SF_CSV_30[4];
+      else if( syst_ext == "__hfup"        ) bSF *= jet_SF_CSV_30[5];
+      else if( syst_ext == "__hfdown"      ) bSF *= jet_SF_CSV_30[6];
+      else if( syst_ext == "__hfstat1up"   ) bSF *= jet_SF_CSV_30[7];
+      else if( syst_ext == "__hfstat1down" ) bSF *= jet_SF_CSV_30[8];
+      else if( syst_ext == "__hfstat2up"   ) bSF *= jet_SF_CSV_30[9];
+      else if( syst_ext == "__hfstat2down" ) bSF *= jet_SF_CSV_30[10];
+      else if( syst_ext == "__lfstat1up"   ) bSF *= jet_SF_CSV_30[11];
+      else if( syst_ext == "__lfstat1down" ) bSF *= jet_SF_CSV_30[12];
+      else if( syst_ext == "__lfstat2up"   ) bSF *= jet_SF_CSV_30[13];
+      else if( syst_ext == "__lfstat2down" ) bSF *= jet_SF_CSV_30[14];
+      else if( syst_ext == "__cferr1up"    ) bSF *= jet_SF_CSV_30[15];
+      else if( syst_ext == "__cferr1down"  ) bSF *= jet_SF_CSV_30[16];
+      else if( syst_ext == "__cferr2up"    ) bSF *= jet_SF_CSV_30[17];
+      else if( syst_ext == "__cferr2down"  ) bSF *= jet_SF_CSV_30[18];
       else	                                 bSF *= jet_SF_CSV_30[0];
       
       for(int icut=0; icut < ncut; ++icut){
