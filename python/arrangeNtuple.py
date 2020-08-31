@@ -29,11 +29,11 @@ if len(listSplit) > 0:
         if nfiles != len(os.walk(os.path.join(ntupleLoc, key)).next()[2]):
             print "WARNNING: THE FILES ARE MISSING"
 
-mergedLoc = ntupleLoc.replace('split','merged')
-if not os.path.exists(mergedLoc):
-    os.mkdir(mergedLoc)
-    for item in os.listdir(ntupleLoc):
-        if 'part' in item: continue
-        rootFiles = [os.path.join(ntupleLoc, item, file) for file in os.listdir(os.path.join(ntupleLoc, item))]
-        command = ['hadd', os.path.join(mergedLoc,item+'.root')]+rootFiles
-        subprocess.call(command)
+#mergedLoc = ntupleLoc.replace('split','merged')
+#if not os.path.exists(mergedLoc):
+#    os.mkdir(mergedLoc)
+#    for item in os.listdir(ntupleLoc):
+#        if 'part' in item: continue
+#        rootFiles = [os.path.join(ntupleLoc, item, file) for file in os.listdir(os.path.join(ntupleLoc, item))]
+#        command = ['hadd', os.path.join(mergedLoc,item+'.root')]+rootFiles
+#        subprocess.call(command)
