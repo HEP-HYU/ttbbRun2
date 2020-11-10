@@ -3,42 +3,35 @@ import sys
 
 import ROOT
 
-strHistConfigTemplate = """
+strHistConfigTemplate = """\
 '{name}':
   y-axis: "Events"
   y-axis-format: "%1%"
   save-extensions: ['pdf']
   show-ratio: true
   {options}
-
 """
 
-strFileConfigTemplate = """
-{name}:
+strFileConfigTemplate = """\
+'{name}':
   type: {type}
-  legend: {legend}
-  pretty-name: {prettyname}
+  pretty-name: '{prettyname}'
 {options}
-
 """
 
-strMCOptionsTemplate = """
-  cross-sections: {xsec}
+strMCOptionsTemplate = """\
+  cross-section: {xsec}
   generated-events: {genevt}
-  fill-color: {color}
+  fill-color: '{color}'
   group: {group}
   order: {order}
 """ 
 
 class MakeConfigs:
-    def __init__(self, year, root_path, output_path, hist):
+    def __init__(self, year, root_path, output_path):
         self.year = year
         self.root_path = root_path
         self.output_path = output_path
-        self.hist = hist
-
-        if self.hist: self.make_histogram_configs()
-        self.make_file_configs()
 
     def make_histogram_configs(self):
         f_tmp = ROOT.TFile(os.path.join(self.root_path, 'hist_DataSingleMu.root'))
@@ -52,15 +45,15 @@ class MakeConfigs:
             str_config = strHistConfigTemplate.format(name=hist, options='#log-y: true')
             str_bank.append(str_config)
 
-        config = open(os.path.join(output_path, 'histos.yml'), 'w')
-        str_out = ' '.join(item for item in str_bank)
-        config.write(str_output)
+        config = open(os.path.join(self.output_path, 'histos.yml'), 'w')
+        str_out = '\n'.join(item for item in str_bank)
+        config.write(str_out)
         config.close()
 
     def make_file_configs(self):
         str_bank = []
-
-        data_options = '  marker-size: 0.6\n  group: GData'
+        
+        data_options = "  legend: 'Data'\n  marker-size: 0.6\n  group: GData"
         
         temp = strFileConfigTemplate.format(name='hist_DataSingleMu.root', type='data', legend='data',
             prettyname='DataSingleMu', options=data_options)
@@ -71,14 +64,14 @@ class MakeConfigs:
         str_bank.append(temp)
 
         genevt = {}
-        with open('../samples/genevt'+str(self.year)+'.txt','r') as f:
+        with open('./samples/genevt'+str(self.year)+'.txt','r') as f:
             while True:
                 line = f.readline()
                 if not line: break
                 tmp = line.split(' ')
                 genevt[tmp[0]] = float(tmp[1])
 
-        with open('../samples/xsec'+str(self.year)+'.txt','r') as f:
+        with open('./samples/xsec'+str(self.year)+'.txt','r') as f:
             while True:
                 line = f.readline()
                 if not line: break
@@ -99,11 +92,7 @@ class MakeConfigs:
                         prettyname=sample, options=mc_options)
                 str_bank.append(temp)
 
-        config = open(os.path.join(output_path, 'files'+str(self.year)+'.yml'), 'w')
-        str_out = ' '.join(item for item in str_bank)
-        config.write(str_output)
+        config = open(os.path.join(self.output_path, 'files'+str(self.year)+'.yml'), 'w')
+        str_out = '\n'.join(item for item in str_bank)
+        config.write(str_out)
         config.close()
-
-config = MakeConfigs(16, '../output/post16', '../plotIt/configs', True)
-config = MakeConfigs(17, '../output/post16', '../plotIt/configs', False)
-config = MakeConfigs(18, '../output/post16', '../plotIt/configs', False)

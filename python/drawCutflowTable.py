@@ -3,6 +3,8 @@ import sys
 
 import ROOT
 
+import saveAndLoadSamples as sls
+
 strTableTemplate = """
 \\begin{table}[htb]
   \\rotatebox{90}{
@@ -25,7 +27,7 @@ strTableTemplate = """
 \\end{table}
 """
 
-class DrawYieldsTable:
+class DrawYieldsTable(sls.LoadSamples):
     def __init__(self, year, root_path, output_path, hist_name='h_nJets'):
         self.year = year
         self.root_path = root_path
@@ -37,39 +39,22 @@ class DrawYieldsTable:
         self.samples = {}
         self.xsecs = {}
         self.genevt = {}
-
-        self.get_root_files()
-        self.draw_yields()
-
-    def get_root_files(self):
-        with open('../samples/xsec'+str(self.year)+'.txt','r') as f:
-            while True:
-                line = f.readline()
-                if 'Xsec' in line: continue
-                if not line: break
-                tmp = line.split(' ')
-                if tmp[2] < 0: continue
-                self.xsecs[int(tmp[2])] = [tmp[0], float(tmp[1])]
         
-        with open('../samples/genevt'+str(self.year)+'.txt','r') as f:
-            while True:
-                line = f.readline()
-                if not line: break
-                tmp = line.split(' ')
-                self.genevt[tmp[0]] = float(tmp[1])
+    def get_root_files(self):
+        self.get_sample_info()
 
-        self.data['Muon'] = ROOT.TFile(os.patj.join(self.root_path, 'hist_DataSingleMu.root'))
-        self.data['Electron'] = ROOT.TFile(os.patj.join(self.root_path, 'hist_DataSingleMu.root'))
-        for sample in self.xsecs.keys():
-            self.samples[sample] = ROOT.TFile(os.path.join(self.root_path, 'hist_'+sample+'.root'))
+        self.data['Muon'] = ROOT.TFile(os.path.join(self.root_path, 'hist_DataSingleMu.root'))
+        self.data['Electron'] = ROOT.TFile(os.path.join(self.root_path, 'hist_DataSingleEG.root'))
+        for sample in self.xsecs.values():
+            self.samples[sample[0]] = ROOT.TFile(os.path.join(self.root_path, 'hist_'+sample[0]+'.root'))
 
     def draw_yields(self):
         for ich in range(0,3):
             steps = [1,3,4,6,7,8,9]
             
             data_nevts = []
-            data_str = '      %s ' % (sample_name)
-            for istep in step:
+            data_str = '     Data ' 
+            for istep in steps:
                 if ich == 0:
                     TH1 = self.data['Muon'].Get(self.hist_name+'_Ch0_S'+str(istep))
                 elif ich == 1:
@@ -80,13 +65,13 @@ class DrawYieldsTable:
                     TH1.Add(TH1temp)
 
                 error = ROOT.Double()
-                nevts = hist_tmp.IntegralAndError(1, TH1.GetNbinsX()+1, error)
+                nevts = TH1.IntegralAndError(1, TH1.GetNbinsX()+1, error)
                 data_str += '& $%.1f $ ' % (nevts)
                 data_nevts.append(nevts)
-             data_str += '\\\\\n'
+            data_str += '\\\\\n'
            
-            mc_nevts = [0.0 for i in range(len(step))]
-            mc_error = [0.0 for i in range(len(step))]
+            mc_nevts = [0.0 for i in range(len(steps))]
+            mc_error = [0.0 for i in range(len(steps))]
             mc_dicts = {}
             for item in self.xsecs.items():
                 sample_name = item[1][0]
@@ -95,39 +80,37 @@ class DrawYieldsTable:
                 scale = (self.luminosity[self.year]*xsec/self.genevt[sample_name])
 
                 temp = '      %s ' % (sample_name)
-                for idx, istep in enumerate(step):
+                for idx, istep in enumerate(steps):
                     TH1 = sample.Get(self.hist_name+'_Ch'+str(ich)+'_S'+str(istep))
                     TH1.Scale(scale)
                     
                     #nevts = hist_tmp.Integral(0, hist_tmp.GetNbinsX()+1)
                     error = ROOT.Double()
-                    nevts = hist_tmp.IntegralAndError(1, TH1.GetNbinsX()+1, error)
+                    nevts = TH1.IntegralAndError(1, TH1.GetNbinsX()+1, error)
                     
                     temp += '& $%.1f {\scriptstyle\ \pm\ %.1f}$ ' % (nevts, error)
                     mc_nevts[idx] += nevts
-                    mc_error[idx] = sqrt(mc_error[idx]^2 + error^2)
+                    import math
+                    mc_error[idx] = math.sqrt(pow(mc_error[idx],2) + pow(error,2))
                 temp += '\\\\\n'
-                mc_dict[item[0]] = temp
+                mc_dicts[item[0]] = temp
     
             totalMC = '      TotalMC '
             ratio = '      Ratio '
-            for idx, value in enumerate(mc_nevts): 
-                ratio = float(data_nevts[idx])/float(value)
+            for idx, value in enumerate(mc_nevts):
+                temp = float(data_nevts[idx])/float(value)
                 totalMC += '& $%.1f {\scriptstyle\ \pm\ %.1f}$ ' % (value, mc_error[idx])
-                ratio += ' & $%.2f$ ' % ratio
+                ratio += ' & $%.2f$ ' % temp
             totalMC += '\\\\'
             ratio += '\\\\'
         
-            str_dict['year'] = str(year)
-            str_dict['nRows'] = '|'+'c|'.join(i for i in range(len(step)))
-            str_dict['mcNevts'] = '\n'.join(value for value in mc_dict.values())
+            str_dict = {}
+            str_dict['year'] = str(self.year)
+            str_dict['nRows'] = '|'+'c|'*len(steps)
+            str_dict['mcNevts'] = '\n'.join(value for value in mc_dicts.values())
             str_dict['dataNevts'] = data_str
             str_dict['totalMC'] = totalMC
             str_dict['ratio'] = ratio
 
-            strOut = strTemplate % str_dict
-            with open("../output/yields"+str(year)+'_ch'+str(ich)+".tex", 'w') as f: f.write(strOut)
-
-table = DrawYieldsTable(16, '../output/post16', '../output/')
-table = DrawYieldsTable(17, '../output/post17', '../output/')
-table = DrawYieldsTable(18, '../output/post18', '../output/')
+            strOut = strTableTemplate % str_dict
+            with open(self.output_path+"/yields"+str(self.year)+'_ch'+str(ich)+".tex", 'w') as f: f.write(strOut)

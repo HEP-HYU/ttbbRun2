@@ -3,9 +3,10 @@ import sys
 
 import ROOT
 
+import saveAndLoadSamples as sls
 import tdrstyle
 
-class DrawSystPlots:
+class DrawSystPlots(sls.LoadSamples):
     luminosity = {16:35922, 17:41529, 18:59741}
     def __init__(self, year, root_path, hist_name, output_path):
         self.year = year
@@ -16,30 +17,14 @@ class DrawSystPlots:
         self.xsecs = {}
         self.genevt = {}
         
-        self.get_root_files()
-        self.draw_histograms()
-
-        if os.path.exists(self.output_path):
+        if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
 
     def get_root_files(self):
-        with open('../samples/xsec'+str(self.year)+'.txt','r') as f:
-            while True:
-                line = f.readline()
-                if 'Xsec' in line: continue
-                if not line: break
-                tmp = line.split(' ')
-                if tmp[2] < 0: continue
-                self.xsecs[tmp[0]] = float(tmp[1])
-        with open('../samples/genevt'+str(self.year)+'.txt','r') as f:
-            while True:
-                line = f.readline()
-                if not line: break
-                tmp = line.split(' ')
-                self.genevt[tmp[0]] = float(tmp[1])
+        self.get_sample_info()
        
-        for sample in self.xsecs.keys():
-            self.samples[sample] = ROOT.TFile(os.path.join(self.root_path, 'hist_'+sample+'.root'))
+        for sample in self.xsecs.values():
+            self.samples[sample[0]] = ROOT.TFile(os.path.join(self.root_path, 'hist_'+sample[0]+'.root'))
 
     def draw_histograms(self):
         ROOT.gStyle.SetOptStat(0)
@@ -55,28 +40,33 @@ class DrawSystPlots:
             if item[-2:] == 'up':
                 name = (item.split('__')[-1]).replace('up','')
                 syst_name.append(name)
-        
+
+        xsecs = {}
+        for sample in self.xsecs.values():
+            xsecs[sample[0]] = sample[1]
         for syst in syst_name:
             i = 0
             for name, file in self.samples.items():
                 if 'QCD' in name: continue
+                if any(i in syst for i in ['tune','pdf','ps','sw','hdamp']):
+                    if not ('TT' in name and 'Powheg' in name): continue
                 if i == 0:
-                    TH1Nom = file.Get(self.hist_name)
-                    TH1Up = file.Get(self.hist_name+'__'+syst+'up')
-                    TH1Down = file.Get(self.hist_name+'__'+syst+'down')
+                    TH1Nom = file.Get(self.hist_name).Clone()
+                    TH1Up = file.Get(self.hist_name+'__'+syst+'up').Clone()
+                    TH1Down = file.Get(self.hist_name+'__'+syst+'down').Clone()
 
-                    TH1Nom.Scale(self.xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
-                    TH1Up.Scale(self.xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
-                    TH1Down.Scale(self.xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
+                    TH1Nom.Scale(xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
+                    TH1Up.Scale(xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
+                    TH1Down.Scale(xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
                     i += 1
                 else:
-                    tmpNom = file.Get(self.hist_name)
-                    tmpUp = file.Get(self.hist_name+'__'+syst+'up')
-                    tmpDown = file.Get(self.hist_name+'__'+syst+'down')
+                    tmpNom = file.Get(self.hist_name).Clone()
+                    tmpUp = file.Get(self.hist_name+'__'+syst+'up').Clone()
+                    tmpDown = file.Get(self.hist_name+'__'+syst+'down').Clone()
                     
-                    tmpNom.Scale(self.xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
-                    tmpUp.Scale(self.xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
-                    tmpDown.Scale(self.xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
+                    tmpNom.Scale(xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
+                    tmpUp.Scale(xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
+                    tmpDown.Scale(xsecs[name]*DrawSystPlots.luminosity[self.year]/self.genevt[name])
 
                     TH1Nom.Add(tmpNom)
                     TH1Up.Add(tmpUp)
@@ -155,8 +145,8 @@ class DrawSystPlots:
             TH1RatioDown = TH1Nom.Clone()
             TH1RatioDown.Divide(TH1Down)
             
-            TH1RatioUp.SetMaximum(1.6)
-            TH1RatioUp.SetMinimum(0.4)
+            TH1RatioUp.SetMaximum(1.4)
+            TH1RatioUp.SetMinimum(0.6)
             TH1RatioUp.GetXaxis().SetLabelOffset(0.021)
             TH1RatioUp.GetXaxis().SetLabelSize(14)
             TH1RatioUp.GetXaxis().SetTitleSize(15)
@@ -173,7 +163,8 @@ class DrawSystPlots:
             TH1RatioUp.Draw("p")
             TH1RatioDown.Draw("p same")
 
-            canvas.Print(output_path+'/'+syst+".pdf","pdf")
-    
-
-hist = DrawSystPlots(16, '../output/root16_post', 'h_keras_RecoDeltaRvsJetCSV_bin0_Ch2_S2', '../output/pdf/16/syst/')
+            canvas.Print(self.output_path+'/'+syst+".pdf","pdf")
+            
+            pad1.Clear()
+            pad2.Clear()
+            canvas.Clear()
