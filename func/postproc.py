@@ -24,14 +24,13 @@ class RunPostProcess:
         self._check_directory()
         self._load_samples()
 
+    from postproc_merge import _merge_root
+    from postproc_merge import do_merge_root
 
-    from func.merge import _merge_root
-    from func.merge import do_merge_root
-
-    from func.post import _normalize_by_bSF
-    from func.post import _rescale_extsample
-    from func.post import _write_envelope
-    from func.post import _execute_postprocess
+    from postproc_post import _normalize_by_bSF
+    from postproc_post import _rescale_extsample
+    from postproc_post import _write_envelope
+    from postproc_post import _execute_postprocess
 
     def _check_directory(self):
         self.ctl = os.path.exists(self.root_dir)

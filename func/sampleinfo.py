@@ -7,10 +7,11 @@ class SaveSamples:
         self.year = year
         self.ntuple_path = ntuple_path
         self.output_path = output_path
-        self.store_sample_list()
-        self.store_nevents()
+        
+        self._store_sample_list()
+        self._store_nevents()
     
-    def store_sample_list(self):
+    def _store_sample_list(self):
         f_data = open(self.output_path+'/data'+str(self.year)+'.txt','w')
         f_mc   = open(self.output_path+'/sample'+str(self.year)+'.txt', 'w')
         f_syst = open(self.output_path+'/systematic'+str(self.year)+'.txt','w')
@@ -32,7 +33,7 @@ class SaveSamples:
         f_mc.close()
         f_syst.close()
 
-    def store_nevents(self):
+    def _store_nevents(self):
         f_out = open(self.output_path+'/genevt'+str(self.year)+'.txt','w')
         
         for item in os.listdir(self.ntuple_path):
