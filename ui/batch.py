@@ -11,7 +11,13 @@ def _write_config(self):
         ...Default config file: configs/config16.yml
     """)
     self.cfg = raw_input("...Config file: ")
-    self._get_config()
+    if self.cfg == '': self.cfg = 'configs/config16.yml'
+    
+    try:
+        self._get_config()
+        print self._config
+    except Exception as e:
+        print(str(e))
 
 def _select_command(self):
     print textwrap.dedent("""\
@@ -24,8 +30,8 @@ def _select_command(self):
         6. draw: draw cut flow table and histograms\
     """)
 
-    cmd = raw_input("...Choose option: sample/tselector/dnn/qcd/post/draw/exit ")
-    if not any(i in cmd for i in ['sample','tselector','dnn','qcd','post','draw','exit']):
+    cmd = raw_input("...Choose option: selection/sample/tselector/dnn/qcd/post/draw/exit ")
+    if not any(i in cmd for i in ['selection','sample','tselector','dnn','qcd','post','draw','exit']):
         print "...Wrong command"
         exit(0)
     if cmd == "exit":
@@ -43,7 +49,19 @@ def _select_command(self):
         if not any(i in sub_cmd for i in ['test','qcd','common','exit']):
             print "...Wrong command"
             exit(0)
-        if sub_cmd == 'exit': exit(0) 
+        if sub_cmd == 'exit': exit(0)
+
+    elif cmd == 'post':
+        print textwrap.dedent("""\
+            ....Select sub-option
+            1. merge: Merge root files
+            2. scale: Scale histograms
+        """)
+        sub_cmd = raw_input("Choose subcommand: merge/scale/exit ")
+        if not any(i in sub_cmd for i in ['merge', 'scale', 'exit']):
+            print "...Wrong command"
+            exit(0)
+        if sub_cmd == 'exit': exit(0)
 
     elif cmd == 'dnn':
         print textwrap.dedent("""\
@@ -76,6 +94,3 @@ def _select_command(self):
     if not sub_cmd == '': cmd = cmd + '/' + sub_cmd
         
     return cmd
-
-def _run_command(self, cmd):
-    print self.cmd 

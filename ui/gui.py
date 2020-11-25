@@ -102,6 +102,10 @@ def _make_cmd_combo(self):
             cb2.addItem('n2a')
             cb2.addItem('pred')
             cb2.addItem('hist')
+        elif cb.currentText() == 'post':
+            cb2.addItem('')
+            cb2.addItem('merge')
+            cb2.addItem('scale')
         elif cb.currentText() == 'draw':
             cb2.addItem('')
             cb2.addItem('table')
@@ -114,6 +118,7 @@ def _make_cmd_combo(self):
     cb2 = QtWidgets.QComboBox(self)
     
     cb.addItem('')
+    cb.addItem('selection')
     cb.addItem('sample')
     cb.addItem('tselector')
     cb.addItem('DNN')

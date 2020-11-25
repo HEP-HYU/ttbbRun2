@@ -1,11 +1,12 @@
 import os
 import sys
+import textwrap
 
 def _get_config(self):
     import yaml
     try:
-        with open(os.path.join(self._base_path, self.cfg), 'r') as f:
-            self._config = yaml.load(f, Loader=yaml.FullLoader)
+        with open(os.path.join(self.base_path, self.cfg), 'r') as f:
+            self.config = yaml.load(f, Loader=yaml.FullLoader)
         if not self.batch: self.cfg_status_lbl.setText(str("Success"))
     except Exception as e:
         if self.batch:
@@ -14,19 +15,19 @@ def _get_config(self):
             self.log_qte.append(str(e))
             self.cfg_status_lbl.setText(str("Fail"))
 
-    if not self.batch: self.log_qte.append("Setup configs: "+str(self._config))
+    if not self.batch: self.log_qte.append("Setup configs: "+str(self.config))
 
 def _run_cmd(self):
     try:
         if 'sample' in self.cmd:
-            from func import saveAndLoadSamples as sls
-            c = sls.SaveSamples(self._config['year'], self._config['ntuple'], self._base_path+'/samples')
+            from func import sampleinfo as si
+            c = si.SaveSamples(self.config['year'], self.config['ntuple'], self.sample_path)
 
             if not self.batch: self.cmd_status_lbl.setText(str("Success"))
 
         elif 'tselector' in self.cmd:
-            from func import makeSlurmJob as sj
-            c = sj.MakeSlurmJob(self._config['year'], self._config['ntuple'], self._base_path)
+            from func import slurm as sl
+            c = sl.MakeSlurmJob(self.config['year'], self.config['ntuple'], self.base_path, 'tselector.py')
             if 'test' in self.cmd:
                 c.make_slurm_job(True, False)
             elif 'qcd' in self.cmd:
@@ -35,90 +36,116 @@ def _run_cmd(self):
                 c.make_slurm_job()
 
             if not self.batch: self.cmd_status_lbl.setText(str("Success"))
-            
-        else:
-            print "MELONA"
-
-        """
-        elif 'DNN' in cmd.text():
-            if 'model' in cmd.text():
-                import makeModel as mm
-                train_input = ''
-                config_file = ''
-                model = mm.MakeModel(train_input, config_file)
-                model.load_config()
+        
+        elif 'DNN' in self.cmd:
+            if 'model' in self.cmd:
+                from func import dnn_model as mm
+                model = mm.MakeModel(self.config)
                 model.compile_train()
-                model.save_config()
             
-            elif 'n2a' in cmd.text():
-                outputDir = '../output/array'+str(self.config['year'])
-                for item in os.listdir(inputDir+'/TTLJ_PowhegPythia_ttbb'):
-                    cmd = ['sbatch','slurm_n2a.sh',inputDir+'/TTLJ_PowhegPythia_ttbb',item,outputDir+'/Training','True','']
-                    subprocess.call(cmd)
-                for sample in os.listdir(inputDir):
-                    outputDir = '../output/array'+str(year)+'/'+sample
-                    if 'part' in sample: continue
-                    for item in os.listdir(inputDir+'/'+sample):
-                        cmd = ['sbatch','slurm_n2a.sh',inputDir+'/'+sample,item,outputDir,'False']
-                        subprocess.call(cmd)
-                    if not any(i in sample for i in ['QCD','Data','SYS']):
-                        jetSyst = ['jerup','jerdown','jecup','jecdown']
-                        for syst in jetSyst:
-                            outputDir = '../output/array'+str(year)+'/'+sample+'__'+syst
-                            for item in os.listdir(inputDir+'/'+sample):
-                                cmd = ['sbatch','slurm_n2a.sh',inputDir+'/'+sample,item,outputDir,'False',syst]
-                                subprocess.call(cmd)
-            
-            elif 'pred' in cmd.text():
-               inputDir = '../output/array'+str(config['year'])
-                outputDir = '../output/pred'+str(config['year'])
+            elif 'n2a' in self.cmd:
+                from func import slurm as sl
+                c = sl.MakeSlurmJob(self.config['year'], self.config['ntuple'], self.base_path, 'dnn_n2a.py')
+                c.make_slurm_job()
+
+            elif 'pred' in self.cmd:
+                outputDir = self.base_path+'/output/pred'+str(self.config['year'])
                 if not os.path.exists(outputDir):
                     os.makedirs(outputDir)
-                import prediction as pred
-                pred.prediction(year, inputDir, outputDir)
+                from func import dnn_pred as pd
+                pd.prediction(self.config['year'], self.config['array'], outputDir)
 
-            elif 'hist' in cmd.text():
-                arrayDir  = '../output/pred'+str(config['year'])
-                outputDir = '../output/dnn'+str(config['year'])
-                if not os.path.exists(outputDir):
-                    os.makedirs(outputDir)
-                procs = []
-                for sample in os.listdir(arrayDir):
-                    #if not 'DataSingleMuB' in sample: continue
-                    if 'Training' in sample: continue
-                    if 'SYS' in sample:
-                        tmp = sample.split('_')
-                        if 'Bkg' in sample:
-                            outName = tmp[0]+'_'+tmp[1]+'__'+tmp[-1].lower()
-                        else:
-                            outName = tmp[0]+'_'+tmp[1]+'_'+tmp[-1]+'__'+tmp[-2].lower()
-                    else:
-                        outName = sample
-                    if 'tunecuetp8m4' in outName:
-                        outName = outName.replace('tunecuetp8m4','tune')
-                    if 'tunecp5' in outName:
-                        outName = outName.replace('tunecp5', 'tune')
-                    outputDir = '../output/dnn'+str(year)+'/'+outName
-                    if not os.path.exists(outputDir):
-                        os.makedirs(outputDir)
-                    for item in os.listdir(os.path.join(arrayDir,sample)):
-                        cmd = ['sbatch', 'slurm_a2h.sh', str(year), arrayDir+'/'+sample, item, outputDir, outName]
-                        subprocess.call(cmd)
+            elif 'hist' in self.cmd:
+                from func import slurm as sl
+                c = sl.MakeSlurmJob(self.config['year'], self.base_path+'/output/pred'+str(year), self.base_path, 'dnn_ana.py')
+                c.make_slurm_job()
 
+            if not self.batch: self.cmd_status_lbl.setText(str("Success"))
+        
+        elif 'post' in self.cmd:
+            from func import postproc as pp
+            post = pp.PostProcess(self.base_path, self.output_path, self.config['year'])
+            if 'merge' in self.cmd:
+                post.merge_hist()
             else:
-                label.setText(str('Not yet'))
+                post.do_post_process()
+            
+            if not self.batch: self.cmd_status_lbl.setText(str("Success"))
+       
+        elif 'qcd' in self.cmd:
+            post_path = self.base_path+'/output/post'+str(self.config['year'])
+            from func import qcd
+            qcd = qcd.GetQCDshape(self.config['year'], self.config['luminosity'], post_path)
+            qcd.get_qcd_shape()
 
-        elif 'post' in cmd.text():
-            print "melona"
-        elif 'draw' in cmd.text():
-            if 'table' in cmd.text():
-            elif 'syst' in cmd.text():
-            elif 'plotIt' in cmd.text():
+        elif 'gen' in self.cmd:
+            post_path = self.base_path+'/output/post'+str(self.config['year'])
+            from func import genhist as gh
+            gen = gh.RunWithGenTree(self.config['ntuple'], 'TTLJ_PowhegPythia_ttbb', post_path)
+            gen.run_with_gen_tree()
+
+        elif 'draw' in self.cmd:
+            post_path = self.base_path+'/output/post'+str(self.config['year'])
+            if 'table' in self.cmd:
+                output_path = self.output_path+'/table'+str(self.config['year'])
+                
+                from func import drawCutflowTable as cf
+                table = cf.DrawYieldsTable(self.config['year'], self.config['luminosity'], post_path, output_path)
+                table.draw_yields()
+                
+                if not self.batch: self.cmd_status_lbl.setText(str("Success"))
+            elif 'syst' in self.cmd:
+                output_path = self.output_path+'/syst'+str(self.config['year'])
+                
+                from func import drawSystPlots as sp
+                hist = sp.DrawSystPlots(self.config['year'], post_path, self.config['hist'], output_path)
+                hist.draw_histograms()
+                
+                if not self.batch: self.cmd_status_lbl.setText(str("Success"))
+            elif 'plotIt' in self.cmd:
+                text = textwrap.dedent("""\
+                    This command only make plotIt config files.
+                    If you want to run plotIt, please activate SL7 environment first.
+                    Setup command: source plotIt/setup_sl7_env.sh
+                    plotIt command: plotIt plotIt/configs/config[YEAR].yml -o output/pdf/[YEAR]
+                    """)
+                if not self.batch:
+                    self.log_qte.append(text)
+                else:
+                    print text
+                
+                from func import makePlotItConfigs as mpc
+                
+                config_path = os.path.join(self.base_path,'plotIt/configs')
+                make = mpc.MakeConfigs(self.config['year'], post_path, config_path)
+                make.make_file_configs()
+                make.make_histogram_configs()
+                
+                if not self.batch: self.cmd_status_lbl.setText(str("Success"))
+        
+        elif 'selection' in self.cmd:
+            text = textwrap.dedent("""\
+                ...Event selection
+                Step 0: one lepton
+                Step 1: Step 0 + Njets >= 1
+                Step 2: Step 0 + 2 <= Njets < 4
+                Step 3: Step 0 + Njets >= 4
+                Step 4: Step 3 + Nbjets >= 2
+                Step 5: Step 0 + 2 <= Njets < 6
+                Step 6: Step 0 + Njets >= 6
+                Step 7: Step 6 + Nbjets >= 2
+                Step 8: Step 6 + Nbjets >= 3
+                Step 9: Step 6 + Nbjets >= 4
+            """)
+
+            if self.batch:
+                print text
             else:
-            print "melona"
+                self.log_qte.append(text)
+
         else:
-            label.setText(str("Not yet"))
-        """
+            if not self.batch: self.cmd_status_lbl.setText(str("?"))
+    
     except Exception as e:
         if not self.batch:
             self.log_qte.append(str(e))

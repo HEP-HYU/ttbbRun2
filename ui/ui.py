@@ -3,13 +3,15 @@ from PyQt5 import QtCore, QtWidgets
 
 class MyApp(QtWidgets.QWidget):
     def __init__(self, base_path, batch):
-        self._base_path = base_path 
-        self._ui_path = os.path.join(self._base_path, 'ui')
-        self._func_path = os.path.join(self._base_path, 'func')
-        self._macro_path = os.path.join(self._base_path, 'macro')
-        self._sample_path = os.path.join(self._base_path, 'samples')
-        self._output_path = os.path.join(self._base_path, 'output')
-        self._config = []
+        super(QtWidgets.QWidget,self).__init__()
+        
+        self.base_path = base_path 
+        self.ui_path = os.path.join(self.base_path, 'ui')
+        self.func_path = os.path.join(self.base_path, 'func')
+        self.macro_path = os.path.join(self.base_path, 'macro')
+        self.sample_path = os.path.join(self.base_path, 'samples')
+        self.output_path = os.path.join(self.base_path, 'output')
+        self.config = []
         self.batch = batch
         self.cfg = ''
         self.cmd = ''
@@ -17,11 +19,10 @@ class MyApp(QtWidgets.QWidget):
         if self.batch:
             self.initUI()
         else:
-            super(QtWidgets.QWidget,self).__init__()
             self.initGUI()
 
+    from batch import _write_config
     from batch import _select_command
-    from batch import _run_command
 
     from gui import _make_layout
     from gui import _make_qle_with_lbl
@@ -46,6 +47,7 @@ class MyApp(QtWidgets.QWidget):
         self.show()
 
     def initUI(self):
-        self._set_config()
-        self.cmd = self._select_command()
-        self._run_command(self.cmd)
+        self._write_config()
+        while True:
+            self.cmd = self._select_command()
+            self._run_cmd()
