@@ -48,7 +48,7 @@ class DrawSystPlots(sls.LoadSamples):
             i = 0
             for name, file in self.samples.items():
                 if 'QCD' in name: continue
-                if any(i in syst for i in ['tune','pdf','ps','sw','hdamp']):
+                if any(i in syst for i in ['tune','pdf','ps','sw','hdamp','isr','fsr']):
                     if not ('TT' in name and 'Powheg' in name): continue
                 if i == 0:
                     TH1Nom = file.Get(self.hist_name).Clone()

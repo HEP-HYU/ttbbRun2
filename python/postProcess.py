@@ -75,20 +75,19 @@ def bSFnorm(h_bSF, h_tmp):
 
     return h_tmp
 
-def postProcess(base_path, proc, year):
-    input_path = base_path+'/output/root'+str(year)+'/'
-    if not os.path.exists(input_path+'post'):
+def postProcess(input_path, proc, year, isCP5=True):
+    if not os.path.exists(input_path+'/post'):
         try:
-            os.makedirs(input_path+'post')
+            os.makedirs(input_path+'/post')
         except OSError:
-            print(input_path+'post: already exists')
+            print(input_path+'/post: already exists')
     print("Begin Process "+str(os.getpid())+" "+str(proc))
       
     if any(i in proc for i in ['Data', 'QCD']):
         return
 
     f_sample = TFile.Open(os.path.join(input_path, proc), "READ")
-    f_update = TFile.Open(os.path.join(input_path+'post', proc), "RECREATE")
+    f_update = TFile.Open(os.path.join(input_path,'post', proc), "RECREATE")
     
     h_eventinfo    = f_sample.Get("EventInfo")
     h_scaleweights = f_sample.Get("ScaleWeights")
@@ -102,10 +101,19 @@ def postProcess(base_path, proc, year):
         if any(i in hist for i in ['scale','ps','pdf','Info','Weight']): continue
         tmp = hist.split('__')[0]
         tmp = tmp.split('_')[-2]
-        if 'S0' in hist:
-            h_bSF = f_sample.Get('h_bSFinfo_'+tmp+'_S0')
+        if not 'Ch2' in tmp:
+            if 'S0' in hist:
+                h_bSF = f_sample.Get('h_bSFinfo_'+tmp+'_S0')
+            else:
+                h_bSF = f_sample.Get('h_bSFinfo_'+tmp+'_S1')
         else:
-            h_bSF = f_sample.Get('h_bSFinfo_'+tmp+'_S1')
+            if 'S0' in hist:
+                h_bSF = f_sample.Get('h_bSFinfo_Ch0_S0')
+                h_bSF.Add(f_sample.Get('h_bSFinfo_Ch1_S0'))
+            else:
+                h_bSF = f_sample.Get('h_bSFinfo_Ch0_S0')
+                h_bSF.Add(f_sample.Get('h_bSFinfo_Ch1_S0'))
+
         h_tmp = f_sample.Get(hist)
         h_tmp = bSFnorm(h_bSF, h_tmp)
         h_tmp.Write()
@@ -123,31 +131,24 @@ def postProcess(base_path, proc, year):
                 tmp = value.Get(hist+"__"+syst_jet[index])
                 tmp.Write()
 
-    syst_external = ['tune', 'hdamp']
-    if year == 16:
-        syst_external.append('isr')
-        syst_external.append('fsr')
+    if not isCP5:
+        syst_external = ['tune', 'hdamp', 'isr', 'fsr']
+    else:
+        syst_external = ['tune', 'hdamp']
 
     if 'Filter' in proc: return 
 
     if 'TT' in proc:
         print("Rescaling external samples...")
         for syst in syst_external:
-            for i in range(2):
-                if year == 16 and 'Bkg' in proc and 'hdamp' in syst:
-                    continue
-                if year == 16 and any(syst in sys for sys in ['tune', 'isr', 'fsr']) and not 'Bkg' in proc:
-                    ext_name = proc[:5]+'TT'+proc[9:-5]
-                else: 
+            for vari in ['up','down']:
+                if isCP5:
                     ext_name = proc[:-5]
+                else:
+                    ext_name = proc.replace('TTLJ','TT')[:-5]
                 
-                tmp = ''
-                if i == 0: tmp = syst+'up'
-                else: tmp = syst+'down'
-                print("External syst sample: "+ext_name)
-
+                tmp = syst+vari 
                 f_ext = TFile.Open(os.path.join(input_path, ext_name+'__'+tmp+'.root'), "READ")
-
                 h_out = []
                 h_out = rescale(f_ext, h_eventinfo)
 
@@ -159,9 +160,9 @@ def postProcess(base_path, proc, year):
         print("Writing envelope...")
         ps_list = ["isrup", "fsrup", "isrdown", "fsrdown"]
         
-        if year == 16:
+        if not isCP5:
             if not 'Bkg' in proc:
-                ext_name = proc[:5]+'TT'+proc[9:-5]
+                ext_name = proc.replace('TTLJ','TT')[:-5]
             else:
                 ext_name = proc[:-5]
 
@@ -176,13 +177,7 @@ def postProcess(base_path, proc, year):
                 h_psweights.SetBinContent(index+1,tmp)
                 f_ps_list[index].Close()
         else:
-            f_txt = open(base_path+'/samples/sample'+str(year)+'.txt','r')
-            ntuple_loc = f_txt.readline()[:-1]
-            f_txt.close()
-
-            f_ntuple = TFile.Open(os.path.join(ntuple_loc, proc[5:-5]+".root"))
-            h_psweights = f_ntuple.Get("ttbbLepJets/PSWeights")
-            f_ntuple.Close()
+            h_psweights = f_sample.Get("PSWeights")
 
         for hist in hist_list:
             if any(i in hist for i in ['__', 'Info', 'Weight', 'bSF']): continue
@@ -194,8 +189,8 @@ def postProcess(base_path, proc, year):
                 h_sw_list.append(f_sample.Get(hist+"__scale"+str(i)))
         
             h_pdf_list = []
-            if year == 16: maxpdf = 102
-            else: maxpdf = 103
+            if year == 16 and not 'CP5' in proc: maxpdf = 102
+            else: maxpdf = 104
             for i in range(maxpdf):
                 h_pdf_list.append(f_sample.Get(hist+"__pdf"+str(i)))
         
@@ -218,10 +213,10 @@ def postProcess(base_path, proc, year):
             h_pdf_new[0].Write()
             h_pdf_new[1].Write()    
            
-            h_ps_new = []
-            h_ps_new = write_envelope("ps", h_central, h_ps_list, h_eventinfo, h_psweights)
-            h_ps_new[0].Write()
-            h_ps_new[1].Write()
+            #h_ps_new = []
+            #h_ps_new = write_envelope("ps", h_central, h_ps_list, h_eventinfo, h_psweights)
+            #h_ps_new[0].Write()
+            #h_ps_new[1].Write()
     
     f_update.cd()
     evtinfo = f_sample.Get("EventInfo")

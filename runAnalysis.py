@@ -37,7 +37,8 @@ if __name__ == '__main__':
         run17 = True
         run18 = True
 
-    python.storeSampleInfo.storeSampleList(os.getcwd()+'/samples')
+    #python.storeSampleInfo.storeSampleList(os.getcwd()+'/samples')
+    #python.storeSampleInfo.storeNumberOfEvents(os.getcwd()+'/samples')
 
     for year in range(16,19):
         if year == 16 and run16 == False: continue
@@ -66,54 +67,66 @@ if __name__ == '__main__':
         samples += data
                    
         #Compile TSelector
-        python.runAna.runAna(year, inputDir+'/nosplit', "TTLJ_PowhegPythia_ttbb.root", "Nosys_Compile", False, False)
+        python.runTSelector.runAna(year, inputDir+"/TTLJ_PowhegPythia_ttbb", "Tree_ttbbLepJets_000.root", "Nosys_Compile", "False")
         
         if args.test:
-            testDataset = ['TTLJ_PowhegPythia_ttbb']
-            for sample in testDataset:
-                for item in os.listdir(inputDir+sample):
-                    cmd = ['sbatch','job_slurm.sh', str(year), inputDir+'/split/'+sample, item, sample, 'False', 'False']
-                    subprocess.call(cmd)
+            python.runTSelector.runAna(year, inputDir+'/TTLJ_PowhegPythia_ttbb', 'Tree_ttbbLepJets_000.root', 'Test_ttbb', 'False')
+            #testDataset = ['TTLJ_PowhegPythia_ttbb', 'TTLJ_PowhegPythiaCP5_ttbb', 'ttWToLNu_aMCatNLOMadspinPythia', 'TTLL_PowhegPythiaTuneCP5_ttbkg', 'TT_PowhegPythiaBkg_SYS_ISRDown']
+            #for sample in testDataset:
+                #cmd = ['sbatch','job_slurm.sh', str(year), inputDir+'/'+sample, 'Tree_ttbbLepJets_000.root', sample, 'False']
+                #subprocess.call(cmd)
+                #for item in os.listdir(inputDir+'/'+sample):
+                #    cmd = ['sbatch','job_slurm.sh', str(year), inputDir+'/'+sample, item, sample, 'False']
+                #    subprocess.call(cmd)
+                #jetsyst = ['jerup','jerdown','jecup','jecdown']
+                #for syst in jetsyst:
+                #    for item in os.listdir(inputDir+'/'+sample):
+                #        cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+sample,item,sample+'__'+syst,'False']
+                #        subprocess.call(cmd)
 
         elif args.qcd:
             for sample in samples:
-                cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/nosplit',sample+'.root','Nosys_'+sample,'False','False']
-                subprocess.call(cmd)
-                cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/nosplit',sample+'.root','dataDriven_'+sample,'True','False']
-                subprocess.call(cmd)
-                cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/nosplit',sample+'.root','dataDriven_'+sample+'__qcdisoup','True','False']
-                subprocess.call(cmd)
-                cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/nosplit',sample+'.root','dataDriven_'+sample+'__qcdisodown','True','False']
-                subprocess.call(cmd)
-             
+                for item in os.listdir(inputDir+'/'+sample):
+                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+sample,item,'Nosys_'+sample,'False']
+                    subprocess.call(cmd)
+                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+sample,item,'dataDriven_'+sample,'True']
+                    subprocess.call(cmd)
+                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+sample,item,'dataDriven_'+sample+'__qcdisoup','True']
+                    subprocess.call(cmd)
+                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+sample,item,'dataDriven_'+sample+'__qcdisodown','True']
+                    subprocess.call(cmd)
             #python.getQCD.getQCDShape(os.getcwd(), year, samples)
         else:
             for sample in samples:
-                for item in os.listdir(inputDir+sample):
-                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+sample,item,sample,'False','False']
+                for item in os.listdir(inputDir+'/'+sample):
+                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+sample,item,sample,'False']
                     subprocess.call(cmd)
- 
-            systematics = {}
-            with open('samples/systematics'+str(year)+'.txt', 'r') as f:
-                while True:
-                    line = f.readline()
-                    if not line: break
-                    line = line.replace('\n','')
-                    line = line.split(' ')
-                    systematics[line[0]] = line[1]
            
             for sample in samples:
                 if "QCD" in sample or "Data" in sample: continue
                 jetsyst = ['jerup','jerdown','jecup','jecdown']
                 for syst in jetsyst:
-                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/nosplit',sample+'.root',sample+'__'+syst,'False','False']
-                    subprocess.call(cmd)
-            
-            for key, value in systematics.items():
-                tmp = key.split('_')
-                if 'Bkg' in key:
-                    outName = tmp[0]+'_'+tmp[1]+'_'+tmp[-1]+'__'+value
+                    for item in os.listdir(inputDir+'/'+sample):
+                        cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+sample,item,sample+'__'+syst,'False']
+                        subprocess.call(cmd)
+ 
+            extSystematics = [] 
+            with open('samples/systematic'+str(year)+'.txt', 'r') as f:
+                while True:
+                    line = f.readline()
+                    if not line: break
+                    extSystematics.append(line[:-1])
+          
+            for syst in extSystematics:
+                tmp = syst.split('_')
+                if 'Bkg' in syst:
+                    outName = tmp[0]+'_'+tmp[1]+'__'+tmp[-1].lower()
                 else:
-                    outName = tmp[0]+'_'+tmp[1]+'__'+value
-                cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/nosplit',key+'.root',outName, 'False','False']
-                subprocess.call(cmd)
+                    outName = tmp[0]+'_'+tmp[1]+'_'+tmp[-1]+'__'+tmp[-2].lower()
+                if 'tunecuetp8m4' in outName:
+                    outName = outName.replace('tunecuetp8m4','tune')
+                if 'tunecp5' in outName:
+                    outName = outName.replace('tunecp5', 'tune')
+                for item in os.listdir(inputDir+'/'+syst):
+                    cmd = ['sbatch','job_slurm.sh',str(year),inputDir+'/'+syst,item,outName,'False']
+                    subprocess.call(cmd)

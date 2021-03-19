@@ -1,6 +1,0 @@
-fixedtau_dR 0.003
-taumin_dR 0.1
-taumax_dR 0.9 
-fixedtau_M 0.05
-taumin_M 0.0
-taumax_M 0.0

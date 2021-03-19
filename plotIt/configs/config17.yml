@@ -5,7 +5,7 @@ configuration:
   experiment: " CMS"
   #extra-label: "Preliminary"
   extra-label: "Work in Progress"
-  root: ''
+  root: './output/post17'
   luminosity: 41529
   #luminosity-error: 0.00
   luminosity-error: 0.023
@@ -21,7 +21,7 @@ configuration:
   yields-table-numerical-precision-yields: 2
 
 files: 
-  include: ['files/files17.yml'] # For basic plots
+  include: ['files17.yml'] # For basic plots
 #  include: ['files/files17_qcd.yml'] # For QCD region plots
 #  include: ['files/files17_test.yml'] # Drawing without systematics
 
@@ -71,6 +71,7 @@ systematics:
   - hfstat2
   - cferr1
   - cferr2
+  - prefire
   - sw: {type: shape, on: 'hist_TTLJ_PowhegPythia_ttbb.root'}
   - sw: {type: shape, on: 'hist_TTLJ_PowhegPythia_ttbj.root'}
   - sw: {type: shape, on: 'hist_TTLJ_PowhegPythia_ttcc.root'}
@@ -113,7 +114,9 @@ systematics:
   - tune: {type: shape, on: 'hist_TTLL_PowhegPythiaBkg.root'}
 
 plots:
-  include: ['histos/histos_ttlj.yml'] # Basic plot list
+  #include: ['histos.yml'] # Basic plot list
+  include: ['histos_Ch2S7.yml']
+  #  include: ['test.yml'] # Basic plot list
 #  include:  ['histos/histos_qcd.yml'] # QCD region plot list
 #  include:  ['histos/histos_yields.yml'] # nJet hist only
 

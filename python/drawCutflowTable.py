@@ -39,6 +39,9 @@ class DrawYieldsTable(sls.LoadSamples):
         self.samples = {}
         self.xsecs = {}
         self.genevt = {}
+
+        if not os.path.exists(self.output_path):
+            os.makedirs(self.output_path)
         
     def get_root_files(self):
         self.get_sample_info()

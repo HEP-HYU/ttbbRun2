@@ -5,8 +5,8 @@ import sys
 
 import postProcess as pp
 
-def getQCDShape(base_path, year, sample_list):
-    lumi = {16:35922, 17:41529, 18:59693}
+def getQCDShape(base_path, year):
+    lumi = {16:35922, 17:41529, 18:59741}
 
     genevt = {}
     with open(base_path+'/samples/genevt'+str(year)+'.txt','r') as f:
@@ -16,6 +16,7 @@ def getQCDShape(base_path, year, sample_list):
             tmp = line.split(' ')
             genevt[tmp[0]] = float(tmp[1])
 
+    sample_list = [] 
     xsec = {}
     with open(base_path+'/samples/xsec'+str(year)+'.txt','r') as f:
         while True:
@@ -23,12 +24,15 @@ def getQCDShape(base_path, year, sample_list):
             if not line: break
             if 'Sample Xsec' in line: continue
             tmp = line.split(' ')
+            if float(tmp[2]) < 0: continue
             xsec[tmp[0]] = float(tmp[1])
+            sample_list.append(tmp[0])
  
     input_path = base_path+'/output/root'+str(year)+'_qcd/'
     if not os.path.exists(input_path+'/post'):
         os.mkdir(input_path+'/post')   
-    
+   
+    f_out = open("../qcd"+str(year)+'.txt','w')
     print "YEAR: "+str(year)
     print "Start post process for data driven QCD"
 
@@ -135,8 +139,12 @@ def getQCDShape(base_path, year, sample_list):
                 print("Hist: "+str(hist))
                 print("nevt_data: "+str(nevt_data))
                 print("nevt_qcd: "+str(nevt_qcd))
-                purity = float(nevt_qcd)/float(nevt_data)
-                print("Puriy: "+str(purity))
+                f_out.write("Hist: "+str(hist))
+                f_out.write("nevt_data: "+str(nevt_data))
+                f_out.write("nevt_qcd: "+str(nevt_qcd))
+                #purity = float(nevt_qcd)/float(nevt_data)
+                #print("Puriy: "+str(purity))
 
             h_qcd.Write()
         f_qcd.Close()
+    f_out.close()

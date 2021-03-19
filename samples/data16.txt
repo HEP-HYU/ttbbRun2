@@ -4,13 +4,11 @@ DataSingleEGD
 DataSingleEGE
 DataSingleEGF
 DataSingleEGG
-DataSingleEGHv2
-DataSingleEGHv3
+DataSingleEGH
 DataSingleMuB
 DataSingleMuC
 DataSingleMuD
 DataSingleMuE
 DataSingleMuF
 DataSingleMuG
-DataSingleMuHv2
-DataSingleMuHv3
+DataSingleMuH

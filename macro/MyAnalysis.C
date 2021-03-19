@@ -66,27 +66,21 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
   else{
     v_syst.push_back("");
     v_syst.insert(v_syst.end(), syst_basic.begin(), syst_basic.end());
-    if( process.Contains("2016") ){
-      v_syst.insert(v_syst.end(), syst_lep16.begin(), syst_lep16.end());
-      if( process.Contains("TTLJ") || process.Contains("Bkg") ){
-        v_syst.push_back("__scale0"); v_syst.push_back("__scale1"); v_syst.push_back("__scale2");
-	      v_syst.push_back("__scale3"); v_syst.push_back("__scale4"); v_syst.push_back("__scale5");
-	      int maxpdf = 103;
+    if( !process.Contains("2018") ){
+      v_syst.push_back("__prefireup"); v_syst.push_back("__prefiredown");
+    }
+    if( process.Contains("TT") ){
+      v_syst.push_back("__scale0"); v_syst.push_back("__scale1"); v_syst.push_back("__scale2");
+	    v_syst.push_back("__scale3"); v_syst.push_back("__scale4"); v_syst.push_back("__scale5");
+      if( process.Contains("2016") && !process.Contains("CP5") ){
+ 	      int maxpdf = 102;
 	      std::string str_tmp;
         for( int i = 0; i < maxpdf; ++i){
           str_tmp = "__pdf" + to_string(i);
 	        v_syst.push_back(str_tmp);
         }
       }
-    }
-    else{
-      if( process.Contains("2017") ){
-        v_syst.push_back("__prefireup"); v_syst.push_back("__prefiredown");
-      }
-      v_syst.insert(v_syst.end(), syst_lep1718.begin(), syst_lep1718.end());
-      if( process.Contains("TTLJ") || process.Contains("Bkg") || process.Contains("Resp") ){
-        v_syst.push_back("__scale0"); v_syst.push_back("__scale1"); v_syst.push_back("__scale2");
-        v_syst.push_back("__scale3"); v_syst.push_back("__scale4"); v_syst.push_back("__scale5");
+      else{
         v_syst.push_back("__isrup");  v_syst.push_back("__isrdown");
         v_syst.push_back("__fsrup");  v_syst.push_back("__fsrdown");
         int maxpdf = 104;
@@ -99,80 +93,46 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
     }
   }
   
-  if( process.Contains("TTLJ") || process.Contains("Bkg") ){
+  if( process.Contains("TT") ){
     pdfweight   = {fReader, "pdfweight"};
     scaleweight = {fReader, "scaleweight"};
-    if( !process.Contains("2016") ) psweight = {fReader, "psweight"};
+    //if( !process.Contains("2016") || process.Contains("CP5") ) 
+    psweight = {fReader, "psweight"};
   }
-  if( process.Contains("2016") ){
-    lepton_pT     = {fReader, "lepton_pT"};
-    lepton_E      = {fReader, "lepton_E"};
-    jet_pT        = {fReader, "jet_pT"};
-    jet_E         = {fReader, "jet_E"};
-    jet_CSV       = {fReader, "jet_CSV"};
-    jet_SF_CSV_30 = {fReader, "jet_SF_CSV_30"};
+  if( process.Contains("TTLJ") && !process.Contains("Bkg") && !process.Contains("SYS") ){
+    addbjet1_pt    = {fReader, "addbjet1_pt"};
+    addbjet1_eta   = {fReader, "addbjet1_eta"};
+    addbjet1_phi   = {fReader, "addbjet1_phi"};
+    addbjet1_e     = {fReader, "addbjet1_e"};
+    addbjet2_pt    = {fReader, "addbjet2_pt"};
+    addbjet2_eta   = {fReader, "addbjet2_eta"};
+    addbjet2_phi   = {fReader, "addbjet2_phi"};
+    addbjet2_e     = {fReader, "addbjet2_e"};
 
-    if( process.Contains("PowhegPythia_ttbb") ){
-      addbjet1_pt    = {fReader, "addbjet1_pt"};
-      addbjet1_eta   = {fReader, "addbjet1_eta"};
-      addbjet1_phi   = {fReader, "addbjet1_phi"};
-      addbjet1_e     = {fReader, "addbjet1_e"};
-      addbjet2_pt    = {fReader, "addbjet2_pt"};
-      addbjet2_eta   = {fReader, "addbjet2_eta"};
-      addbjet2_phi   = {fReader, "addbjet2_phi"};
-      addbjet2_e     = {fReader, "addbjet2_e"};
-
-      mindRbjet1_pt  = {fReader, "mindRbjet1_pt"};
-      mindRbjet1_eta = {fReader, "mindRbjet1_eta"};
-      mindRbjet1_phi = {fReader, "mindRbjet1_phi"};
-      mindRbjet1_e   = {fReader, "mindRbjet1_e"};
-      mindRbjet2_pt  = {fReader, "mindRbjet2_pt"};
-      mindRbjet2_eta = {fReader, "mindRbjet2_eta"};
-      mindRbjet2_phi = {fReader, "mindRbjet2_phi"};
-      mindRbjet2_e   = {fReader, "mindRbjet2_e"};
-    }
+    mindRbjet1_pt  = {fReader, "mindRjet1_pt"};
+    mindRbjet1_eta = {fReader, "mindRjet1_eta"};
+    mindRbjet1_phi = {fReader, "mindRjet1_phi"};
+    mindRbjet1_e   = {fReader, "mindRjet1_e"};
+    mindRbjet2_pt  = {fReader, "mindRjet2_pt"};
+    mindRbjet2_eta = {fReader, "mindRjet2_eta"};
+    mindRbjet2_phi = {fReader, "mindRjet2_phi"};
+    mindRbjet2_e   = {fReader, "mindRjet2_e"};
   }
-  else{
-    lepton_pT     = {fReader, "lepton_pt"};
-    lepton_E      = {fReader, "lepton_e"};
-    jet_pT        = {fReader, "jet_pt"};
-    jet_E         = {fReader, "jet_e"};
-    jet_CSV       = {fReader, "jet_deepCSV"};
-    jet_SF_CSV_30 = {fReader, "jet_SF_deepCSV_30"};
-    
-    if( process.Contains("PowhegPythia_ttbb") ){
-      addbjet1_pt    = {fReader, "addbjet1_pt"};
-      addbjet1_eta   = {fReader, "addbjet1_eta"};
-      addbjet1_phi   = {fReader, "addbjet1_phi"};
-      addbjet1_e     = {fReader, "addbjet1_e"};
-      addbjet2_pt    = {fReader, "addbjet2_pt"};
-      addbjet2_eta   = {fReader, "addbjet2_eta"};
-      addbjet2_phi   = {fReader, "addbjet2_phi"};
-      addbjet2_e     = {fReader, "addbjet2_e"};
-
-      mindRbjet1_pt  = {fReader, "mindRjet1_pt"};
-      mindRbjet1_eta = {fReader, "mindRjet1_eta"};
-      mindRbjet1_phi = {fReader, "mindRjet1_phi"};
-      mindRbjet1_e   = {fReader, "mindRjet1_e"};
-      mindRbjet2_pt  = {fReader, "mindRjet2_pt"};
-      mindRbjet2_eta = {fReader, "mindRjet2_eta"};
-      mindRbjet2_phi = {fReader, "mindRjet2_phi"};
-      mindRbjet2_e   = {fReader, "mindRjet2_e"};
-    }
-    
-    if( process.Contains("2017") ){
-      MUON_ETA_      = 2.4;
-      ELECTRON_PT_   = 30.0;
-      ELECTRON_ETA_  = 2.4;
-      JET_CSV_TIGHT_ = 0.8001;
-      prefireweight = {fReader, "prefireweight"};
-    }
-    if( process.Contains("2018") ){
-      MUON_ETA_      = 2.4;
-      ELECTRON_PT_   = 30.0;
-      ELECTRON_ETA_  = 2.4;
-      JET_CSV_TIGHT_ = 0.7527;
-    }
+  if( process.Contains("2017") ){
+    MUON_ETA_       = 2.4;
+    ELECTRON_PT_    = 30.0;
+    ELECTRON_ETA_   = 2.4;
+    JET_CSV_TIGHT_  = 0.8001;
+    JET_CSV_MEDIUM_ = 0.4941;
+    JET_CSV_LOOSE_  = 0.1522;
+  }
+  if( process.Contains("2018") ){
+    MUON_ETA_       = 2.4;
+    ELECTRON_PT_    = 30.0;
+    ELECTRON_ETA_   = 2.4;
+    JET_CSV_TIGHT_  = 0.7527;
+    JET_CSV_MEDIUM_ = 0.4184;
+    JET_CSV_LOOSE_  = 0.1241;
   }
 
   for(unsigned int i = 0; i < v_syst.size(); i++){
@@ -223,38 +183,31 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
           fOutput->Add(histBook[i]->h_csv[iChannel][iStep][iJet]);
         }
 
+        fOutput->Add(histBook[i]->h_reco_addbjet1_pt[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_addbjet1_csv[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_addbjet2_pt[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_reco_addbjet2_csv[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_reco_addbjets_deltaR[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_reco_addbjets_invMass[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_reco_addbjets_deltaR_split[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_reco_addbjets_invMass_split[iChannel][iStep]);
 
+        fOutput->Add(histBook[i]->h_gen_mindR_addbjet1_pt[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_mindR_addbjet2_pt[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_gen_mindR_deltaR[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_gen_mindR_invMass[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_gen_mindR_deltaR_split[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_gen_mindR_invMass_split[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_respMatrix_mindR_deltaR[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_respMatrix_mindR_invMass[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_respMatrix_mindR_deltaR_split[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_respMatrix_mindR_invMass_split[iChannel][iStep]);
 
+        fOutput->Add(histBook[i]->h_gen_gentop_addbjet1_pt[iChannel][iStep]);
+        fOutput->Add(histBook[i]->h_gen_gentop_addbjet2_pt[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_gen_gentop_deltaR[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_gen_gentop_invMass[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_gen_gentop_deltaR_split[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_gen_gentop_invMass_split[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_respMatrix_gentop_deltaR[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_respMatrix_gentop_invMass[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_respMatrix_gentop_deltaR_split[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_respMatrix_gentop_invMass_split[iChannel][iStep]);
 
-        fOutput->Add(histBook[i]->h_reco_deltaRvsInvMass[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]);
- 
         for(int iBin=0; iBin < nbins_reco_addbjets_dR; iBin++)
-          fOutput->Add(histBook[i]->h_reco_deltaRvsJetPt_bin[iChannel][iStep][iBin]);
+          fOutput->Add(histBook[i]->h_reco_deltaRvsCSV_bin[iChannel][iStep][iBin]);
         for(int iBin=0; iBin < nbins_reco_addbjets_M; iBin++)
-          fOutput->Add(histBook[i]->h_reco_invMassvsJetPt_bin[iChannel][iStep][iBin]);
-        fOutput->Add(histBook[i]->h_reco_deltaRvsJetPt[iChannel][iStep]);
-        fOutput->Add(histBook[i]->h_reco_invMassvsJetPt[iChannel][iStep]);
+          fOutput->Add(histBook[i]->h_reco_invMassvsCSV_bin[iChannel][iStep][iBin]);
         fOutput->Add(histBook[i]->h_3Dmatrix_mindR_deltaR[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_3Dmatrix_mindR_invMass[iChannel][iStep]);
         fOutput->Add(histBook[i]->h_3Dmatrix_gentop_deltaR[iChannel][iStep]);
@@ -266,11 +219,11 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/){
 
 Bool_t MyAnalysis::Process(Long64_t entry){
   fReader.SetEntry(entry);
-  option = GetOption();
+  
   process = option.Data();
   const int mode = *channel;
   if(mode>2) return kTRUE;
- 
+
   //Object selection
   TLorentzVector p4met;
   const double met = *MET;
@@ -304,16 +257,16 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     // 2016 electron
     // Isolation: <= 0.0588 in barrel region
     // Cut-based veto working point: I_rel > 0.175
-    if     ( syst_ext == "__qcdisoup"   ) invertIso = relIso > 0.3 /*and relIso <= 0.85)*/ ? true : false;
-    else if( syst_ext == "__qcdisodown" ) invertIso = relIso > 0.0588 and relIso <= 0.3 ? true : false; 
-    else                                  invertIso = relIso > 0.0588 /*and relIso < 0.85)*/ ? true : false;
+    if     ( syst_ext == "__qcdisoup"   ) invertIso = relIso > 0.3 and relIso <= 0.85 ? true : false;
+    else if( syst_ext == "__qcdisodown" ) invertIso = relIso > 0.06 and relIso <= 0.3 ? true : false; 
+    else                                  invertIso = relIso > 0.06 and relIso < 0.85 ? true : false;
   }
   
   int njets = 0;
   int nbjets = 0;
   multimap<float /*jet_Pt*/,   TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets;
   multimap<float /*jet_CSV*/,  TLorentzVector /*jet_4-momentum*/, greater<float>> m_jets_csv;
-  multimap<float /*jet_Pt*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_bjets;
+  multimap<float /*jet_CSV*/, TLorentzVector /*jet_4-momentum*/, greater<float>> m_bjets;
   for (unsigned int iJet = 0; iJet < jet_pT.GetSize() ; ++iJet) {
     float jetSystVar = 1.0;
     if( !process.Contains("Data") ){
@@ -335,9 +288,9 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     m_jets.insert(pair<float,TLorentzVector>(jet.Pt(),jet));
     m_jets_csv.insert(pair<float,TLorentzVector>(jet_CSV[iJet],jet));
     ++njets;
-    if( jet_CSV[iJet] > JET_CSV_TIGHT_ ){
+    if( jet_CSV[iJet] > JET_CSV_MEDIUM_ ){
       ++nbjets;
-      m_bjets.insert(pair<float, TLorentzVector>(jet.Pt(), jet));
+      m_bjets.insert(pair<float, TLorentzVector>(jet_CSV[iJet], jet));
     }
   }
 
@@ -360,6 +313,7 @@ Bool_t MyAnalysis::Process(Long64_t entry){
 
   TLorentzVector reco_addbjet1, reco_addbjet2;
   double reco_addbjet1_pt = -999, reco_addbjet2_pt = -999;
+  double reco_addbjet1_csv = -999, reco_addbjet2_csv = -999;
   double reco_addbjets_deltaR = -999, reco_addbjets_invMass = -999;
   if (m_bjets.size() >= 2){
     for(auto m_itr = m_bjets.begin(); m_itr != m_bjets.end(); m_itr++){
@@ -370,8 +324,10 @@ Bool_t MyAnalysis::Process(Long64_t entry){
         if(tmp_dR < abs(reco_addbjets_deltaR)){
           reco_addbjet1 = m_itr->second;
           reco_addbjet2 = m_itr2->second;
-          reco_addbjet1_pt = m_itr->first;
-          reco_addbjet2_pt = m_itr2->first;
+          reco_addbjet1_pt = reco_addbjet1.Pt();
+          reco_addbjet2_pt = reco_addbjet2.Pt();
+          reco_addbjet1_csv = m_itr->first;
+          reco_addbjet2_csv = m_itr2->first;
 
           reco_addbjets_deltaR   = tmp_dR;
           reco_addbjets_invMass  = (reco_addbjet1 + reco_addbjet2).M();
@@ -388,20 +344,30 @@ Bool_t MyAnalysis::Process(Long64_t entry){
   for(int i=0; i < len_M-1; i++)
     if( reco_addbjets_invMass >= reco_addbjets_M_width[i] and reco_addbjets_invMass < reco_addbjets_M_width[i+1] ) Mregion = i;
 
-  TLorentzVector gen_addbjet1, gen_addbjet2;
-  TLorentzVector gen_mindRbjet1, gen_mindRbjet2;
-  if( process.Contains("PowhegPythia_ttbb") ){
-    gen_addbjet1.SetPtEtaPhiE(*addbjet1_pt, *addbjet1_eta, *addbjet1_phi, *addbjet1_e);
-    gen_addbjet2.SetPtEtaPhiE(*addbjet2_pt, *addbjet2_eta, *addbjet2_phi, *addbjet2_e);
+  double gen_gentop_addbjet1_pt = -999, gen_gentop_addbjet2_pt = -999;
+  double gen_gentop_addbjets_deltaR = -999, gen_gentop_addbjets_invMass = -999;
+  double gen_mindR_addbjet1_pt = -999, gen_mindR_addbjet2_pt = -999;
+  double gen_mindR_addbjets_deltaR = -999, gen_mindR_addbjets_invMass = -999; 
 
-    gen_mindRbjet1.SetPtEtaPhiE(*mindRbjet1_pt, *mindRbjet1_eta, *mindRbjet1_phi, *mindRbjet1_e);
-    gen_mindRbjet2.SetPtEtaPhiE(*mindRbjet2_pt, *mindRbjet2_eta, *mindRbjet2_phi, *mindRbjet2_e);
+  TLorentzVector gen_gentop_addbjet1, gen_gentop_addbjet2;
+  TLorentzVector gen_mindR_addbjet1, gen_mindR_addbjet2;
+  if( process.Contains("PowhegPythia_ttbb") ){
+    gen_gentop_addbjet1.SetPtEtaPhiE(*addbjet1_pt, *addbjet1_eta, *addbjet1_phi, *addbjet1_e);
+    gen_gentop_addbjet2.SetPtEtaPhiE(*addbjet2_pt, *addbjet2_eta, *addbjet2_phi, *addbjet2_e);
+
+    gen_mindR_addbjet1.SetPtEtaPhiE(*mindRbjet1_pt, *mindRbjet1_eta, *mindRbjet1_phi, *mindRbjet1_e);
+    gen_mindR_addbjet2.SetPtEtaPhiE(*mindRbjet2_pt, *mindRbjet2_eta, *mindRbjet2_phi, *mindRbjet2_e);
+    
+    gen_gentop_addbjet1_pt        = gen_gentop_addbjet1.Pt();
+    gen_gentop_addbjet2_pt        = gen_gentop_addbjet2.Pt();
+    gen_gentop_addbjets_deltaR    = gen_gentop_addbjet1.DeltaR(gen_gentop_addbjet2);
+    gen_gentop_addbjets_invMass   = (gen_gentop_addbjet1+gen_gentop_addbjet2).M(); 
+   
+    gen_mindR_addbjet1_pt       = gen_mindR_addbjet1.Pt();
+    gen_mindR_addbjet2_pt       = gen_mindR_addbjet2.Pt();
+    gen_mindR_addbjets_deltaR   = gen_mindR_addbjet1.DeltaR(gen_mindR_addbjet2); 
+    gen_mindR_addbjets_invMass  = (gen_mindR_addbjet1+gen_mindR_addbjet2).M(); 
   }
-  double gen_addbjets_deltaR    = gen_addbjet1.DeltaR(gen_addbjet2);
-  double gen_addbjets_invMass   = (gen_addbjet1+gen_addbjet2).M(); 
-  
-  double gen_mindR_deltaR   = gen_mindRbjet1.DeltaR(gen_mindRbjet2); 
-  double gen_mindR_invMass  = (gen_mindRbjet1+gen_mindRbjet2).M(); 
 
   int passchannel = -999;
   bool passlepton = false;
@@ -414,28 +380,25 @@ Bool_t MyAnalysis::Process(Long64_t entry){
     passlepton = true;
   }
   
-  int ncut = 4;
-  bool eventSelection[ncut];
-  for(int icut = 0; icut < ncut; icut++) eventSelection[icut] = false;
+  bool eventSelection[nStep];
+  for(int iStep = 0; iStep < nStep; iStep++) eventSelection[iStep] = false;
 
   if( process.Contains("dataDriven") ){
-    eventSelection[0] = passlepton; //passmuon or passelectron and abs(lepton.Eta()) <= 1.4445 );
-    eventSelection[1] = eventSelection[0] and invertIso; 
-    eventSelection[2] = eventSelection[1] and njets >= 2 and njets < 6;
-    eventSelection[3] = eventSelection[1] and njets >= 6 and nbjets >= 3;
-  }
-  else if( process.Contains("Nosys") ){
-    eventSelection[0] = passlepton;
-    eventSelection[1] = eventSelection[0];
-    eventSelection[2] = eventSelection[0] and njets >= 2 and njets < 6;
-    eventSelection[3] = eventSelection[0] and njets >= 6 and nbjets >= 3;
+    eventSelection[0] = passlepton and invertIso;
+    //Should change condition: invertIso and (passmuon or passelectron and abs(lepton.Eta()) <= 1.4445));
   }
   else{
-    eventSelection[0] = passlepton and njets >= 1;
-    eventSelection[1] = eventSelection[0] and njets >= 6;
-    eventSelection[2] = eventSelection[1] and nbjets >= 2;
-    eventSelection[3] = eventSelection[1] and nbjets >= 3;
+    eventSelection[0] = passlepton;
   }
+  eventSelection[1] = eventSelection[0] and njets >= 1;
+  eventSelection[2] = eventSelection[0] and njets >= 2 and njets < 4;
+  eventSelection[3] = eventSelection[0] and njets >= 4;
+  eventSelection[4] = eventSelection[3] and nbjets >= 2;
+  eventSelection[5] = eventSelection[0] and njets >= 2 and njets < 6;
+  eventSelection[6] = eventSelection[0] and njets >= 6;
+  eventSelection[7] = eventSelection[6] and nbjets >= 2;
+  eventSelection[8] = eventSelection[6] and nbjets >= 3;
+  eventSelection[9] = eventSelection[6] and nbjets >= 4;
 
   if( !eventSelection[0] ) return kTRUE;
 
@@ -452,72 +415,46 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       else if( syst_ext == "__pudown" ) EventWeight *= PUWeight[2];
       else                              EventWeight *= PUWeight[0];
    
-      //Prefire weight, 2017only
-      if( process.Contains("2017") ){
-        if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
-        else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
-        else                                   EventWeight *= prefireweight[0];
-      }
+      //Prefire weight, 2016,17 only
+      if     ( syst_ext == "__prefireup"   ) EventWeight *= prefireweight[1];
+      else if( syst_ext == "__prefiredown" ) EventWeight *= prefireweight[2];
+      else                                   EventWeight *= prefireweight[0];
       
       //Lepton Scale Factor
-      if( process.Contains("2016") ){
-        if( passchannel == 0 ){
-          //mu [0]~[2]:ID/Iso, [3]~[5]:Trigger
-          if     ( syst_ext == "__musfup"    ) EventWeight *= lepton_SF[1];
-          else if( syst_ext == "__musfdown"  ) EventWeight *= lepton_SF[2];
-          else                                 EventWeight *= lepton_SF[0];
-          
-          if     ( syst_ext == "__mutrgup"   ) EventWeight *= lepton_SF[4];
-          else if( syst_ext == "__mutrgdown" ) EventWeight *= lepton_SF[5];
-          else                                 EventWeight *= lepton_SF[3];
-        }
-        else if( passchannel == 1 ){
-          //el [0]~[2]: ID/Iso/Reco, [3]~[5]: Trigger
-          if     ( syst_ext == "__elsfup"    ) EventWeight *= lepton_SF[1];
-          else if( syst_ext == "__elsfdown"  ) EventWeight *= lepton_SF[2];
-          else                                 EventWeight *= lepton_SF[0];
+      if( passchannel == 0 ){
+        //Muon
+        //[0]~[2]:ID, [3]~[5]:Iso, [6]~[8]:Trigger
+        if     ( syst_ext == "__muidup"    ) EventWeight *= lepton_SF[1];
+        else if( syst_ext == "__muiddown"  ) EventWeight *= lepton_SF[2];
+        else                                 EventWeight *= lepton_SF[0];
 
-          if     ( syst_ext == "__eltrgup"   ) EventWeight *= lepton_SF[4];
-          else if( syst_ext == "__eltrgdown" ) EventWeight *= lepton_SF[5];
-          else                                 EventWeight *= lepton_SF[3];
-        }
-      }//Run2016
-      else{
-        if( passchannel == 0 ){
-          //Muon
-          //[0]~[2]:ID, [3]~[5]:Iso, [6]~[8]:Trigger
-          if     ( syst_ext == "__muidup"    ) EventWeight *= lepton_SF[1];
-          else if( syst_ext == "__muiddown"  ) EventWeight *= lepton_SF[2];
-          else                                 EventWeight *= lepton_SF[0];
+        if     ( syst_ext == "__muisoup"   ) EventWeight *= lepton_SF[4];
+        else if( syst_ext == "__muisodown" ) EventWeight *= lepton_SF[5];
+        else        	                       EventWeight *= lepton_SF[3];
 
-          if     ( syst_ext == "__muisoup"   ) EventWeight *= lepton_SF[4];
-          else if( syst_ext == "__muisodown" ) EventWeight *= lepton_SF[5];
-          else        	                       EventWeight *= lepton_SF[3];
+        if     ( syst_ext == "__mutrgup"   ) EventWeight *= lepton_SF[7];
+        else if( syst_ext == "__mutrgdown" ) EventWeight *= lepton_SF[8];
+        else                                 EventWeight *= lepton_SF[6];
+      }
+      else if( passchannel == 1 ){
+        //Electron
+        //[0]~[2]: ID, [3]~[5]:Reco, [6]~[8]:Zvtx, [9]~[11]: Trigger
+        if     ( syst_ext == "__elidup"     ) EventWeight *= lepton_SF[1];
+        else if( syst_ext == "__eliddown"   ) EventWeight *= lepton_SF[2];
+        else                                  EventWeight *= lepton_SF[0];
 
-          if     ( syst_ext == "__mutrgup"   ) EventWeight *= lepton_SF[7];
-          else if( syst_ext == "__mutrgdown" ) EventWeight *= lepton_SF[8];
-          else                                 EventWeight *= lepton_SF[6];
-        }
-        else if( passchannel == 1 ){
-          //Electron
-          //[0]~[2]: ID, [3]~[5]:Reco, [6]~[8]:Zvtx, [9]~[11]: Trigger
-          if     ( syst_ext == "__elsfup"     ) EventWeight *= lepton_SF[1];
-          else if( syst_ext == "__elsfdown"   ) EventWeight *= lepton_SF[2];
-          else                                  EventWeight *= lepton_SF[0];
+        if     ( syst_ext == "__elrecoup"   ) EventWeight *= lepton_SF[4];
+        else if( syst_ext == "__elrecodown" ) EventWeight *= lepton_SF[5];
+        else	                                EventWeight *= lepton_SF[3];
 
-          if     ( syst_ext == "__elrecoup"   ) EventWeight *= lepton_SF[4];
-          else if( syst_ext == "__elrecodown" ) EventWeight *= lepton_SF[5];
-          else	                                EventWeight *= lepton_SF[3];
+        if     ( syst_ext == "__elzvtxup"   ) EventWeight *= lepton_SF[7];
+        else if( syst_ext == "__elzvtxdown" )	EventWeight *= lepton_SF[8];
+        else	                                EventWeight *= lepton_SF[6];
 
-          if     ( syst_ext == "__elzvtxup"   ) EventWeight *= lepton_SF[7];
-          else if( syst_ext == "__elzvtxdown" )	EventWeight *= lepton_SF[8];
-          else	                                EventWeight *= lepton_SF[6];
-
-          if     ( syst_ext == "__eltrgup"   )	EventWeight *= lepton_SF[10];
-          else if( syst_ext == "__eltrgdown" )  EventWeight *= lepton_SF[11];
-          else	                                EventWeight *= lepton_SF[9];
-        }
-      }//Run 2017-2018
+        if     ( syst_ext == "__eltrgup"   )	EventWeight *= lepton_SF[10];
+        else if( syst_ext == "__eltrgdown" )  EventWeight *= lepton_SF[11];
+        else	                                EventWeight *= lepton_SF[9];
+      }
 
       //Scale Weight(ME)
       //[0] = muF up , [1] = muF down, [2] = muR up, [3] = muR up && muF up
@@ -557,44 +494,44 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       else if( syst_ext == "__cferr2down"  ) bSF *= jet_SF_CSV_30[18];
       else	                                 bSF *= jet_SF_CSV_30[0];
       
-      for(int icut=0; icut < ncut; ++icut){
-        if( !eventSelection[icut] ) continue;
-        if     ( syst_ext == ""              ){
-          h_bSF[passchannel][icut]->Fill(0.5, EventWeight);
-          h_bSF[passchannel][icut]->Fill(1.5, bSF*EventWeight);
+      for(int iStep=0; iStep < nStep; ++iStep){
+        if( !eventSelection[iStep] ) continue;
+        if( syst_ext == ""){
+          h_bSF[passchannel][iStep]->Fill(0.5, EventWeight);
+          h_bSF[passchannel][iStep]->Fill(1.5, bSF*EventWeight);
         }
-        else if( syst_ext == "__lfup"        ) h_bSF[passchannel][icut]->Fill(2.5,  bSF*EventWeight);
-        else if( syst_ext == "__lfdown"      ) h_bSF[passchannel][icut]->Fill(3.5,  bSF*EventWeight);
-        else if( syst_ext == "__hfup"        ) h_bSF[passchannel][icut]->Fill(4.5,  bSF*EventWeight);
-        else if( syst_ext == "__hfdown"      ) h_bSF[passchannel][icut]->Fill(5.5,  bSF*EventWeight);
-        else if( syst_ext == "__hfstat1up"   ) h_bSF[passchannel][icut]->Fill(6.5,  bSF*EventWeight);
-        else if( syst_ext == "__hfstat1down" ) h_bSF[passchannel][icut]->Fill(7.5,  bSF*EventWeight);
-        else if( syst_ext == "__hfstat2up"   ) h_bSF[passchannel][icut]->Fill(8.5,  bSF*EventWeight);
-        else if( syst_ext == "__hfstat2down" ) h_bSF[passchannel][icut]->Fill(9.5,  bSF*EventWeight);
-        else if( syst_ext == "__lfstat1up"   ) h_bSF[passchannel][icut]->Fill(10.5, bSF*EventWeight); 
-        else if( syst_ext == "__lfstat1down" ) h_bSF[passchannel][icut]->Fill(11.5, bSF*EventWeight); 
-        else if( syst_ext == "__lfstat2up"   ) h_bSF[passchannel][icut]->Fill(12.5, bSF*EventWeight); 
-        else if( syst_ext == "__lfstat2down" ) h_bSF[passchannel][icut]->Fill(13.5, bSF*EventWeight);
-        else if( syst_ext == "__cferr1up"    ) h_bSF[passchannel][icut]->Fill(14.5, bSF*EventWeight);
-        else if( syst_ext == "__cferr1down"  ) h_bSF[passchannel][icut]->Fill(15.5, bSF*EventWeight);
-        else if( syst_ext == "__cferr2up"    ) h_bSF[passchannel][icut]->Fill(16.5, bSF*EventWeight);
-        else if( syst_ext == "__cferr2down"  ) h_bSF[passchannel][icut]->Fill(17.5, bSF*EventWeight);
+        else if( syst_ext == "__lfup"        ) h_bSF[passchannel][iStep]->Fill(2.5,  bSF*EventWeight);
+        else if( syst_ext == "__lfdown"      ) h_bSF[passchannel][iStep]->Fill(3.5,  bSF*EventWeight);
+        else if( syst_ext == "__hfup"        ) h_bSF[passchannel][iStep]->Fill(4.5,  bSF*EventWeight);
+        else if( syst_ext == "__hfdown"      ) h_bSF[passchannel][iStep]->Fill(5.5,  bSF*EventWeight);
+        else if( syst_ext == "__hfstat1up"   ) h_bSF[passchannel][iStep]->Fill(6.5,  bSF*EventWeight);
+        else if( syst_ext == "__hfstat1down" ) h_bSF[passchannel][iStep]->Fill(7.5,  bSF*EventWeight);
+        else if( syst_ext == "__hfstat2up"   ) h_bSF[passchannel][iStep]->Fill(8.5,  bSF*EventWeight);
+        else if( syst_ext == "__hfstat2down" ) h_bSF[passchannel][iStep]->Fill(9.5,  bSF*EventWeight);
+        else if( syst_ext == "__lfstat1up"   ) h_bSF[passchannel][iStep]->Fill(10.5, bSF*EventWeight); 
+        else if( syst_ext == "__lfstat1down" ) h_bSF[passchannel][iStep]->Fill(11.5, bSF*EventWeight); 
+        else if( syst_ext == "__lfstat2up"   ) h_bSF[passchannel][iStep]->Fill(12.5, bSF*EventWeight); 
+        else if( syst_ext == "__lfstat2down" ) h_bSF[passchannel][iStep]->Fill(13.5, bSF*EventWeight);
+        else if( syst_ext == "__cferr1up"    ) h_bSF[passchannel][iStep]->Fill(14.5, bSF*EventWeight);
+        else if( syst_ext == "__cferr1down"  ) h_bSF[passchannel][iStep]->Fill(15.5, bSF*EventWeight);
+        else if( syst_ext == "__cferr2up"    ) h_bSF[passchannel][iStep]->Fill(16.5, bSF*EventWeight);
+        else if( syst_ext == "__cferr2down"  ) h_bSF[passchannel][iStep]->Fill(17.5, bSF*EventWeight);
       }
 
       //Parton Shower
-      if( !process.Contains("2016") ){
-        if      ( syst_ext == "__isrup"   ) EventWeight *= psweight[0];
-        else if ( syst_ext == "__isrdown" ) EventWeight *= psweight[2];
-        else if ( syst_ext == "__fsrup"   ) EventWeight *= psweight[1];
-        else if ( syst_ext == "__fsrdown" ) EventWeight *= psweight[3];
-        else                                EventWeight *= 1.0;
-      }
+      //if( !process.Contains("2016") || process.Contains("CP5") ){
+      if      ( syst_ext == "__isrup"   ) EventWeight *= psweight[0];
+      else if ( syst_ext == "__isrdown" ) EventWeight *= psweight[2];
+      else if ( syst_ext == "__fsrup"   ) EventWeight *= psweight[1];
+      else if ( syst_ext == "__fsrdown" ) EventWeight *= psweight[3];
+      else                                EventWeight *= 1.0;
+      //}
 
       //PDF Uncertainties
       size_t pos;
       if( (pos = syst_ext.find("pdf",0)) != std::string::npos ){
-        int maxpdf = 103;
-        if( option.Contains("2016") ) maxpdf = 104;
+        int maxpdf = 104;
+        //if( process.Contains("2016") && !process.Contains("CP5") ) maxpdf = 102;
         for( int i = 0; i < maxpdf; ++i){
           std::string str_tmp = "pdf" + to_string(i);
           if( (pos = syst_ext.find(str_tmp)) != std::string::npos ){
@@ -605,87 +542,61 @@ Bool_t MyAnalysis::Process(Long64_t entry){
       }
     }// EventWeight
 
-    for(int icut=0; icut < ncut; ++icut){
-      if( !eventSelection[icut] ) continue;
-      histBook[iSys]->h_pv[passchannel][icut]           ->Fill(*GoodPV, bSF*EventWeight);
-      histBook[iSys]->h_pv_nosf[passchannel][icut]      ->Fill(*GoodPV, bSF*EventWeight/PUWeight[0]);
-      histBook[iSys]->h_lepton_pt[passchannel][icut]    ->Fill(lepton.Pt(),                  bSF*EventWeight);
-      histBook[iSys]->h_lepton_eta[passchannel][icut]   ->Fill(abs(lepton.Eta()),            bSF*EventWeight);
-      histBook[iSys]->h_lepton_relIso[passchannel][icut]->Fill(relIso,                       bSF*EventWeight);
-      histBook[iSys]->h_njets[passchannel][icut]        ->Fill(njets,                        bSF*EventWeight);
-      histBook[iSys]->h_nbjets[passchannel][icut]       ->Fill(nbjets,                       bSF*EventWeight);
-      histBook[iSys]->h_trans_mass[passchannel][icut]   ->Fill(transverseMass(lepton,p4met), bSF*EventWeight);
-
-      for(int iJet=0; iJet<nJet; ++iJet){
-        histBook[iSys]->h_jet_pt[passchannel][icut][iJet] ->Fill(a_jetPt[iJet],  bSF*EventWeight);
-        histBook[iSys]->h_jet_eta[passchannel][icut][iJet]->Fill(a_jetEta[iJet], bSF*EventWeight);
-        histBook[iSys]->h_csv[passchannel][icut][iJet]    ->Fill(a_jetCSV[iJet], bSF*EventWeight);
-      }
+    for(int iStep=0; iStep < nStep; iStep++){
+      if( !eventSelection[iStep] ) continue;
+      histBook[iSys]->h_pv[passchannel][iStep]     ->Fill(*GoodPV, bSF*EventWeight);
+      histBook[iSys]->h_pv_nosf[passchannel][iStep]->Fill(*GoodPV, bSF*EventWeight/PUWeight[0]);
       
-      histBook[iSys]->h_reco_addbjets_deltaR[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   bSF*EventWeight);
-      histBook[iSys]->h_reco_addbjets_invMass[passchannel][icut] ->Fill(reco_addbjets_invMass,  bSF*EventWeight);
-
-      histBook[iSys]->h_respMatrix_gentop_deltaR[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   gen_addbjets_deltaR,   bSF*EventWeight);
-      histBook[iSys]->h_respMatrix_gentop_invMass[passchannel][icut] ->Fill(reco_addbjets_invMass,  gen_addbjets_invMass,  bSF*EventWeight);
-      histBook[iSys]->h_respMatrix_mindR_deltaR[passchannel][icut]   ->Fill(reco_addbjets_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
-      histBook[iSys]->h_respMatrix_mindR_invMass[passchannel][icut]  ->Fill(reco_addbjets_invMass,  gen_mindR_invMass,    bSF*EventWeight);
-
-      histBook[iSys]->h_gen_gentop_deltaR[passchannel][icut]  ->Fill(gen_addbjets_deltaR,    bSF*EventWeight);
-      histBook[iSys]->h_gen_gentop_invMass[passchannel][icut] ->Fill(gen_addbjets_invMass,   bSF*EventWeight);
-      histBook[iSys]->h_gen_mindR_deltaR[passchannel][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
-      histBook[iSys]->h_gen_mindR_invMass[passchannel][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
-
-      histBook[iSys]->h_reco_deltaRvsInvMass[passchannel][icut]->Fill(reco_addbjets_deltaR, reco_addbjets_invMass, bSF*EventWeight);
+      histBook[iSys]->h_lepton_pt[passchannel][iStep]    ->Fill(lepton.Pt(), bSF*EventWeight);
+      histBook[iSys]->h_lepton_eta[passchannel][iStep]   ->Fill(abs(lepton.Eta()), bSF*EventWeight);
+      histBook[iSys]->h_lepton_relIso[passchannel][iStep]->Fill(relIso, bSF*EventWeight);
       
-      if( dRregion != 999 ) histBook[iSys]->h_reco_deltaRvsJetPt_bin[passchannel][icut][dRregion]->Fill(reco_addbjet1_pt, bSF*EventWeight);
-      histBook[iSys]->h_reco_deltaRvsJetPt[passchannel][icut]->Fill(reco_addbjets_deltaR, reco_addbjet1_pt, bSF*EventWeight);
-      histBook[iSys]->h_3Dmatrix_mindR_deltaR[passchannel][icut]->Fill(reco_addbjets_deltaR, gen_mindR_deltaR, reco_addbjet1_pt, bSF*EventWeight);
-      histBook[iSys]->h_3Dmatrix_gentop_deltaR[passchannel][icut]->Fill(reco_addbjets_deltaR, gen_addbjets_deltaR, reco_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_trans_mass[passchannel][iStep]->Fill(transverseMass(lepton,p4met), bSF*EventWeight);
+      
+      histBook[iSys]->h_njets[passchannel][iStep] ->Fill(njets, bSF*EventWeight);
+      histBook[iSys]->h_nbjets[passchannel][iStep]->Fill(nbjets, bSF*EventWeight);
 
-      if( Mregion != 999 ) histBook[iSys]->h_reco_invMassvsJetPt_bin[passchannel][icut][Mregion]->Fill(reco_addbjet1_pt, bSF*EventWeight);
-      histBook[iSys]->h_reco_invMassvsJetPt[passchannel][icut]->Fill(reco_addbjets_invMass, reco_addbjet1_pt, bSF*EventWeight);
-      histBook[iSys]->h_3Dmatrix_mindR_invMass[passchannel][icut]->Fill(reco_addbjets_invMass, gen_mindR_invMass, reco_addbjet1_pt, bSF*EventWeight);
-      histBook[iSys]->h_3Dmatrix_gentop_invMass[passchannel][icut]->Fill(reco_addbjets_invMass, gen_addbjets_invMass, reco_addbjet1_pt, bSF*EventWeight);
+      for(int iJet=0; iJet<nJet; iJet++){
+        histBook[iSys]->h_jet_pt[passchannel][iStep][iJet] ->Fill(a_jetPt[iJet],  bSF*EventWeight);
+        histBook[iSys]->h_jet_eta[passchannel][iStep][iJet]->Fill(a_jetEta[iJet], bSF*EventWeight);
+        histBook[iSys]->h_csv[passchannel][iStep][iJet]    ->Fill(a_jetCSV[iJet], bSF*EventWeight);
+      }
+     
+      histBook[iSys]->h_reco_addbjet1_pt[passchannel][iStep]     ->Fill(reco_addbjet1_pt, bSF*EventWeight); 
+      histBook[iSys]->h_reco_addbjet1_csv[passchannel][iStep]    ->Fill(reco_addbjet1_csv, bSF*EventWeight); 
+      histBook[iSys]->h_reco_addbjet2_pt[passchannel][iStep]     ->Fill(reco_addbjet2_pt, bSF*EventWeight); 
+      histBook[iSys]->h_reco_addbjet2_csv[passchannel][iStep]    ->Fill(reco_addbjet2_csv, bSF*EventWeight); 
+      histBook[iSys]->h_reco_addbjets_deltaR[passchannel][iStep] ->Fill(reco_addbjets_deltaR, bSF*EventWeight);
+      histBook[iSys]->h_reco_addbjets_invMass[passchannel][iStep]->Fill(reco_addbjets_invMass, bSF*EventWeight);
+      
+      histBook[iSys]->h_gen_mindR_addbjet1_pt[passchannel][iStep]   ->Fill(gen_mindR_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_gen_mindR_addbjet2_pt[passchannel][iStep]   ->Fill(gen_mindR_addbjet2_pt, bSF*EventWeight);
+      histBook[iSys]->h_gen_mindR_deltaR[passchannel][iStep]        ->Fill(gen_mindR_addbjets_deltaR, bSF*EventWeight);
+      histBook[iSys]->h_gen_mindR_invMass[passchannel][iStep]       ->Fill(gen_mindR_addbjets_invMass, bSF*EventWeight);
+      histBook[iSys]->h_respMatrix_mindR_deltaR[passchannel][iStep] ->Fill(reco_addbjets_deltaR,  gen_mindR_addbjets_deltaR, bSF*EventWeight);
+      histBook[iSys]->h_respMatrix_mindR_invMass[passchannel][iStep]->Fill(reco_addbjets_invMass, gen_mindR_addbjets_invMass, bSF*EventWeight);
 
-      if( nevt % 2 == 0 ){
-        histBook[iSys]->h_reco_addbjets_deltaR_split[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   bSF*EventWeight);
-        histBook[iSys]->h_reco_addbjets_invMass_split[passchannel][icut] ->Fill(reco_addbjets_invMass,  bSF*EventWeight);
-        histBook[iSys]->h_gen_gentop_deltaR_split[passchannel][icut]  ->Fill(gen_addbjets_deltaR,    bSF*EventWeight);
-        histBook[iSys]->h_gen_gentop_invMass_split[passchannel][icut] ->Fill(gen_addbjets_invMass,   bSF*EventWeight);
-        histBook[iSys]->h_gen_mindR_deltaR_split[passchannel][icut]   ->Fill(gen_mindR_deltaR,      bSF*EventWeight);
-        histBook[iSys]->h_gen_mindR_invMass_split[passchannel][icut]  ->Fill(gen_mindR_invMass,     bSF*EventWeight);
-      }
-      else{
-        histBook[iSys]->h_respMatrix_gentop_deltaR_split[passchannel][icut]  ->Fill(reco_addbjets_deltaR,   gen_addbjets_deltaR,   bSF*EventWeight);
-        histBook[iSys]->h_respMatrix_gentop_invMass_split[passchannel][icut] ->Fill(reco_addbjets_invMass,  gen_addbjets_invMass,  bSF*EventWeight);
-        histBook[iSys]->h_respMatrix_mindR_deltaR_split[passchannel][icut]   ->Fill(reco_addbjets_deltaR,   gen_mindR_deltaR,     bSF*EventWeight);
-        histBook[iSys]->h_respMatrix_mindR_invMass_split[passchannel][icut]  ->Fill(reco_addbjets_invMass,  gen_mindR_invMass,    bSF*EventWeight);
-      }
-    }//cut
+      histBook[iSys]->h_gen_gentop_addbjet1_pt[passchannel][iStep]   ->Fill(gen_gentop_addbjet1_pt, bSF*EventWeight);
+      histBook[iSys]->h_gen_gentop_addbjet2_pt[passchannel][iStep]   ->Fill(gen_gentop_addbjet2_pt, bSF*EventWeight);
+      histBook[iSys]->h_gen_gentop_deltaR[passchannel][iStep]        ->Fill(gen_gentop_addbjets_deltaR, bSF*EventWeight);
+      histBook[iSys]->h_gen_gentop_invMass[passchannel][iStep]       ->Fill(gen_gentop_addbjets_invMass, bSF*EventWeight);
+      histBook[iSys]->h_respMatrix_gentop_deltaR[passchannel][iStep] ->Fill(reco_addbjets_deltaR, gen_gentop_addbjets_deltaR, bSF*EventWeight);
+      histBook[iSys]->h_respMatrix_gentop_invMass[passchannel][iStep]->Fill(reco_addbjets_invMass, gen_gentop_addbjets_invMass, bSF*EventWeight);
+
+      if( dRregion != 999 ) histBook[iSys]->h_reco_deltaRvsCSV_bin[passchannel][iStep][dRregion]->Fill(reco_addbjet1_csv, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_mindR_deltaR[passchannel][iStep]->Fill(reco_addbjets_deltaR, gen_mindR_addbjets_deltaR, reco_addbjet1_csv, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_gentop_deltaR[passchannel][iStep]->Fill(reco_addbjets_deltaR, gen_gentop_addbjets_deltaR, reco_addbjet1_csv, bSF*EventWeight);
+
+      if( Mregion != 999 ) histBook[iSys]->h_reco_invMassvsCSV_bin[passchannel][iStep][Mregion]->Fill(reco_addbjet1_csv, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_mindR_invMass[passchannel][iStep]->Fill(reco_addbjets_invMass, gen_mindR_addbjets_invMass, reco_addbjet1_csv, bSF*EventWeight);
+      histBook[iSys]->h_3Dmatrix_gentop_invMass[passchannel][iStep]->Fill(reco_addbjets_invMass, gen_gentop_addbjets_invMass, reco_addbjet1_csv, bSF*EventWeight);
+    }//iStep
   }
-  ++nevt;
   return kTRUE;
 }
 
 void MyAnalysis::SlaveTerminate(){
   option = GetOption();
-
-  for(unsigned int iSys = 0; iSys < v_syst.size(); ++iSys){
-    for(int iChannel=0; iChannel<nChannel; ++iChannel){
-      for(int iStep=0; iStep<nStep; ++iStep){
-        int ibin = 1;
-        for(int ixbin=1; ixbin <= histBook[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsX(); ++ixbin){
-          for(int iybin=1; iybin <= histBook[iSys]->h_reco_deltaRvsInvMass[0][0]->GetNbinsY(); ++iybin){
-            double value = histBook[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinContent(ixbin,iybin);
-            double error = histBook[iSys]->h_reco_deltaRvsInvMass[iChannel][iStep]->GetBinError(ixbin,iybin);
-            histBook[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinContent(ibin, value);
-            histBook[iSys]->h_reco_deltaRvsInvMass_spread[iChannel][iStep]->SetBinError(ibin, error);
-            ibin++;
-          }
-        }
-      }
-    }
-  }
 }
 
 void MyAnalysis::Terminate(){
@@ -740,6 +651,7 @@ void MyAnalysis::Terminate(){
     }
     if(str.find("h_") != std::string::npos ) obj->Write();
   }
+  
   out->Write();
   out->Close();
 }

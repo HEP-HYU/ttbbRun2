@@ -5,8 +5,8 @@ configuration:
   experiment: " CMS"
   #extra-label: "Preliminary"
   extra-label: "Work in Progress"
-  root: ''
-  luminosity: 59693
+  root: './output/rere18'
+  luminosity: 59741
   #luminosity-error: 0.00
   luminosity-error: 0.025
   error-fill-style: 3154
@@ -21,7 +21,7 @@ configuration:
   yields-table-numerical-precision-yields: 2
 
 files: 
-  include: ['files/files18.yml'] # For basic plots
+  include: ['files18.yml'] # For basic plots
 #  include: ['files/files18_qcd.yml'] # For QCD region plots
 #  include: ['files/files16_test.yml'] # Drawing without systematics
 
@@ -113,7 +113,9 @@ systematics:
   - tune: {type: shape, on: 'hist_TTLL_PowhegPythiaBkg.root'}
 
 plots:
-  include: ['histos/histos_ttlj.yml'] # Basic plot list
+  #include: ['histos.yml'] # Basic plot list
+  #  include: ['histos_Ch2S9.yml'] # Basic plot list
+  include: ['histos_merge.yml'] # Basic plot list
 #  include: ['histos/histos_qcd.yml'] # QCD region plot list
 #  include: ['histos/histos_yields.yml'] # nJet hist only
 

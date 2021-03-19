@@ -1,18 +1,18 @@
-hist_DataSingleMu.root:
+'hist_DataSingleMu.root':
   type: data
+  pretty-name: 'DataSingleMu'
   legend: 'Data'
-  pretty-name: 'DataMu'
   marker-size: 0.6
   group: GData
 
-hist_DataSingleEG.root:
+'hist_DataSingleEG.root':
   type: data
+  pretty-name: 'DataSingleEG'
   legend: 'Data'
-  pretty-name: 'DataEG'
   marker-size: 0.6
   group: GData
 
-hist_ttZToQQ_aMCatNLOMadspinPythia.root:
+'hist_ttZToQQ_aMCatNLOMadspinPythia.root':
   type: mc
   pretty-name: 'ttZToQQ_aMCatNLOMadspinPythia'
   cross-section: 0.5297
@@ -21,7 +21,8 @@ hist_ttZToQQ_aMCatNLOMadspinPythia.root:
   group: GttX
   order: 12
 
-hist_ttZToLLNuNu_aMCatNLOMadspinPythia.root:
+
+'hist_ttZToLLNuNu_aMCatNLOMadspinPythia.root':
   type: mc
   pretty-name: 'ttZToLLNuNu_aMCatNLOMadspinPythia'
   cross-section: 0.2529
@@ -30,7 +31,8 @@ hist_ttZToLLNuNu_aMCatNLOMadspinPythia.root:
   group: GttX
   order: 13
 
-hist_ttWToQQ_aMCatNLOMadspinPythia.root:
+
+'hist_ttWToQQ_aMCatNLOMadspinPythia.root':
   type: mc
   pretty-name: 'ttWToQQ_aMCatNLOMadspinPythia'
   cross-section: 0.4062
@@ -39,7 +41,8 @@ hist_ttWToQQ_aMCatNLOMadspinPythia.root:
   group: GttX
   order: 10
 
-hist_ttWToLNu_aMCatNLOMadspinPythia.root:
+
+'hist_ttWToLNu_aMCatNLOMadspinPythia.root':
   type: mc
   pretty-name: 'ttWToLNu_aMCatNLOMadspinPythia'
   cross-section: 0.2043
@@ -48,7 +51,8 @@ hist_ttWToLNu_aMCatNLOMadspinPythia.root:
   group: GttX
   order: 11
 
-hist_ttHTobb_PowhegPythia.root:
+
+'hist_ttHTobb_PowhegPythia.root':
   type: mc
   pretty-name: 'ttHTobb_PowhegPythia'
   cross-section: 0.2923
@@ -57,7 +61,8 @@ hist_ttHTobb_PowhegPythia.root:
   group: GttX
   order: 8
 
-hist_ttHToNonbb_PowhegPythia.root:
+
+'hist_ttHToNonbb_PowhegPythia.root':
   type: mc
   pretty-name: 'ttHToNonbb_PowhegPythia'
   cross-section: 0.2151
@@ -66,7 +71,8 @@ hist_ttHToNonbb_PowhegPythia.root:
   group: GttX
   order: 9
 
-hist_ZZ_Pythia.root:
+
+'hist_ZZ_Pythia.root':
   type: mc
   pretty-name: 'ZZ_Pythia'
   cross-section: 16.523
@@ -75,7 +81,8 @@ hist_ZZ_Pythia.root:
   group: GVV
   order: 21
 
-hist_ZJets_M50_aMCatNLOPythia.root:
+
+'hist_ZJets_M50_aMCatNLOPythia.root':
   type: mc
   pretty-name: 'ZJets_M50_aMCatNLOPythia'
   cross-section: 6225.42
@@ -84,7 +91,8 @@ hist_ZJets_M50_aMCatNLOPythia.root:
   group: GZJets
   order: 22
 
-hist_ZJets_M10to50_MadgraphPythia.root:
+
+'hist_ZJets_M10to50_MadgraphPythia.root':
   type: mc
   pretty-name: 'ZJets_M10to50_MadgraphPythia'
   cross-section: 18610.0
@@ -93,7 +101,8 @@ hist_ZJets_M10to50_MadgraphPythia.root:
   group: GZJets
   order: 23
 
-hist_WZ_Pythia.root:
+
+'hist_WZ_Pythia.root':
   type: mc
   pretty-name: 'WZ_Pythia'
   cross-section: 47.13
@@ -102,7 +111,8 @@ hist_WZ_Pythia.root:
   group: GVV
   order: 20
 
-hist_WW_Pythia.root:
+
+'hist_WW_Pythia.root':
   type: mc
   pretty-name: 'WW_Pythia'
   cross-section: 118.7
@@ -111,7 +121,8 @@ hist_WW_Pythia.root:
   group: GVV
   order: 19
 
-hist_W4JetsToLNu_MadgraphPythia.root:
+
+'hist_W4JetsToLNu_MadgraphPythia.root':
   type: mc
   pretty-name: 'W4JetsToLNu_MadgraphPythia'
   cross-section: 544.3
@@ -120,7 +131,8 @@ hist_W4JetsToLNu_MadgraphPythia.root:
   group: GWJets
   order: 25
 
-hist_W3JetsToLNu_MadgraphPythia.root:
+
+'hist_W3JetsToLNu_MadgraphPythia.root':
   type: mc
   pretty-name: 'W3JetsToLNu_MadgraphPythia'
   cross-section: 992.5
@@ -129,7 +141,8 @@ hist_W3JetsToLNu_MadgraphPythia.root:
   group: GWJets
   order: 26
 
-hist_W2JetsToLNu_MadgraphPythia.root:
+
+'hist_W2JetsToLNu_MadgraphPythia.root':
   type: mc
   pretty-name: 'W2JetsToLNu_MadgraphPythia'
   cross-section: 2793.0
@@ -138,7 +151,8 @@ hist_W2JetsToLNu_MadgraphPythia.root:
   group: GWJets
   order: 27
 
-hist_W1JetsToLNu_MadgraphPythia.root:
+
+'hist_W1JetsToLNu_MadgraphPythia.root':
   type: mc
   pretty-name: 'W1JetsToLNu_MadgraphPythia'
   cross-section: 9625.0
@@ -147,79 +161,88 @@ hist_W1JetsToLNu_MadgraphPythia.root:
   group: GWJets
   order: 28
 
-hist_TTLL_PowhegPythiaBkg.root:
+
+'hist_TTLL_PowhegPythiaBkg.root':
   type: mc
   pretty-name: 'TTLL_PowhegPythiaBkg'
   cross-section: 88.29
   generated-events: 68595608.0
   fill-color: '#ff6666'
-  group: GttBkg
+  group: Gttbkg
   order: 5
 
-hist_TTLJ_PowhegPythia_ttother.root:
+
+'hist_TTLJ_PowhegPythia_ttother.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttother'
   cross-section: 365.34
   generated-events: 109124472.0
   fill-color: '#ff6666'
-  group: GttBkg
+  group: Gttbkg
   order: 4
 
-hist_TTLJ_PowhegPythia_ttcc.root:
+
+'hist_TTLJ_PowhegPythia_ttcc.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttcc'
   cross-section: 365.34
   generated-events: 109124472.0
   fill-color: '#990000'
-  legend: 'ttcc'
+  group: Gttcc
   order: 2
 
-hist_TTLJ_PowhegPythia_ttbj.root:
+
+'hist_TTLJ_PowhegPythia_ttbj.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttbj'
   cross-section: 365.34
   generated-events: 109124472.0
   fill-color: '#660000'
-  legend: 'ttbj'
+  group: Gttbj
   order: 1
 
-hist_TTLJ_PowhegPythia_ttbb.root:
+
+'hist_TTLJ_PowhegPythia_ttbb.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttbb'
   cross-section: 365.34
   generated-events: 109124472.0
   fill-color: '#330000'
-  legend: 'ttbb'
+  group: Gttbb
   order: 0
 
-hist_TTLJ_PowhegPythia_ttLF.root:
+
+'hist_TTLJ_PowhegPythia_ttLF.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythia_ttLF'
   cross-section: 365.34
   generated-events: 109124472.0
   fill-color: '#cc0000'
-  legend: 'ttLF'
+  group: GttLF
   order: 3
 
-hist_TTLJ_PowhegPythiaBkg.root:
+
+'hist_TTLJ_PowhegPythiaBkg.root':
   type: mc
   pretty-name: 'TTLJ_PowhegPythiaBkg'
   cross-section: 365.34
   generated-events: 109124472.0
   fill-color: '#ff6666'
-  group: GttBkg
+  group: Gttbkg
   order: 6
 
-hist_TTJJ_PowhegPythiaBkg.root:
+
+'hist_TTJJ_PowhegPythiaBkg.root':
   type: mc
   pretty-name: 'TTJJ_PowhegPythiaBkg'
   cross-section: 377.96
   generated-events: 129211204.0
   fill-color: '#ff6666'
-  group: GttBkg
+  group: Gttbkg
   order: 7
 
-hist_SingleTop_t_PowhegPythia.root:
+
+'hist_SingleTop_t_PowhegPythia.root':
   type: mc
   pretty-name: 'SingleTop_t_PowhegPythia'
   cross-section: 136.02
@@ -228,7 +251,8 @@ hist_SingleTop_t_PowhegPythia.root:
   group: GSingleT
   order: 14
 
-hist_SingleTop_tW_PowhegPythia.root:
+
+'hist_SingleTop_tW_PowhegPythia.root':
   type: mc
   pretty-name: 'SingleTop_tW_PowhegPythia'
   cross-section: 35.85
@@ -237,7 +261,8 @@ hist_SingleTop_tW_PowhegPythia.root:
   group: GSingleT
   order: 15
 
-hist_SingleTop_s_aMCatNLOPythia.root:
+
+'hist_SingleTop_s_aMCatNLOPythia.root':
   type: mc
   pretty-name: 'SingleTop_s_aMCatNLOPythia'
   cross-section: 3.36
@@ -246,7 +271,8 @@ hist_SingleTop_s_aMCatNLOPythia.root:
   group: GSingleT
   order: 16
 
-hist_SingleTbar_t_PowhegPythia.root:
+
+'hist_SingleTbar_t_PowhegPythia.root':
   type: mc
   pretty-name: 'SingleTbar_t_PowhegPythia'
   cross-section: 80.95
@@ -255,7 +281,8 @@ hist_SingleTbar_t_PowhegPythia.root:
   group: GSingleT
   order: 17
 
-hist_SingleTbar_tW_PowhegPythia.root:
+
+'hist_SingleTbar_tW_PowhegPythia.root':
   type: mc
   pretty-name: 'SingleTbar_tW_PowhegPythia'
   cross-section: 35.85
@@ -264,7 +291,8 @@ hist_SingleTbar_tW_PowhegPythia.root:
   group: GSingleT
   order: 18
 
-hist_QCD_Pt-15to20_MuEnriched.root:
+
+'hist_QCD_Pt-15to20_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-15to20_MuEnriched'
   cross-section: 3819570.0
@@ -273,7 +301,8 @@ hist_QCD_Pt-15to20_MuEnriched.root:
   group: GQCD
   order: 29
 
-hist_QCD_Pt-20to30_MuEnriched.root:
+
+'hist_QCD_Pt-20to30_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-20to30_MuEnriched'
   cross-section: 2960198.4
@@ -282,7 +311,8 @@ hist_QCD_Pt-20to30_MuEnriched.root:
   group: GQCD
   order: 30
 
-hist_QCD_Pt-50to80_MuEnriched.root:
+
+'hist_QCD_Pt-50to80_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-50to80_MuEnriched'
   cross-section: 437504.1
@@ -291,7 +321,8 @@ hist_QCD_Pt-50to80_MuEnriched.root:
   group: GQCD
   order: 31
 
-hist_QCD_Pt-80to120_MuEnriched.root:
+
+'hist_QCD_Pt-80to120_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-80to120_MuEnriched'
   cross-section: 106033.6648
@@ -300,7 +331,8 @@ hist_QCD_Pt-80to120_MuEnriched.root:
   group: GQCD
   order: 32
 
-hist_QCD_Pt-120to170_MuEnriched.root:
+
+'hist_QCD_Pt-120to170_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-120to170_MuEnriched'
   cross-section: 25190.51514
@@ -309,7 +341,8 @@ hist_QCD_Pt-120to170_MuEnriched.root:
   group: GQCD
   order: 33
 
-hist_QCD_Pt-170to300_MuEnriched.root:
+
+'hist_QCD_Pt-170to300_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-170to300_MuEnriched'
   cross-section: 8654.49315
@@ -318,7 +351,8 @@ hist_QCD_Pt-170to300_MuEnriched.root:
   group: GQCD
   order: 34
 
-hist_QCD_Pt-300to470_MuEnriched.root:
+
+'hist_QCD_Pt-300to470_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-300to470_MuEnriched'
   cross-section: 797.35269
@@ -327,7 +361,8 @@ hist_QCD_Pt-300to470_MuEnriched.root:
   group: GQCD
   order: 35
 
-hist_QCD_Pt-470to600_MuEnriched.root:
+
+'hist_QCD_Pt-470to600_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-470to600_MuEnriched'
   cross-section: 79.02553776
@@ -336,7 +371,8 @@ hist_QCD_Pt-470to600_MuEnriched.root:
   group: GQCD
   order: 36
 
-hist_QCD_Pt-600to800_MuEnriched.root:
+
+'hist_QCD_Pt-600to800_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-600to800_MuEnriched'
   cross-section: 25.09505908
@@ -345,7 +381,8 @@ hist_QCD_Pt-600to800_MuEnriched.root:
   group: GQCD
   order: 37
 
-hist_QCD_Pt-800to1000_MuEnriched.root:
+
+'hist_QCD_Pt-800to1000_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-800to1000_MuEnriched'
   cross-section: 4.707368272
@@ -354,7 +391,8 @@ hist_QCD_Pt-800to1000_MuEnriched.root:
   group: GQCD
   order: 38
 
-hist_QCD_Pt-1000toInf_MuEnriched.root:
+
+'hist_QCD_Pt-1000toInf_MuEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-1000toInf_MuEnriched'
   cross-section: 1.621311692
@@ -363,7 +401,8 @@ hist_QCD_Pt-1000toInf_MuEnriched.root:
   group: GQCD
   order: 39
 
-hist_QCD_Pt-15to20_EMEnriched.root:
+
+'hist_QCD_Pt-15to20_EMEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-15to20_EMEnriched'
   cross-section: 2302200.0
@@ -372,7 +411,8 @@ hist_QCD_Pt-15to20_EMEnriched.root:
   group: GQCD
   order: 40
 
-hist_QCD_Pt-20to30_EMEnriched.root:
+
+'hist_QCD_Pt-20to30_EMEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-20to30_EMEnriched'
   cross-section: 5352960.0
@@ -381,7 +421,8 @@ hist_QCD_Pt-20to30_EMEnriched.root:
   group: GQCD
   order: 41
 
-hist_QCD_Pt-30to50_EMEnriched.root:
+
+'hist_QCD_Pt-30to50_EMEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-30to50_EMEnriched'
   cross-section: 9928000.0
@@ -390,7 +431,8 @@ hist_QCD_Pt-30to50_EMEnriched.root:
   group: GQCD
   order: 42
 
-hist_QCD_Pt-50to80_EMEnriched.root:
+
+'hist_QCD_Pt-50to80_EMEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-50to80_EMEnriched'
   cross-section: 2890800.0
@@ -399,7 +441,8 @@ hist_QCD_Pt-50to80_EMEnriched.root:
   group: GQCD
   order: 43
 
-hist_QCD_Pt-80to120_EMEnriched.root:
+
+'hist_QCD_Pt-80to120_EMEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-80to120_EMEnriched'
   cross-section: 350000.0
@@ -408,7 +451,8 @@ hist_QCD_Pt-80to120_EMEnriched.root:
   group: GQCD
   order: 44
 
-hist_QCD_Pt-120to170_EMEnriched.root:
+
+'hist_QCD_Pt-120to170_EMEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-120to170_EMEnriched'
   cross-section: 62964.0
@@ -417,7 +461,8 @@ hist_QCD_Pt-120to170_EMEnriched.root:
   group: GQCD
   order: 45
 
-hist_QCD_Pt-300toInf_EMEnriched.root:
+
+'hist_QCD_Pt-300toInf_EMEnriched.root':
   type: mc
   pretty-name: 'QCD_Pt-300toInf_EMEnriched'
   cross-section: 1350.0
